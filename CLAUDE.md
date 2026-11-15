@@ -12,6 +12,8 @@ in `Docs/Aleatora_Tech.md`; the plan with its milestones is `Docs/Aleatora_Marko
 the sections the hand-off names, not all of them.
 
 ## Layout
+- Everything of ours is under `Assets/Aurumworks/`: `Materials/`, `Meshes/`, `Physics Materials/`,
+  `Prefabs/`, `Textures/` (moved there by Jon, 2026-11-15), `Resources/`, `ScriptableObjects/`.
 - `Assets/Aurumworks/Scripts/`: our code, in Assembly-CSharp, namespace `Aurumworks.Aleatora`.
   The folders under it are in `Docs/Aleatora_Tech.md` (*Code layout*). The grid's coordinates,
   shapes and layout, and everything under `Music/`, are plain C# with no `UnityEngine` in them, so
@@ -35,10 +37,12 @@ the sections the hand-off names, not all of them.
 - `.meta` files. Unity owns them; a changed or lost GUID breaks every reference to the asset.
 - `Library/`, `Temp/`, `Logs/`, `UserSettings/`, `obj/`, `.vs/`, and the generated `*.csproj` / `*.slnx`.
 - `Assets/InputSystem_Actions.cs`: Unity generates it from the `.inputactions` asset.
-- Without explicit approval: `Packages/manifest.json`, `packages-lock.json`, `ProjectSettings/`,
-  and serialized assets (`.unity`, `.prefab`, `.asset`, `.mat`, `.inputactions`, model import
-  settings). Read them freely; to change them, describe the Inspector change for Jon to make, or
+- Without explicit approval: `Packages/manifest.json`, `packages-lock.json` and
+  `ProjectSettings/`. Read them freely; to change them, describe the change for Jon to make, or
   ask to make it. The plan's own steps are approved by Jon's go-ahead on the plan.
+- Serialized assets (`.unity`, `.prefab`, `.asset`, `.mat`, `.inputactions`, model import
+  settings) are edited as the work needs, without asking (Jon, 2026-11-15). Say in the report
+  what changed in them. An open Editor asks Jon to reload a scene changed on disk.
 - No package upgrades or downgrades. Input System stays at 1.20.1.
 
 ## Unity rules
@@ -97,7 +101,7 @@ State plainly what couldn't be verified.
   are committed in `../Framework/` first.
 - One milestone at a time; stop at the end of each and report. Don't invent design: where the
   plan is silent, ask.
-- Ask before deleting files, changing settings, or editing serialized assets.
+- Ask before deleting files or changing settings.
 - `Docs/Aleatora_Handoff.md` is the hand-off doc. Update it at the end of every turn that changes
   state. A ruling of Jon's goes into `Docs/Aleatora_Design.md` (*Decided by Jon*) with its date.
   What was built goes under its section as "As built" in `Docs/Aleatora_Tech.md`.

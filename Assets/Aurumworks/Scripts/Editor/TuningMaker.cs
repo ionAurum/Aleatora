@@ -15,7 +15,7 @@ namespace Aurumworks.Aleatora
         public const string AssetPath = "Assets/Aurumworks/Resources/" + AleatoraTuning.ResourceName + ".asset";
 
         /// <summary>The cell prefab a new asset starts with: the one the grid was found with.</summary>
-        public const string CellPrefabPath = "Assets/Prefabs/Rounded Hexagonal Prism.prefab";
+        public const string CellPrefabPath = "Assets/Aurumworks/Prefabs/Rounded Hexagonal Prism.prefab";
 
         /// <summary>Makes the tuning asset if it is missing, then selects it.</summary>
         [MenuItem("Aleatora/Make Tuning")]

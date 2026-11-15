@@ -23,6 +23,18 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 8. **The look is Jon's** (2026-11-15, the plan's *How we work*). Everything visual is on the
    tuning asset, read live; nothing visual is a constant in code.
 
+9. **Serialized assets** (2026-11-15). Claude edits scenes, prefabs and other serialized assets
+   as the work needs, without asking first. Packages and `ProjectSettings/` still wait for Jon.
+10. **Our assets live under `Assets/Aurumworks/`** (2026-11-15). Jon moved `Materials`, `Meshes`,
+    `Physics Materials`, `Prefabs` and `Textures` there.
+11. **No AudioListener** (2026-11-15). Removed from the Main Camera.
+12. **Cells are off the *Hexagons* layer** (2026-11-15). The layer was for picking, which no
+    longer needs it.
+13. **`Hexagon.prefab` is deleted** (2026-11-15).
+14. **The cell prefab keeps its collider on `Mesh-Hexagon-Collider.asset`** (2026-11-15). Jon's
+    reason: bodies collide with a simple mesh, cheaply, and don't catch in the visual gap between
+    cells or bounce off their rounded edges. Nothing uses it yet; see *Open, from M0*.
+
 ## Open, each its own plan later (the plan's decision 7)
 
 - What the grid means musically (the three axes are ready to carry, say, an interval each).
@@ -31,10 +43,12 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 
 ## Open, from M0's report (2026-11-15)
 
-- The Main Camera in the scene has an AudioListener. It plays nothing and was left; Jon to say
-  whether it goes.
 - The default window size is 1024 × 768 (the template's is 1920 × 1080); left as found.
-- Cells are no longer on the *Hexagons* layer (picking needs no layer); the layer itself is still
-  in the project.
-- `Assets/Prefabs/Hexagon.prefab`, `Assets/Meshes/Mesh-Hexagon-Collider.asset` and the collider on
-  the cell prefab are unused by the new grid and stay until Jon says they can go.
+- The *Hexagons* layer itself is still in the project (`ProjectSettings/TagManager.asset`),
+  used by nothing.
+- The cell collider (ruling 14) scales with the cell, so a `Gap` above 0 opens real gaps between
+  colliders. If bodies ever roll on the board, either the collider stays full-size while the
+  visual shrinks, or the board gets one collider of its own. No milestone in the plan puts a
+  Rigidbody on the board yet.
+- With no AudioListener the Editor may log "There are no audio listeners in the scene" in play.
+  Project Settings > Audio > Disable Unity Audio silences it and fits ruling 1; Jon to say.

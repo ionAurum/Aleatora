@@ -62,7 +62,9 @@ says, on 2026-11-15, without sound:
 
 ### As found (2026-11-15, commit "As found")
 
-`Docs/AsFound/Grid-11x11.png` is the grid as it drew, from the menu check `m0-setup`.
+`Docs/AsFound/Grid-11x11.png` is the grid as it drew, from the menu check `m0-setup`. The paths
+below are as found; on 2026-11-15 Jon moved these folders under `Assets/Aurumworks/`, the
+AudioListener left the Main Camera and `Hexagon.prefab` was deleted.
 
 - **Scene object `HexGrid`** (layer 10, *Hexagons*), at the origin, with:
   - `HexGrid`: Cinemachine camera `OrbitCamera`; rows 11, columns 11 (the code's default rows
@@ -144,8 +146,11 @@ The board is MathWorld's k × m × n hexagonal grid graph, in cube coordinates (
   `Orientation` (Flat), `Size` (1), `Gap` (0), `CellPrefab` (the found prefab), `Height` (1),
   `RestColor` (white), `SelectedColor` (the found green). These reproduce the found look but for
   the board's shape.
-- **Not carried over:** cells are on the prefab's layer, not *Hexagons*; the prefab's collider is
-  there but unused; the old grid's half-cell centring error is gone.
+- **Not carried over:** cells are on the prefab's layer, not *Hexagons* (Jon agreed); the old
+  grid's half-cell centring error is gone.
+- **The cell's collider** stays on the prefab (Design, ruling 14): a non-convex MeshCollider on
+  `Mesh-Hexagon-Collider.asset`, a full hexagon one unit to a corner, so at `Gap` 0 the colliders
+  tile without the visual gap. Picking doesn't use it. It scales with the cell.
 
 ## Checks
 
