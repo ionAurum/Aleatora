@@ -22,6 +22,9 @@ namespace Aurumworks.Aleatora
         [Tooltip("How the Melodies page draws its transition graph: which arcs, how thick, how large.")]
         [SerializeField] private MelodyViewTuning _melodyView = new();
 
+        [Tooltip("MIDI out: the channel and BPM the Melodies page starts with, and each note's velocity and length.")]
+        [SerializeField] private MidiTuning _midi = new();
+
         /// <summary>The tuning: the asset, or the defaults if there is none.</summary>
         public static AleatoraTuning Load()
         {
@@ -43,5 +46,8 @@ namespace Aurumworks.Aleatora
 
         /// <summary>How the Melodies page draws.</summary>
         public MelodyViewTuning MelodyView => _melodyView;
+
+        /// <summary>MIDI out's starting channel and BPM, and how each note is played.</summary>
+        public MidiTuning Midi => _midi;
     }
 }

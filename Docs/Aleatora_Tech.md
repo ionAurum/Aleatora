@@ -1,7 +1,8 @@
 # Aleatora: how it is built
 
-One section per system, each with what was built under "As built". The plan is
-`Aleatora_Markov_Plan.md`; Jon's rulings are in `Aleatora_Design.md`.
+One section per system, each with what was built under "As built". The plans are
+`Aleatora_Markov_Plan.md` (finished) and `Aleatora_Midi_Plan.md`; Jon's rulings are in
+`Aleatora_Design.md`.
 
 ## Contents
 
@@ -13,6 +14,7 @@ One section per system, each with what was built under "As built". The plan is
 - *Melody generator* (as built)
 - *Melodies page* (as built)
 - *Cell look* (the gel pad shader, as built)
+- *MIDI* (as built)
 - *Checks*
 
 ## Code layout
@@ -24,7 +26,8 @@ All in Assembly-CSharp (no asmdefs), namespace `Aurumworks.Aleatora`, under
 |---|---|---|
 | `Grid/` | `HexCoord`, `HexDirection` (with `HexDirections`), `HexShape`, `HexLayout` (with `HexOrientation`, `HexPoint`): plain C#. `HexGrid`, `HexCellView`, `GridSelection` | The last three only |
 | `Music/` (M1; M2 from `Rng` on) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing` | No |
-| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2), `MelodyViewTuning` (M3) | Yes |
+| `Midi/` (MIDI-1) | `MidiMessage`, `IMidiOutput`, `MidiPorts`, `RecordingOutput`; internal `WinMm`, `WinMmOutput` | No |
+| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2), `MelodyViewTuning` (M3), `MidiTuning`, `MidiPlayback` (MIDI-1) | Yes |
 | `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip`; the static `ViewText` and `ViewMesh` | Yes |
 | (root) | `MainMenu`, `SessionMenu`, `SettingsMenu`, `MenuCheck` | Yes |
 | `Editor/`, `Editor/Tests/` | `PlayerBuild`, `TuningMaker` (*Aleatora > Make Tuning*), EditMode tests | Editor |
@@ -338,9 +341,130 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
   `MissingComponentException` as the pointer moved (found by Jon in the Editor; the menu check
   moves no pointer and runs a player).
 
+## MIDI
+
+### As built (MIDI-1, 2026-11-15, branch `midi-1-port`)
+
+Our own wrapper over `winmm.dll` (Design, ruling 27), plain C# in `Midi/`.
+
+- **`MidiMessage`**: short messages packed as `midiOutShortMsg` takes them (status lowest, then
+  the two data bytes); channels 1–16, clamped, as are the data to 0–127. `NoteOn`, `NoteOff`
+  (release velocity 0 unless given), `ControlChange`, `AllNotesOff` (CC 123), and `Panic`: the
+  2,048 note offs (every note, every channel; ruling 32 and the plan's decision 12), made once.
+  Readers (`Kind`, `Channel`, `Data1`, `Data2`, `IsNoteOn`, `IsNoteOff`, `IsAllNotesOff`) and
+  `Describe` for logs.
+- **`IMidiOutput`**: `Name`, `Send(int)`, `Dispose`. Sends may come from two threads.
+- **`WinMm`** (internal): `midiOutGetNumDevs`, `midiOutGetDevCapsW`, `midiOutOpen` (no
+  callback), `midiOutShortMsg`, `midiOutReset`, `midiOutClose`, and `ErrorText` over
+  `midiOutGetErrorTextW`. `timeBeginPeriod` comes with MIDI-2's clock.
+- **`WinMmOutput`** (internal; not in the plan, which had the port inside `MidiPorts`): an open
+  port. A lock keeps sends and closing apart; `Dispose` resets (ending every note on every
+  channel) and closes; a finalizer closes a port never disposed. A failed send keeps Windows'
+  words in `LastError`.
+- **`MidiPorts`**: `Outputs` lists afresh each time, in Windows' order, without any port whose
+  name starts "Microsoft GS Wavetable" (ruling 28; `IsHidden`). `TryOpen(name, …)` opens the
+  first listed port of that name; a name not listed gives "Greedo (not found)", one that won't
+  open gives Windows' words. Off Windows, or without winmm, nothing is listed or opened.
+- **`RecordingOutput`**: keeps each message with its time (its own `Stopwatch`, or a clock
+  given), and what is sounding (note on adds; note off, note on at 0 or CC 123 on its channel
+  removes; `Dispose` clears). Thread-safe.
+- **`Game/MidiTuning`**, on `AleatoraTuning` as `Midi` (added to the asset): `Channel` 1, `Bpm` 120
+  (20–300), `Velocity` 100, `NoteLength` 0.9
+  (0.05–1; a share of the beat, called `Gate` until Jon asked for a clearer name).
+- **`Game/MidiPlayback`**, added to the `Aleatora` object by the bootstrap (`Aleatora.Midi`):
+  `Begin` takes the tuning's channel and opens the saved port (`Aurumworks.Midi.Output`, "" for
+  None), **but none in a self-test**. `Choose(name)` saves (and `Settings.Save`s) and opens;
+  `Use(output)` puts a stand-in in, unsaved; `Error` says why the chosen port isn't open;
+  `Panic`; `Close` sends All Notes Off on `Channel`, then disposes. `OnDisable` (which leaving
+  play mode, a script reload and Quit to Menu's scene load all come through) and
+  `OnApplicationQuit` close.
+- **Run In Background is on** (ruling 31; `ProjectSettings.asset`, `runInBackground: 1`).
+- **Jon's machine** (2026-11-15): loopMIDI ports "Greedo" and "Han". Windows describes them as it
+  does any port (manufacturer 1, product 102, MIDI port), so nothing in winmm says "virtual";
+  loopMIDI keeps its ports' names under `HKCU\Software\Tobias Erichsen\loopMIDI\Ports`, which
+  is how the EditMode test finds one to open. Windows MIDI Services is installed (`wdmaud2.drv`,
+  `MidisrvTransferComplete`), and winmm sees the ports through it.
+
+### As built (MIDI-2, 2026-11-15, branch `midi-2-player`)
+
+- **`Midi/NotePlayer`**: the schedule, no clock of its own; every call says the time (seconds).
+  Its own lock, so the clock thread and the main thread may both call it. A copy of the notes;
+  `SetBpm` (20–300), `SetChannel`, `Velocity`, `NoteLength`, `Loop`, `Endless` (each turns the
+  other off), `Source`; `Play(now)`, `Pause(output)`, `Stop(output)`, `Release(output)`,
+  `Panic(output)`, `Advance(now, output)`; `IsPlaying`, `IsPaused`, `Position`, `Sounding`,
+  `Count`, `NoteAt`. The limits and defaults are its constants (`MidiTuning` refers to them, so
+  `Midi/` needs nothing from `Game/`). Readings where the plan was silent, accepted by Jon in
+  MIDI-4 (Design, ruling 35):
+  - *Pause*, then *Play*: the next note goes on at once, and the beats run from it.
+  - *BPM* while playing: the next note goes on a beat at the new tempo after the last note
+    went on (at once if that time is past); the note sounding keeps its length unless the next
+    note comes first.
+  - A note on found more than a beat late (the clock held up) goes on now and the beats run from
+    it, rather than the missed notes in a burst.
+  - `SetNotes(notes)` starts from the first on the next beat (*Generate*);
+    `SetNotes(notes, keepPosition: true)` plays on from the playhead (*Step*, *Tonic*). The note
+    sounding goes to its note off either way.
+  - The end (loop off) is found at the beat after the last note: playing until then, then
+    `Position` −1 and *Play* starts from the first.
+  - `Position` is the note whose beat it is: framed through its gap to the next beat, kept while
+    paused, −1 when stopped.
+- **`Midi/INoteSource`**: `TryNext(out note)`, *Endless*'s next note. Called **on the clock
+  thread inside the player's lock**, past the last note, once a beat. The page's source (MIDI-3)
+  needs its own lock around the generator and voicing, a queue of what it made for the main
+  thread to show, and must never call the player while holding that lock (the lock order is
+  `MidiPlayback`'s, then the player's, then the source's or the output's).
+- **`Game/MidiPlayback`** gains the player and the clock: `Player` (to read, and for what sends
+  nothing), `Now` (its `Stopwatch`), `SetNotes`, `Bpm`, `Channel` (a change ends the note on the
+  old channel), `Play`, `Pause`, `Stop`, `Panic` (the player's: playing goes on), `Shutdown`
+  (stops the player, ends the thread, closes; `OnDisable` and quitting call it), `IsClockRunning`.
+  The thread starts on *Play* and ends by itself once the player isn't playing: background,
+  above normal priority, `timeBeginPeriod(1)` for its life (`WinMm.BeginMillisecondTimer`),
+  `Advance` under the playback's lock, then `Sleep(1)`. An exception stops the player and is
+  logged from `Update`. A change of port (`Choose`, `Use`) ends the note on the old port and plays
+  on, on the new one. `Begin` takes the tuning's BPM, velocity and note length too.
+- **Measured** (EditMode, 2026-11-15, Jon's machine): 16 notes at 300 BPM through the thread,
+  mean 0.57 ms late, worst 1.18 ms.
+
+### As built (MIDI-3, 2026-11-15, branch `midi-3-page`)
+
+- **`Midi/MelodySource`** (not named in the plan): the page's generator and voicing behind their
+  own lock, Endless's `INoteSource`. `Begin(generator, voicing, mask)`, `SetVoicing`,
+  `SetSettings`, `Step()` (the page's), `TryNext` (the clock thread's). Every note made, from
+  either, goes into one queue in the order made; `Drain(list, distribution)` hands them to the
+  page with the last note's distribution. It never calls the player.
+- **`NotePlayer.SyncRoot`** (new): the player's lock. The page holds it while it changes its melody
+  and the player's notes together (*Generate*, *Step*, *Tonic*: take what Endless made, change,
+  `SetNotes`), so Endless can't add a note between them. Lock order: `MidiPlayback`'s, the
+  player's, the source's or the output's. Each frame the page drains the queue (no player lock)
+  and grows the strip, the bars and the lists; its melody and the player's are the same note for
+  note (tested on made-up times and on a real thread).
+- **`View/MidiPage`** (static, a dialog): *MIDI*, *Output*, then *None* and each port as buttons,
+  the saved one in accent (so it is selected as the page opens); a saved port not listed shows
+  as "Greedo (not found)"; `MidiPlayback.Error` in the danger colour under the list; *Refresh*,
+  *Back*. Pressing a port `Choose`s it, then the page **closes and opens again**, built afresh
+  (*Refresh* the same, with *Refresh* selected). `OutputName`: the open output's name, "None", or
+  the saved name with "(not open)" or "(not found)".
+- **Settings**: a *MIDI* row (`SettingsPage.More`), a button reading "MIDI: Greedo" that opens the
+  MIDI page and reads the choice again as it closes. Only with the game's `MidiPlayback`.
+- **The transport** on `MelodiesPage`, a row across the top of the *Melody* panel: *Play* (reads
+  *Pause* while playing), *Stop*, *Loop*, *Endless*, *Panic!*, *Channel* (1–16), *BPM*
+  (`InputField: BPM`; 20–300, anything else puts the last back), *Output* (the port's name only,
+  the button's object `Button: Output`). Widths are fixed but *Output*'s, which takes the rest
+  (about 170 px of the 1,920 canvas). The panels above gave height: *The set* 0.805–1, *Next note*
+  0.61–0.795, *Transitions* and the graph from 0.28, *Melody* 0–0.27. The page's controls start as
+  the player stands: Loop, Endless, Channel and BPM live on `MidiPlayback` for the run (the
+  tuning's at start), not saved. *Panic!* is a plain button, not the danger colour. Closing the
+  page (`OnDestroy`) stops playback and takes the source off the player; the MIDI page over it
+  doesn't. *Step* and *Tonic* play on from the playhead; *Generate* and a new *Set* start from
+  the first note on the next beat. The *Output* label follows the open output each frame.
+- **`MelodyStrip`**: `SetPlayhead(index in the melody)`, `Playhead`, `PlayheadColumn`; the note
+  playing framed 3 px in the theme's text colour, a little outside the strip; the newest note's
+  frame stays in Line. A note off the strip's left edge plays with nothing framed.
+
 ## Checks
 
-- **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2, 131 as of M3:
+- **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2, 131 as of M3,
+  166 as of MIDI-1, 193 as of MIDI-2, 200 as of MIDI-3:
   - `HexCoordTests`: Q + R + S = 0; the directions as named; a neighbour is one step away and its
     opposite comes back; six distinct neighbours; distance symmetric with the triangle
     inequality; equality and hashing; rounding a centre gives the cell; points round a corner
@@ -376,6 +500,33 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
   - `MelodiesPageTests` (M3): shares in hundredths at the edges; set names, and every shipped
     set has a corpus and a mode; the temperature slider's ends, middle and round trip; each drawn
     view has a CanvasRenderer (fails without the attribute, checked).
+  - `MidiMessageTests` (MIDI-1): note on and off and CC 123 bytes on channels 1 and 16; channel
+    and data clamped; the readers; velocity 0 ends a note; the panic's 2,048, each note and
+    channel once.
+  - `MidiPortsTests` (MIDI-1): listing doesn't throw; GS Wavetable never listed nor opened; a port
+    not there, or no name, doesn't open and says so; **a loopMIDI port** (found through loopMIDI's
+    registry key) opens, takes an All Notes Off, closes and opens again (skipped without one;
+    ruling 33). It is the only test that opens a port, and it sends no note.
+  - `MidiPlaybackTests` (MIDI-1): `RecordingOutput` keeps what, when and what is sounding;
+    `MidiPlayback` with a recording: `Panic`, `Close`'s All Notes Off on the channel in use,
+    another output closing the first, the channel clamped; `MidiTuning`'s defaults. `Begin` is
+    never called, so no saved port opens.
+  - `NotePlayerTests` (MIDI-2), on made-up times advanced every millisecond: four notes at 120
+    on at 0, 0.5, 1, 1.5 and off 0.45 after each; channel and velocity in the bytes; a repeated
+    note off then on at the same time; loop off ends with nothing sounding and *Play* restarts;
+    loop on wraps; *Loop* and *Endless* exclusive; *Pause* and *Stop* leave nothing sounding,
+    *Play* resumes or restarts; *Endless* plays 12 notes past 4 from the generator, the same as
+    *Step* from the seed; no source ends it; *Panic* leaves the next note on its beat; *BPM*
+    slower and faster; clamped; a channel change ends the note on the old; new notes from the
+    next beat, or from the playhead; a note found late; no output; nothing to play.
+  - `MidiPlaybackTests` (MIDI-2): the clock thread plays 16 notes at 300 BPM, each within 5 ms
+    (the spread logged); *Pause* and *Stop* end the thread with nothing sounding, *Play* resumes;
+    `Shutdown` while playing; a change of port while playing.
+  - `MelodySourceTests` (MIDI-3): `Step` queues what the generator and voicing make, in order,
+    with the last distribution; `TryNext` the same notes; not ready makes nothing and Endless
+    ends; `Begin` drops what waited; voicing and settings from the next note; the page's melody
+    stays the player's with *Step* between Endless's notes, on made-up times and on a real thread
+    at 300 BPM (19 notes, 15 from *Step*, on the first run).
   - Only the M2 tests draw random numbers, from `Rng` with fixed seeds.
 - **The menu check** (`MenuCheck.cs`), as of M0 (10 screenshots): the template's walk (main menu,
   Settings, Play, session menu and its Settings, Quit to Menu), with no volumes and no
@@ -399,10 +550,27 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
   of 5 and on the grid's row of ♭3 show those rows; *Tonic* D moves every note; *Set*
   `irish_dorian` (52 arcs, "Irish · dorian"; `4-Dorian`); the asset's set unchanged; Escape
   closes it and the selection returns to *Play* (*Resume* from the session menu). 12 screenshots.
+  As of MIDI-1, `CheckMidi` after `CheckGenerator`: the bootstrap made `MidiPlayback`; it opened
+  no port; the outputs (logged) don't list GS Wavetable; with a `RecordingOutput` in place,
+  *Panic* sends 2,048 note offs and leaves nothing sounding; `Close` sends All Notes Off on the
+  channel in use and disposes it.
+  As of MIDI-3, `CheckMidiPage` from Settings (*MIDI*): it opens over Settings; *None* first,
+  *Refresh* and *Back*, no GS Wavetable, one button in accent; navigation stays in it (`5-Midi`);
+  *Refresh* builds it again with *Refresh* selected; Escape closes it to Settings' *Back*. In
+  `CheckMelodies` (all through), `CheckTransport` after `4-Melodies`, with a `RecordingOutput`:
+  *Output* reads its name; *Channel* 3, *BPM* 300 (301 puts 300 back); *Play*: it reads *Pause*,
+  the first four note ons are the melody's first four on channel 3, 0.2 s apart (to 15 ms), each
+  note off 0.18 s on; the strip frames the player's note (`5-Playing`); *Stop* leaves nothing
+  sounding or framed; *Loop* with four notes wraps; *Endless* turns Loop off and plays past note
+  32, the page's melody the player's; *Panic!* sends 2,048 and playing goes on; *Output* opens the
+  MIDI page over the page (as from Settings) and playing goes on; *Stop*, *Generate* again. At
+  the end, Escape while playing closes the page with nothing sounding, and the recording is
+  closed for `CheckMidi`. 14 screenshots.
   `menucheck.sh` takes `WIDTH` and `HEIGHT` (1920 × 1080 unless given).
 - **Runs (2026-11-15):** `m0-setup` and `m0-setup2` on `main` (exit 0; the second left the tree
   clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean). M1: EditMode tests 69 of 69;
   `m1-tables` on `m1-tables` (exit 0, 51 checks held, tree clean). Before merging M1 (with the
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
   `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128, then 131 of 131 after the CanvasRenderer fix; `m3` at
-  1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean).
+  1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean). MIDI-1: EditMode tests 166 of 166 (the loopMIDI test
+  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots).

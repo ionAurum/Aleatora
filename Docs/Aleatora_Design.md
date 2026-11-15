@@ -60,8 +60,9 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 22. **`Gap` is never above 0, and the Inspector hides it** (2026-11-15). The cells touch, so the
     colliders tile as ruling 14 wants; the visual gap between pads is in the cell's mesh. This
     settles M0's open item on parting colliders.
-23. **The default window is 1920 × 1080** (2026-11-15; Jon wrote "1920x180", read as 1080). It
-    applies when the player runs windowed; it starts in Fullscreen Window.
+23. **The default window is 1920 × 1080** (2026-11-15; Jon wrote "1920x180", read as 1080, and
+    confirmed 1080 the same day). It applies when the player runs windowed; it starts in
+    Fullscreen Window.
 24. **Dithering is on for the Main Camera** (2026-11-15), set by Jon, for the gel glow's gradients.
 25. **`m3-view` merges to `main`** (2026-11-15), ending M4.
 26. **MIDI comes first of decision 7's plans** (2026-11-15). Its first proof: decide on and
@@ -70,10 +71,43 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     controls, loop included, on the *Melodies* page; note on and off on that channel, driven by
     the generated melody, as quarter notes at the BPM. One direction only; MIDI in comes later.
     The plan: `Docs/Aleatora_Midi_Plan.md`.
+27. **Our own MIDI library** (2026-11-15; the MIDI plan's decision 1, its default). A small wrapper
+    over Windows' `winmm.dll`, behind `IMidiOutput`. Jon: Aleatora is Windows-only.
+28. **Microsoft GS Wavetable Synth is hidden from the port list** (2026-11-15; MIDI decision 3, its
+    default). Jon: Aleatora is for serious composers and producers.
+29. **The channel is a dropdown, 1 to 16, for now** (2026-11-15; MIDI decision 4). Jon hadn't
+    specified the control clearly. Later something richer: checkboxes, perhaps purpose-specific
+    ones (several channels at once, each for a purpose).
+30. **Loop repeats the melody as it stands; and an *Endless* mode** (2026-11-15; MIDI decision 7).
+    *Endless* keeps stepping the generator, playing each new note as it is made. Jon: "a cool
+    idea".
+31. **Run In Background is on** in the player (2026-11-15; MIDI decision 10, its default).
+32. **A classic *Panic!* button** (2026-11-15): note off for all 128 MIDI notes.
+33. **Virtual or mock MIDI ports are fine for Claude's tests** (2026-11-15): a loopMIDI port, or a
+    recording output. No hardware port.
+34. **MIDI out is proved** (2026-11-15, MIDI-4). Jon played Aleatora into Reaper through a
+    loopMIDI port ("Greedo"); Reaper received the note ons and offs.
+35. **The MIDI work as built is accepted** (2026-11-15, MIDI-4). Jon: "I accept everything you
+    suggested & built." So the MIDI plan's decisions 2, 5, 6, 8, 9 and 11 stand as their defaults,
+    and decision 12 as built; and the readings flagged in MIDI-2 and MIDI-3 (Tech, *MIDI*) stand:
+    - *Panic!* sends note off on all 16 channels (2,048), doesn't stop playback, and is a plain
+      button, not the danger colour.
+    - *Pause*, then *Play*: the next note at once. A *BPM* change while playing: the next note a
+      beat at the new tempo after the last note went on (at once if that's past). Choosing another
+      port while playing plays on, on the new port.
+    - The transport row as laid out, the panels above made shorter for it, and *Output* showing
+      only the port's name, cut with "…".
+    - The playhead framed 3 px in the theme's text colour; the newest note keeps its thinner frame.
+    - The *MIDI* page closes and opens again after a choice or *Refresh*; a saved port that won't
+      open reads "(not open)", one that's gone "(not found)".
+    - Loop, Endless, Channel and BPM last for the run, not saved.
+36. **The MIDI branches merge to `main`** (2026-11-15): `midi-1-port`, `midi-2-player` and
+    `midi-3-page`, through `midi-3-page`, ending the MIDI plan's MIDI-4.
 
 ## Open, each its own plan later (the plan's decision 7)
 
 - What the grid means musically (the three axes are ready to carry, say, an interval each).
 - How the generator drives the grid.
-- How notes leave Aleatora as MIDI (planned first, ruling 26) and OSC.
+- How notes leave Aleatora as OSC. MIDI out is built (rulings 26 to 36); MIDI in, clock and sync
+  and a richer channel choice are the MIDI plan's *Later*.
 

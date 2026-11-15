@@ -1,4 +1,6 @@
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Aurumworks.Aleatora
 {
@@ -7,7 +9,8 @@ namespace Aurumworks.Aleatora
     /// kept in the framework's Settings and applied as it changes. The main menu and the session
     /// menu open it over themselves (SettingsMenu.Instance.Open); Back, UI Cancel and UI Menu
     /// (Escape, the gamepad's East and Start) close it, which writes the settings to disk. Aleatora
-    /// makes no sound, so it lists no volumes and has no mixer (the template's has both). On the
+    /// makes no sound, so it lists no volumes and has no mixer (the template's has both). Its own
+    /// row is MIDI (MIDI-3): a button showing the MIDI output, which opens the MIDI page. On the
     /// Menus prefab, with SessionMenu.
     /// </summary>
     public class SettingsMenu : MonoBehaviour
@@ -40,7 +43,31 @@ namespace Aurumworks.Aleatora
         public RectTransform Open()
         {
             MenuStack menus = SessionMenu.Menus;
-            return menus != null ? new SettingsPage().Open(menus) : null;
+            return menus != null ? new SettingsPage { More = column => MidiRow(column, menus) }.Open(menus) : null;
         }
+
+        // MIDI: the output's name, on a button that opens the MIDI page; it shows the choice made there as that closes.
+        private static void MidiRow(RectTransform column, MenuStack menus)
+        {
+            MidiPlayback midi = Aleatora.Instance != null ? Aleatora.Instance.Midi : null;
+            if (midi == null)
+            {
+                return;
+            }
+
+            TextMeshProUGUI label = null;
+            Button button = UiKit.Button(column, "MIDI", () =>
+                MidiPage.Open(menus, midi, () =>
+                {
+                    if (label != null)
+                    {
+                        label.text = Label(midi);
+                    }
+                }), 56f);
+            label = button.GetComponentInChildren<TextMeshProUGUI>();
+            label.text = Label(midi);
+        }
+
+        private static string Label(MidiPlayback midi) => "MIDI: " + MidiPage.OutputName(midi);
     }
 }

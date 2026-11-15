@@ -9,7 +9,7 @@ Cinemachine 3.1.7, uGUI with TextMeshPro. Brought up to the Aurumworks framework
 **Read `Docs/Aleatora_Handoff.md` first.** It is the hand-off doc: the state, what comes next and
 what to read for it. Jon's rulings are in `Docs/Aleatora_Design.md`; how each system is built is
 in `Docs/Aleatora_Tech.md`; the plans with their milestones are `Docs/Aleatora_Markov_Plan.md` (finished) and
-`Docs/Aleatora_Midi_Plan.md` (MIDI out, in hand). Read
+`Docs/Aleatora_Midi_Plan.md` (MIDI out, finished). Read
 the sections the hand-off names, not all of them.
 
 ## Layout
@@ -18,7 +18,7 @@ the sections the hand-off names, not all of them.
   `Shaders/` (the cells' gel pad shader, `GelHexPad.shader`: `Docs/Aleatora_Tech.md`, *Cell look*).
 - `Assets/Aurumworks/Scripts/`: our code, in Assembly-CSharp, namespace `Aurumworks.Aleatora`.
   The folders under it are in `Docs/Aleatora_Tech.md` (*Code layout*). The grid's coordinates,
-  shapes and layout, and everything under `Music/`, are plain C# with no `UnityEngine` in them, so
+  shapes and layout, and everything under `Music/` and `Midi/`, are plain C# with no `UnityEngine` in them, so
   EditMode tests run them whole.
 - Code shared with the other Aurumworks projects is in `com.aurumworks.core`, taken by path from
   `../Framework/` (its own repository; namespace `Aurumworks`): settings, the UI kit and its theme,

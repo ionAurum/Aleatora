@@ -6,9 +6,9 @@ namespace Aurumworks.Aleatora
     /// <summary>
     /// Aleatora, made in code as each scene loads (Docs/Aleatora_Tech.md, Building in code): this
     /// object reads the tuning (AleatoraTuning) and makes the board (HexGrid, on a child at the
-    /// origin) and what selects its cells (GridSelection). The scene holds the camera, the
-    /// Cinemachine camera and the lights. Quit to Menu loads the scene afresh, and with it a fresh
-    /// Aleatora. It makes no sound.
+    /// origin), what selects its cells (GridSelection) and MIDI out (MidiPlayback, which opens the
+    /// saved port). The scene holds the camera, the Cinemachine camera and the lights. Quit to Menu
+    /// loads the scene afresh, and with it a fresh Aleatora. It makes no sound.
     /// </summary>
     public class Aleatora : MonoBehaviour
     {
@@ -23,6 +23,9 @@ namespace Aurumworks.Aleatora
 
         /// <summary>What selects the board's cells.</summary>
         public GridSelection Selection { get; private set; }
+
+        /// <summary>MIDI out: the open port.</summary>
+        public MidiPlayback Midi { get; private set; }
 
         // Statics survive play mode when domain reload is disabled; reset them.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -70,6 +73,9 @@ namespace Aurumworks.Aleatora
 
             Selection = board.AddComponent<GridSelection>();
             Selection.Begin(Grid, Tuning.Grid);
+
+            Midi = gameObject.AddComponent<MidiPlayback>();
+            Midi.Begin(Tuning.Midi);
         }
 
         private void OnDestroy()

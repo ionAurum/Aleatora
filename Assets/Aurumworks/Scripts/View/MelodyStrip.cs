@@ -9,7 +9,9 @@ namespace Aurumworks.Aleatora
     /// The last notes of a melody as a piano roll (M3, task 5): a column per note, the newest at the
     /// right, and a row per semitone over the voicing's range, low at the bottom. The tonic's rows
     /// are marked and named at the left; a note of the mode is in the theme's accent, any other in
-    /// danger. The newest note's MIDI number is written beside it.
+    /// danger. The newest note's MIDI number is written beside it. While the melody plays (MIDI-3,
+    /// the MIDI plan's decision 9) the playing note's column is framed in the theme's text colour;
+    /// a note that has scrolled off the strip's left edge plays with nothing framed.
     /// </summary>
     [RequireComponent(typeof(CanvasRenderer))] // Graphic doesn't, and the Editor never adds one itself
     public class MelodyStrip : MaskableGraphic
@@ -27,12 +29,20 @@ namespace Aurumworks.Aleatora
         private int _low = 55;
         private int _high = 79;
         private int _tonic = 60;
+        private int _first;         // the index in the melody of the first note shown
+        private int _playhead = -1; // the index in the melody of the note playing, or -1
 
         /// <summary>How many notes it shows now: up to Columns.</summary>
         public int Count => _notes.Count;
 
         /// <summary>The notes shown, oldest first, as MIDI note numbers.</summary>
         public IReadOnlyList<int> Notes => _notes;
+
+        /// <summary>The index in the melody of the note playing (SetPlayhead), or −1.</summary>
+        public int Playhead => _playhead;
+
+        /// <summary>The column framed as the playhead (0 is the oldest note shown), or −1: none playing, or off the strip.</summary>
+        public int PlayheadColumn => _playhead >= _first && _playhead - _first < _notes.Count ? _playhead - _first : -1;
 
         /// <summary>Adds the strip to rect, which it fills.</summary>
         public static MelodyStrip On(RectTransform rect)
@@ -55,7 +65,8 @@ namespace Aurumworks.Aleatora
         {
             _notes.Clear();
             _inMode.Clear();
-            for (int i = Mathf.Max(notes.Count - Columns, 0); i < notes.Count; i++)
+            _first = Mathf.Max(notes.Count - Columns, 0);
+            for (int i = _first; i < notes.Count; i++)
             {
                 _notes.Add(notes[i]);
                 _inMode.Add(inMode[i]);
@@ -65,6 +76,19 @@ namespace Aurumworks.Aleatora
             _high = Mathf.Max(low, high);
             _tonic = tonic;
             Place();
+            SetVerticesDirty();
+        }
+
+        /// <summary>Frames the note at this index in the melody last shown as the one playing; −1 for none.</summary>
+        public void SetPlayhead(int index)
+        {
+            index = index < 0 ? -1 : index;
+            if (index == _playhead)
+            {
+                return;
+            }
+
+            _playhead = index;
             SetVerticesDirty();
         }
 
@@ -169,6 +193,13 @@ namespace Aurumworks.Aleatora
             {
                 float x = left + (Columns - 1) * column;
                 ViewMesh.Frame(vh, x - 2f, area.yMin, x + column + 2f, area.yMax, 2f, theme.Line);
+            }
+
+            int playing = PlayheadColumn;
+            if (playing >= 0)
+            {
+                float x = left + (offset + playing) * column;
+                ViewMesh.Frame(vh, x - 3f, area.yMin - 3f, x + column + 3f, area.yMax + 3f, 3f, theme.Text);
             }
         }
     }
