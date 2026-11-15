@@ -450,17 +450,26 @@ shows and steps melodies; it plays nothing.
    degree names along both edges. A click on a row (pointer only; it isn't in the keyboard
    navigation) shows that row's bars in *Next note* with its context. The row of the newest note
    is framed.
-4. **`View/MelodyStrip`**: the last 32 notes as a piano roll, one column a note, one row a
+4. **`View/TransitionGraph`** (Jon, 2026-11-15; Design ruling 18): beside the grid, the same
+   order-1 table as a directed graph. Twelve nodes on a chromatic circle, 1 at the top and
+   clockwise, each labelled with its degree's name; in-mode nodes in accent, the rest muted. An
+   arc from a node to each degree that follows it whose row share is at least
+   `MelodyViewTuning.MinimumArcShare` (default 0.05), curved so the two directions between a pair
+   don't overlap, with an arrowhead at its end and its share as a label (`.42`); a repeated note
+   is a small loop outside its node. Drawn with a `MaskableGraphic` in reference pixels, made once
+   per set. A click on a node (pointer only, like the grid's rows) shows its row in *Next note*;
+   the newest note's node is framed and its arcs drawn in front.
+5. **`View/MelodyStrip`**: the last 32 notes as a piano roll, one column a note, one row a
    semitone over the voicing's range, the tonic's rows marked, in-mode notes in accent and
    chromatic ones in danger; the newest at the right, with its MIDI note number.
-5. **The menu check grows** (`MenuCheck.cs`): open *Melodies* from the main menu; it opens with
-   *Generate* selected; set the seed to 1 and press *Generate*; 32 notes in the strip; screenshot
-   (`4-Melodies`); *Order* to 4 and *Step* eight times, each step's `OrderUsed` ≤ 4 and the bars'
-   sum 1; switch *Set* to `irish_dorian`, screenshot (`4-Dorian`); Cancel closes the page and hands
+6. **The menu check grows** (`MenuCheck.cs`): open *Melodies* from the main menu; it opens with
+   *Generate* selected; set the seed to 1 and press *Generate*; 32 notes in the strip; the graph
+   draws at least one arc and none below the minimum; screenshot (`4-Melodies`); *Order* to 4 and
+   *Step* eight times, each step's `OrderUsed` ≤ 4 and the bars' sum 1; switch *Set* to `irish_dorian`, screenshot (`4-Dorian`); Cancel closes the page and hands
    the selection back; open it from the session menu too. `UiProbe.Reachable` reaches every
    control from *Generate*; `UiProbe.CheckWheel` if anything scrolls. At 1920 × 1080 and a smaller
    window (as the menu check runs them).
-6. **Look at the screenshots** before reporting: labels legible, nothing overlapping at the small
+7. **Look at the screenshots** before reporting: labels legible, nothing overlapping at the small
    size.
 
 **Done when** the menu check passes with its new checks and screenshots. **Hard stop:** Jon
@@ -482,7 +491,7 @@ tuning he likes goes on the tuning asset; `m3-view` merges to `main`. Then decis
 | M0 | `main`, `m0-grid` | Git, the framework's conventions and menus (no sound); the grid rebuilt on k × m × n in both orientations; the tuning asset; docs | Menu check after each part; grid tests; **Jon in the Editor, tuning the look** |
 | M1 | `m1-tables` | The text tables, `MarkovTable`, its reader, `MarkovLibrary` | EditMode tests |
 | M2 | `m2-generator` | `Rng`, the generator with back-off, voicing to MIDI notes | EditMode tests |
-| M3 | `m3-view` | The *Melodies* page: bars, the transition grid, the strip | Menu check with screenshots; **Jon looks** |
+| M3 | `m3-view` | The *Melodies* page: bars, the transition grid and graph, the strip | Menu check with screenshots; **Jon looks** |
 | M4 | merge | Rulings and tuning | Jon |
 
 ## Risks

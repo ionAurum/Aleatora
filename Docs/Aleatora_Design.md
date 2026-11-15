@@ -42,6 +42,12 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     the Intuitive Instruments Exquis: the `Aurumworks/GelHexPad` shader, on
     `Rounded Hexagonal Prism.prefab` through `Gel Hex Pad.mat`. A cell's state colour is the colour
     it glows (Tech, *Cell look*).
+18. **The *Melodies* page has a transition graph beside the transition grid** (2026-11-15). The
+    order-1 table drawn a second way: a directed graph whose twelve nodes are the degrees, labelled
+    with their names, on a chromatic circle (1 at the top, b2, 2, … 7 clockwise; in-mode nodes in
+    accent, the rest muted). An arc runs from a degree to each degree that follows it, labelled
+    with its weight, the row's share written as `.42`. Only arcs whose share is at least a minimum
+    on the tuning asset are drawn (default 5%); a repeated note is a small loop on its node.
 
 ## Open, each its own plan later (the plan's decision 7)
 
