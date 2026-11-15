@@ -150,7 +150,9 @@ The board is MathWorld's k × m × n hexagonal grid graph, in cube coordinates (
   grid's half-cell centring error is gone.
 - **The cell's collider** stays on the prefab (Design, ruling 14): a non-convex MeshCollider on
   `Mesh-Hexagon-Collider.asset`, a full hexagon one unit to a corner, so at `Gap` 0 the colliders
-  tile without the visual gap. Picking doesn't use it. It scales with the cell.
+  tile without the visual gap. Picking doesn't use it. It scales with the cell, so a `Gap` above
+  0 parts the colliders too, which ruling 14 doesn't want (Design, *Open, from M0's report*).
+- Unity's audio is disabled in Project Settings, and the *Hexagons* layer is gone (2026-11-15).
 
 ## Checks
 

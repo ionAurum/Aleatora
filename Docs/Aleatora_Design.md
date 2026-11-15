@@ -33,7 +33,11 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 13. **`Hexagon.prefab` is deleted** (2026-11-15).
 14. **The cell prefab keeps its collider on `Mesh-Hexagon-Collider.asset`** (2026-11-15). Jon's
     reason: bodies collide with a simple mesh, cheaply, and don't catch in the visual gap between
-    cells or bounce off their rounded edges. Nothing uses it yet; see *Open, from M0*.
+    cells or bounce off their rounded edges. **The collider stays full-size while only the
+    visual shrinks.** The idea behind it, from Jon's prototyping: the emitter cone spawns
+    rigidbodies, and one striking a cell triggers a note or the like. Not in any milestone yet.
+15. **Unity's audio is disabled** (2026-11-15). Project Settings > Audio > Disable Unity Audio.
+16. **The *Hexagons* layer is removed** (2026-11-15). Layer 10 is unnamed again.
 
 ## Open, each its own plan later (the plan's decision 7)
 
@@ -44,11 +48,6 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 ## Open, from M0's report (2026-11-15)
 
 - The default window size is 1024 × 768 (the template's is 1920 × 1080); left as found.
-- The *Hexagons* layer itself is still in the project (`ProjectSettings/TagManager.asset`),
-  used by nothing.
-- The cell collider (ruling 14) scales with the cell, so a `Gap` above 0 opens real gaps between
-  colliders. If bodies ever roll on the board, either the collider stays full-size while the
-  visual shrinks, or the board gets one collider of its own. No milestone in the plan puts a
-  Rigidbody on the board yet.
-- With no AudioListener the Editor may log "There are no audio listeners in the scene" in play.
-  Project Settings > Audio > Disable Unity Audio silences it and fits ruling 1; Jon to say.
+- **Not yet as ruling 14 says:** the collider scales with the cell and `Gap` moves cells apart,
+  so a `Gap` above 0 opens real gaps between colliders. To be built when the emitter and its
+  bodies get a plan: the colliders keep tiling at every `Gap` and only the visual shrinks.
