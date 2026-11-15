@@ -6,11 +6,10 @@ namespace Aurumworks.Aleatora.Tests
     /// <summary>
     /// EditMode tests of placing degrees as MIDI notes: always in the range and in 0 to 127, each in
     /// its pitch class; a melody's first note nearest the tonic; a tritone tie toward the middle; a
-    /// range widened or turned round when it must be; and the leaps. The plan asked for no leap
-    /// larger than a tritone with a range of an octave and a half or more; that can't hold at the
-    /// range's edges, where the nearest placement lies outside and moves an octave inward. So: no
-    /// leap above a tritone from a note at least a tritone inside both edges, and none of an octave
-    /// or more anywhere.
+    /// range widened or turned round when it must be; and the leaps. Jon's rule (2026-11-15): any
+    /// leap up to and including an octave, up or down. Nearest the note before, a leap is at most a
+    /// tritone from a note at least a tritone inside both edges; at the edges, where the nearest
+    /// placement lies outside and moves an octave inward, it can be 7 to 11.
     /// </summary>
     public class VoicingTests
     {
@@ -88,7 +87,7 @@ namespace Aurumworks.Aleatora.Tests
         [TestCase(55, 79)]
         [TestCase(48, 66)]
         [TestCase(36, 84)]
-        public void LeapsStayWithinATritoneAwayFromTheEdges(int low, int high)
+        public void LeapsAreAnOctaveAtMost(int low, int high)
         {
             var voicing = new Voicing(60, low, high);
             var rng = new Rng(23);
@@ -100,7 +99,7 @@ namespace Aurumworks.Aleatora.Tests
                 if (previous >= 0)
                 {
                     int leap = Math.Abs(note - previous);
-                    Assert.That(leap, Is.LessThan(Degree.Count), $"note {i}: {previous} to {note}");
+                    Assert.That(leap, Is.LessThanOrEqualTo(Degree.Count), $"note {i}: {previous} to {note}");
                     if (previous - low >= 6 && high - previous >= 6)
                     {
                         inside++;

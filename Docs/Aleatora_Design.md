@@ -48,6 +48,13 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     accent, the rest muted). An arc runs from a degree to each degree that follows it, labelled
     with its weight, the row's share written as `.42`. Only arcs whose share is at least a minimum
     on the tuning asset are drawn (default 5%); a repeated note is a small loop on its node.
+19. **The *Melodies* page as built in M3 is accepted** (2026-11-15). Jon: "it works as expected."
+    The layout (the graph full height at the right, the bars and grid stacked at its left), the
+    arcs bowing inward, the bars scaled to the tallest, a melody made on opening, the opaque
+    backdrop, and `b3`/`#4` in the default font all stand.
+20. **The voicing may leap up to an octave** (2026-11-15). Any leap up to and including an octave,
+    up or down, is allowed; it replaces the plan's "no leap larger than a tritone". Ruling 7
+    stands: nearest the note before, an octave inward at the range's edges (leaps of 7 to 11 there).
 
 ## Open, each its own plan later (the plan's decision 7)
 
@@ -64,22 +71,4 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 
 ## Open, from M2's report (2026-11-15)
 
-- **Voicing at the range's edges.** The plan's rule (nearest the note before; outside the range,
-  an octave inward) leaps 7 to 11 semitones at the edges, so its test "no leap larger than a
-  tritone" can't hold. Built as the plan says; the test was changed (Tech, *Melody generator*).
-  Jon: keep it, or another rule (say, the nearest placement inside the range)?
 - The seed's default is 1; the plan names none.
-
-## Open, from M3's report (2026-11-15)
-
-M3's hard stop: Jon looks at the *Melodies* page and rules on its layout and colours. Beyond
-the plan, for him to rule on (Tech, *Melodies page*):
-
-- **The layout.** The graph takes the height above the strip, with the bars and the grid stacked
-  at its left (the plan had the bars across the top; the graph needed the room).
-- **The graph's arcs bow inward**, the two directions of a pair by `ArcBend` and twice it.
-  Ordinary arcs muted at 60%; the newest note's in accent.
-- **Bars scaled to the tallest**, not to a probability of 1.
-- **The page opens with a melody made**, and covers what it opens over (Background, opaque).
-- **No flat or sharp signs**: the theme sets no fonts and the default has neither, so `b3`,
-  `#4`. A font with them in the theme's *Body* shows ♭3 and ♯4.

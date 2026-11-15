@@ -272,11 +272,11 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
   `Previous`. Beyond the plan: values are kept within 0–127, a backward range is swapped, and a
   range narrower than 11 semitones is widened upward (downward at the top), so every degree has a
   placement in it.
-  **The plan's leap test can't hold:** from a note near an edge, the nearest placement can be
-  outside the range, and moving it an octave inward makes a leap of 7 to 11 semitones (from G5
-  at the top of 55–79, degree 6 is A5 = 81, out, so A4 = 69: a leap of 10). The test asks instead
-  for no leap above a tritone from a note at least a tritone inside both edges, and no leap of an
-  octave anywhere. For Jon (*Open*): whether that is the voicing he wants.
+  **Leaps: an octave at most** (Design, ruling 20, replacing the plan's tritone). From a note
+  near an edge, the nearest placement can be outside the range, and moving it an octave inward
+  makes a leap of 7 to 11 semitones (from G5 at the top of 55–79, degree 6 is A5 = 81, out, so
+  A4 = 69: a leap of 10). `LeapsAreAnOctaveAtMost` asks for no leap above an octave anywhere, and
+  none above a tritone from a note at least a tritone inside both edges.
 - **`Game/MelodyTuning`**, on `AleatoraTuning` as `Melodies` (added to `AleatoraTuning.asset`):
   `Set` (`european_ionian`), the generator's five values as their own Inspector fields with
   tooltips and ranges (`Generator` builds the struct; `Music/` can't use Unity's attributes),
