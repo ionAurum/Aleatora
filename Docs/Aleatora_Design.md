@@ -103,11 +103,16 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     - Loop, Endless, Channel and BPM last for the run, not saved.
 36. **The MIDI branches merge to `main`** (2026-11-15): `midi-1-port`, `midi-2-player` and
     `midi-3-page`, through `midi-3-page`, ending the MIDI plan's MIDI-4.
+37. **MIDI in, and clock and sync with Reaper, come next** (2026-11-15). The technical base
+    layers first; what the incoming data means comes later. Jon plans a musical keyboard for
+    entering chords and the like, for a use he hasn't settled. The plan:
+    `Docs/Aleatora_MidiIn_Plan.md`.
 
 ## Open, each its own plan later (the plan's decision 7)
 
 - What the grid means musically (the three axes are ready to carry, say, an interval each).
 - How the generator drives the grid.
-- How notes leave Aleatora as OSC. MIDI out is built (rulings 26 to 36); MIDI in, clock and sync
-  and a richer channel choice are the MIDI plan's *Later*.
+- How notes leave Aleatora as OSC. MIDI out is built (rulings 26 to 36); MIDI in and clock
+  and sync are planned (ruling 37).
+- What the keyboard's notes do (ruling 37: chords and the like, later).
 
