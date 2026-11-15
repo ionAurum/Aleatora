@@ -120,6 +120,9 @@ namespace Aurumworks.Aleatora
             // The generator makes melodies from the tuning's set, the same for the same seed, in range.
             CheckGenerator();
 
+            // MIDI out (MIDI-1): no port opened in a self-test; Panic and closing, into a recording.
+            CheckMidi();
+
             // The session menu, opened with Escape.
             yield return QueuedInput.Press(Key.Escape);
             SelfTest.Check(Menus.Count == 1 && MenuFocus.IsAnyOpen, "Escape opens the session menu");
@@ -289,6 +292,42 @@ namespace Aurumworks.Aleatora
             Debug.Log($"Menu check: {table.Name}, seed {tuning.Seed}, order {tuning.Generator.Order}: {melody}…");
             SelfTest.Check(same, "the same seed gives the same melody");
             SelfTest.Check(sound, $"200 steps: degrees, orders and notes in {voicing.Low} to {voicing.High}");
+        }
+
+        // MIDI out (MIDI-1): the bootstrap made MidiPlayback and, in a self-test, it opened no port
+        // (the saved one leads into Reaper). Listing the ports doesn't throw and hides Microsoft GS
+        // Wavetable Synth. With a RecordingOutput in its place, Panic sends a note off for every note
+        // on every channel, and closing sends All Notes Off on the channel in use and closes it.
+        private static void CheckMidi()
+        {
+            MidiPlayback midi = Aleatora.Instance != null ? Aleatora.Instance.Midi : null;
+            if (!SelfTest.Check(midi != null, "the bootstrap made MidiPlayback"))
+            {
+                return;
+            }
+
+            SelfTest.Check(!midi.IsOpen, "a self-test opens no MIDI port");
+            IReadOnlyList<string> outputs = MidiPorts.Outputs;
+            Debug.Log("Menu check: MIDI outputs: " + (outputs.Count == 0 ? "none" : string.Join(", ", outputs)));
+            bool hidden = true;
+            foreach (string name in outputs)
+            {
+                hidden &= !MidiPorts.IsHidden(name);
+            }
+
+            SelfTest.Check(hidden, "the MIDI outputs don't list Microsoft GS Wavetable Synth");
+
+            var recording = new RecordingOutput("Menu check");
+            midi.Use(recording);
+            recording.Send(MidiMessage.NoteOn(midi.Channel, 60, 100));
+            midi.Panic();
+            SelfTest.Check(recording.Count == 1 + MidiMessage.PanicCount && recording.SoundingCount == 0,
+                $"Panic sends {MidiMessage.PanicCount} note offs and leaves nothing sounding: {recording.Count - 1}");
+            midi.Close();
+            RecordingOutput.Sent[] sent = recording.Messages;
+            SelfTest.Check(recording.IsDisposed && !midi.IsOpen && sent.Length > 0
+                && sent[sent.Length - 1].Message == MidiMessage.AllNotesOff(midi.Channel),
+                $"closing sends All Notes Off on channel {midi.Channel} and closes the output");
         }
 
         // The Melodies page (M3), opened from a menu by its Melodies button: it opens over it with

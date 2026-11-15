@@ -45,3 +45,8 @@ MonoBehaviour:
     _arrowLength: 12
     _arcLabelSize: 15
     _nodeLabelSize: 20
+  _midi:
+    _channel: 1
+    _bpm: 120
+    _velocity: 100
+    _gate: 0.9
