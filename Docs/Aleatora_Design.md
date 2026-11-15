@@ -55,3 +55,11 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 - **Not yet as ruling 14 says:** the collider scales with the cell and `Gap` moves cells apart,
   so a `Gap` above 0 opens real gaps between colliders. To be built when the emitter and its
   bodies get a plan: the colliders keep tiling at every `Gap` and only the visual shrinks.
+
+## Open, from M2's report (2026-11-15)
+
+- **Voicing at the range's edges.** The plan's rule (nearest the note before; outside the range,
+  an octave inward) leaps 7 to 11 semitones at the edges, so its test "no leap larger than a
+  tritone" can't hold. Built as the plan says; the test was changed (Tech, *Melody generator*).
+  Jon: keep it, or another rule (say, the nearest placement inside the range)?
+- The seed's default is 1; the plan names none.

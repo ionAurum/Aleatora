@@ -1,31 +1,32 @@
 # Aleatora: hand-off
 
-Status (2026-11-15): **M1 built on branch `m1-tables`, waiting for Jon's go-ahead to merge.** M0
-is on `main`. M1: the 17 tables are in `Resources/Markov`; `Music/Degree`, `ModeScale`,
-`MarkovTable`, `MarkovTableReader` and `Game/MarkovLibrary` read them. 69 EditMode tests pass and
-the menu check passes (51 checks, tree clean). What was built is in `Docs/Aleatora_Tech.md`
-(*Melody tables*, "As built"). The plan is `Docs/Aleatora_Markov_Plan.md`; Jon's rulings are in
+Status (2026-11-15): **M2 built on branch `m2-generator`, waiting for Jon's go-ahead to merge.**
+M0, M1 and the gel pads are on `main` (M1 merged `--no-ff` with the gel pads and Jon's Bloom 15
+and `Emitter` off). M2: `Music/Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`,
+`Voicing`, and `Game/MelodyTuning` on the tuning asset (`Melodies`). 107 EditMode tests pass; the
+menu check passes (55 checks, tree clean). What was built: `Docs/Aleatora_Tech.md` (*Melody
+generator*, "As built"). The plan is `Docs/Aleatora_Markov_Plan.md`; Jon's rulings are in
 `Docs/Aleatora_Design.md`.
 
-Also on 2026-11-15, outside the milestones: **the cells are gel pads** (Design, ruling 17;
-Tech, *Cell look*), committed on `m1-tables` at Jon's word. Jon turned Bloom on (intensity 15) and
-set the `Emitter` object inactive.
-
-Open for Jon, none blocking:
-- Dithering on the Main Camera, which the glow wants (Tech, *Cell look*).
-- From M1's report: nothing to rule on. Beyond the plan, for him to know: an empty context is
-  order 0 (the unigram); the menu check now reads the tables; a set whose `set` line is not its
-  file's name is refused.
+Open for Jon:
+- From M2 (`Docs/Aleatora_Design.md`, *Open, from M2's report*): the voicing's leaps at the
+  range's edges (the plan's test couldn't hold; changed); the seed's default (1).
+- Beyond the plan, for him to know: `MelodyStep.IsFirst`; `MelodyGenerator.SetHistory`; the
+  generator's settings are their own Inspector fields on `MelodyTuning`; the allocation test uses
+  Unity's recorder, since Mono's counter counts nothing.
+- Dithering on the Main Camera, which the gel glow wants (Tech, *Cell look*).
 - From M0 (`Docs/Aleatora_Design.md`, *Open, from M0's report*): the window size; the cell
   colliders part when `Gap` is above 0 (ruling 14).
 
-## Next: merge M1, then M2, the generator (branch `m2-generator`, from `main`)
+## Next: merge M2, then M3, the view (branch `m3-view`, from `main`)
 
-On Jon's go-ahead: merge `m1-tables` into `main` (`--no-ff`, as M0 was), then branch.
+On Jon's go-ahead: merge `m2-generator` into `main` (`--no-ff`), then branch. M3 ends in a hard
+stop: Jon looks at the *Melodies* page.
 
-Read: `Docs/Aleatora_Markov_Plan.md` (*Decisions for Jon* 6, *M2*); `Docs/Aleatora_Tech.md`
-(*Melody tables*, *Checks*); `Assets/Aurumworks/Scripts/Music/MarkovTable.cs`;
-`Assets/Aurumworks/Scripts/Game/AleatoraTuning.cs` and `GridTuning.cs` (for `MelodyTuning`).
+Read: `Docs/Aleatora_Markov_Plan.md` (*Decisions for Jon* 4, *M3*); `Docs/Aleatora_Tech.md`
+(*Melody generator*, *Checks*); `Assets/Aurumworks/Scripts/Music/MelodyGenerator.cs`,
+`MelodyStep.cs`; `Game/MelodyTuning.cs`; the menus (`MainMenu.cs`, `SessionMenu.cs`) and
+`../Framework/README.md` for the UI kit.
 
 ## Not in any repository
 
