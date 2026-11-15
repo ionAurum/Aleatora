@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using UnityEngine;
 
 namespace Aurumworks.Aleatora.Tests
 {
@@ -44,6 +45,26 @@ namespace Aurumworks.Aleatora.Tests
             foreach (string name in MarkovLibrary.Names)
             {
                 Assert.That(ViewText.SetName(name), Does.Contain(" · "), name);
+            }
+        }
+
+        // Graphic doesn't require a CanvasRenderer, and in the Editor its getter never adds one
+        // (GetComponent hands back a fake null), so a view without the attribute throws in the
+        // raycaster as the pointer moves. A built player adds one, so the menu check can't see it.
+        [TestCase(typeof(DegreeBars))]
+        [TestCase(typeof(TransitionGraph))]
+        [TestCase(typeof(MelodyStrip))]
+        public void EveryDrawnViewHasACanvasRenderer(System.Type view)
+        {
+            var go = new GameObject("View", typeof(RectTransform));
+            try
+            {
+                go.AddComponent(view);
+                Assert.That(go.GetComponent<CanvasRenderer>() != null, Is.True, view.Name);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
             }
         }
 

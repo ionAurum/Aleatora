@@ -4,8 +4,9 @@ Status (2026-11-15): **M3 built on branch `m3-view`; hard stop, Jon looks at the
 page.** M0, M1, M2 and the gel pads are on `main` (M2 merged `--no-ff`). Ruling 18 (Design): a
 transition graph beside the grid, committed to `main` before branching. M3: `View/MelodiesPage`,
 `DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip`, `ViewText`, `ViewMesh`;
-`Game/MelodyViewTuning` on the tuning asset (`Melody View`). 128 EditMode tests pass; the menu
-check passes at 1920 × 1080 and 1280 × 720 (94 checks, 12 screenshots, tree clean). What was
+`Game/MelodyViewTuning` on the tuning asset (`Melody View`). 131 EditMode tests pass; the menu
+check passes at 1920 × 1080 and 1280 × 720 (94 checks, 12 screenshots, tree clean). The Editor's `MissingComponentException` (no CanvasRenderer) is fixed; the
+menu check was not run again for it (a player was never affected). What was
 built: `Docs/Aleatora_Tech.md` (*Melodies page*). The plan is `Docs/Aleatora_Markov_Plan.md`.
 
 Open for Jon:

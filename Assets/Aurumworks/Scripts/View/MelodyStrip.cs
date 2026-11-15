@@ -11,6 +11,7 @@ namespace Aurumworks.Aleatora
     /// are marked and named at the left; a note of the mode is in the theme's accent, any other in
     /// danger. The newest note's MIDI number is written beside it.
     /// </summary>
+    [RequireComponent(typeof(CanvasRenderer))] // Graphic doesn't, and the Editor never adds one itself
     public class MelodyStrip : MaskableGraphic
     {
         /// <summary>How many notes it shows.</summary>

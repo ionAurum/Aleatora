@@ -18,6 +18,7 @@ namespace Aurumworks.Aleatora
     /// framed (the newest note's), its arcs drawn in front in the accent. A click on a node raises
     /// NodeClicked (the pointer only, as the grid's rows).
     /// </summary>
+    [RequireComponent(typeof(CanvasRenderer))] // Graphic doesn't, and the Editor never adds one itself
     public class TransitionGraph : MaskableGraphic, IPointerClickHandler
     {
         private const int CurveSteps = 40;

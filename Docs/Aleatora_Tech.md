@@ -331,10 +331,15 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
   `ArcBend` 0.16, `ThinnestArc` 1.5, `ThickestArc` 9, `ArrowLength` 12, `ArcLabelSize` 15,
   `NodeLabelSize` 20. Colours are the theme's.
 - `MelodyTuning` gained `Copy()` and a setter on `Tonic`.
+- **A `MaskableGraphic` of ours needs `[RequireComponent(typeof(CanvasRenderer))]`** (as `Image`
+  has). `Graphic` doesn't require one, and its getter adds one only when `GetComponent` gives a
+  true null: a player does, the Editor gives a fake null and adds none, so the raycaster threw
+  `MissingComponentException` as the pointer moved (found by Jon in the Editor; the menu check
+  moves no pointer and runs a player).
 
 ## Checks
 
-- **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2, 128 as of M3:
+- **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2, 131 as of M3:
   - `HexCoordTests`: Q + R + S = 0; the directions as named; a neighbour is one step away and its
     opposite comes back; six distinct neighbours; distance symmetric with the triangle
     inequality; equality and hashing; rounding a centre gives the cell; points round a corner
@@ -368,7 +373,8 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
     nearest the tonic; a tritone tie toward the middle; a worked melody with an octave move at the
     top; narrow, backward and out-of-MIDI ranges made whole; leaps (see *Melody generator*).
   - `MelodiesPageTests` (M3): shares in hundredths at the edges; set names, and every shipped
-    set has a corpus and a mode; the temperature slider's ends, middle and round trip.
+    set has a corpus and a mode; the temperature slider's ends, middle and round trip; each drawn
+    view has a CanvasRenderer (fails without the attribute, checked).
   - Only the M2 tests draw random numbers, from `Rng` with fixed seeds.
 - **The menu check** (`MenuCheck.cs`), as of M0 (10 screenshots): the template's walk (main menu,
   Settings, Play, session menu and its Settings, Quit to Menu), with no volumes and no
@@ -397,5 +403,5 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
   clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean). M1: EditMode tests 69 of 69;
   `m1-tables` on `m1-tables` (exit 0, 51 checks held, tree clean). Before merging M1 (with the
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
-  `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128; `m3` at
+  `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128, then 131 of 131 after the CanvasRenderer fix; `m3` at
   1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean).

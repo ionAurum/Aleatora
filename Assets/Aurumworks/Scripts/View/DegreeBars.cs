@@ -12,6 +12,7 @@ namespace Aurumworks.Aleatora
     /// degree's name under it, and a caption runs under them all. One degree can be outlined: the
     /// note a step chose. The Melodies page shows two: the set's unigram, and Next note (M3, task 2).
     /// </summary>
+    [RequireComponent(typeof(CanvasRenderer))] // Graphic doesn't, and the Editor never adds one itself
     public class DegreeBars : MaskableGraphic
     {
         private const float ShareBand = 26f;
