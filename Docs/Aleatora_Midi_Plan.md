@@ -17,6 +17,8 @@ Written 2026-11-15 from what was on disk that day: `main` after M4 (the Markov p
 Jon's rulings on its decisions came the same day (Design, rulings 27 to 33): decisions 1, 3, 4, 7
 and 10 are ruled, with *Endless* added to 7 and a *Panic!* button (decision 12); the others are
 built as their defaults and flagged in each report.
+**Finished** (2026-11-15): Jon played into Reaper in MIDI-4 and accepted everything as built
+(Design, rulings 34 to 36); the three branches merged to `main`.
 
 ---
 
@@ -110,12 +112,12 @@ Each has the default this plan builds if Jon doesn't say otherwise.
     pause.
 11. **Where the transport goes on the page.** **Default:** a row across the top of the *Melody*
     strip's panel: *Play*, *Stop*, *Loop*, *Endless*, *Panic!*, *Channel*, *BPM*, *Output*. The
-    left column keeps the melody's controls. Jon looks at it in MIDI-4.
+    left column keeps the melody's controls. Accepted by Jon in MIDI-4 (ruling 35).
 12. **Panic!** (Jon, ruling 32): note off for all 128 notes. **Built as:** on all 16 channels
     (2,048 note offs), since a stuck note may be on any channel Aleatora has sent on; that's
     instant through loopMIDI, and may take a moment on a 5-pin DIN port. It doesn't stop playback
     (a sequencer's panic doesn't): the next note still comes on its beat. It sends to the open
-    port, if any, and works with nothing playing. Flagged for Jon in MIDI-4.
+    port, if any, and works with nothing playing. Accepted by Jon in MIDI-4 (ruling 35).
 
 ## Code layout
 

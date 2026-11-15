@@ -393,7 +393,8 @@ Our own wrapper over `winmm.dll` (Design, ruling 27), plain C# in `Midi/`.
   other off), `Source`; `Play(now)`, `Pause(output)`, `Stop(output)`, `Release(output)`,
   `Panic(output)`, `Advance(now, output)`; `IsPlaying`, `IsPaused`, `Position`, `Sounding`,
   `Count`, `NoteAt`. The limits and defaults are its constants (`MidiTuning` refers to them, so
-  `Midi/` needs nothing from `Game/`). Readings where the plan was silent, flagged for Jon:
+  `Midi/` needs nothing from `Game/`). Readings where the plan was silent, accepted by Jon in
+  MIDI-4 (Design, ruling 35):
   - *Pause*, then *Play*: the next note goes on at once, and the beats run from it.
   - *BPM* while playing: the next note goes on a beat at the new tempo after the last note
     went on (at once if that time is past); the note sounding keeps its length unless the next

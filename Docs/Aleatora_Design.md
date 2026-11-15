@@ -85,10 +85,29 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 32. **A classic *Panic!* button** (2026-11-15): note off for all 128 MIDI notes.
 33. **Virtual or mock MIDI ports are fine for Claude's tests** (2026-11-15): a loopMIDI port, or a
     recording output. No hardware port.
+34. **MIDI out is proved** (2026-11-15, MIDI-4). Jon played Aleatora into Reaper through a
+    loopMIDI port ("Greedo"); Reaper received the note ons and offs.
+35. **The MIDI work as built is accepted** (2026-11-15, MIDI-4). Jon: "I accept everything you
+    suggested & built." So the MIDI plan's decisions 2, 5, 6, 8, 9 and 11 stand as their defaults,
+    and decision 12 as built; and the readings flagged in MIDI-2 and MIDI-3 (Tech, *MIDI*) stand:
+    - *Panic!* sends note off on all 16 channels (2,048), doesn't stop playback, and is a plain
+      button, not the danger colour.
+    - *Pause*, then *Play*: the next note at once. A *BPM* change while playing: the next note a
+      beat at the new tempo after the last note went on (at once if that's past). Choosing another
+      port while playing plays on, on the new port.
+    - The transport row as laid out, the panels above made shorter for it, and *Output* showing
+      only the port's name, cut with "…".
+    - The playhead framed 3 px in the theme's text colour; the newest note keeps its thinner frame.
+    - The *MIDI* page closes and opens again after a choice or *Refresh*; a saved port that won't
+      open reads "(not open)", one that's gone "(not found)".
+    - Loop, Endless, Channel and BPM last for the run, not saved.
+36. **The MIDI branches merge to `main`** (2026-11-15): `midi-1-port`, `midi-2-player` and
+    `midi-3-page`, through `midi-3-page`, ending the MIDI plan's MIDI-4.
 
 ## Open, each its own plan later (the plan's decision 7)
 
 - What the grid means musically (the three axes are ready to carry, say, an interval each).
 - How the generator drives the grid.
-- How notes leave Aleatora as MIDI (planned first, ruling 26; being built) and OSC.
+- How notes leave Aleatora as OSC. MIDI out is built (rulings 26 to 36); MIDI in, clock and sync
+  and a richer channel choice are the MIDI plan's *Later*.
 
