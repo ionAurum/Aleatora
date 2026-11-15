@@ -9,6 +9,7 @@ One section per system, each with what was built under "As built". The plan is
 - *Building in code*
 - *Differences from the template*
 - *Grid* (as found, the review, as built)
+- *Melody tables* (as built)
 - *Checks*
 
 ## Code layout
@@ -19,8 +20,8 @@ All in Assembly-CSharp (no asmdefs), namespace `Aurumworks.Aleatora`, under
 | Folder | Holds | Unity in it? |
 |---|---|---|
 | `Grid/` | `HexCoord`, `HexDirection` (with `HexDirections`), `HexShape`, `HexLayout` (with `HexOrientation`, `HexPoint`): plain C#. `HexGrid`, `HexCellView`, `GridSelection` | The last three only |
-| `Music/` (M1, M2) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing` | No |
-| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`; later `MelodyTuning`, `MarkovLibrary` | Yes |
+| `Music/` (M1; M2 from `Rng` on) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing` | No |
+| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`; later `MelodyTuning` | Yes |
 | `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `MelodyStrip` | Yes |
 | (root) | `MainMenu`, `SessionMenu`, `SettingsMenu`, `MenuCheck` | Yes |
 | `Editor/`, `Editor/Tests/` | `PlayerBuild`, `TuningMaker` (*Aleatora > Make Tuning*), EditMode tests | Editor |
@@ -154,9 +155,38 @@ The board is MathWorld's k × m × n hexagonal grid graph, in cube coordinates (
   0 parts the colliders too, which ruling 14 doesn't want (Design, *Open, from M0's report*).
 - Unity's audio is disabled in Project Settings, and the *Hexagons* layer is gone (2026-11-15).
 
+## Melody tables
+
+### As built (M1, 2026-11-15, branch `m1-tables`)
+
+- **The tables** are in `Assets/Aurumworks/Resources/Markov/`: 17 sets and `Index.txt`, 1.8 MB of
+  LF text, in git as text. `python -I Tools/markov.py Tools/Markov/Source
+  Assets/Aurumworks/Resources/Markov` writes them again (it rewrites nothing that is identical).
+  Every set has orders 1 to 4. `german_dorian` has 11 order-1 rows, not 12: a degree never
+  played has no row.
+- **`Music/Degree`**: `Count`, `IsValid`, `Name` (as on disk), `Display` (♭ and ♯), `TryParse`
+  for a string and for a span.
+- **`Music/ModeScale`**: `Mask(mode)`, `Has(mask, degree)`, `Contains(mode, degree)`, `All`
+  (4095, an unknown mode's).
+- **`Music/MarkovTable`**: as the plan's M1, task 4. A context is packed base 12, oldest degree
+  most significant; per order a `Dictionary<int, int>` gives its row's offset in one flat
+  `int[]`. Beyond the plan: **an empty context is order 0** (`TryGetCounts` gives the unigram,
+  `Total` gives `Notes`, `Contexts(0)` the one empty context), ready for M2's back-off;
+  `ContextCount(order)`; `HighestOrder` = 8 (12⁸ still packs into an int).
+- **`Music/MarkovTableReader`**: `Read(text, out table)` never throws; errors carry line numbers
+  and stop being listed after 20. It makes every check of the plan's *The tables on disk*, and
+  also refuses: a header line missing, twice, or after the first `order`; orders out of turn
+  (they run 1, 2, …); an unknown line. Blank lines and spaces at a line's end are passed over.
+  `ReadIndex(text)` reads `Index.txt`.
+  **What it can't tell:** a file cut exactly at the end of an order reads as a whole table of
+  fewer orders (the format has no last line). The menu check and the tests ask for four orders.
+- **`Game/MarkovLibrary`**: `Names`, `TryGet(name, out table)`. A set the index doesn't list is
+  not found and logs nothing. A set whose file is missing, fails to read, or whose `set` line is
+  not its file's name logs one error and is not tried again.
+
 ## Checks
 
-- **EditMode tests** (`Editor/Tests/`), 21 as of M0:
+- **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1:
   - `HexCoordTests`: Q + R + S = 0; the directions as named; a neighbour is one step away and its
     opposite comes back; six distinct neighbours; distance symmetric with the triangle
     inequality; equality and hashing; rounding a centre gives the cell; points round a corner
@@ -168,6 +198,13 @@ The board is MathWorld's k × m × n hexagonal grid graph, in cube coordinates (
   - `HexLayoutTests`, both orientations: `Pick(Position(c)) == c` on 7 × 5 × 3, and for a point
     inside each cell; neighbours √3 · Size + Gap apart; a centred board's middle at the origin;
     +K east in Pointy and north in Flat; Flat at Size 1, Gap 0 spaced as the old grid.
+  - `DegreeTests` (M1): names as on disk and back; what is no degree; ♭ and ♯; each mode's
+    degrees; an unknown mode has all twelve.
+  - `MarkovTableTests` (M1): all 17 sets load from `Resources`, through the reader and the
+    library; `european_ionian`'s known values; the invariants for every set and order, through
+    the table's own API; contexts outside the table; 24 malformed tables, each with the error it
+    must name; no text; the tiny table cut at every length; the cap on errors; CRLF as LF; the
+    index.
   - The tests draw no random numbers.
 - **The menu check** (`MenuCheck.cs`), as of M0 (10 screenshots): the template's walk (main menu,
   Settings, Play, session menu and its Settings, Quit to Menu), with no volumes and no
@@ -177,5 +214,8 @@ The board is MathWorld's k × m × n hexagonal grid graph, in cube coordinates (
   3 × 5 × 7 (57) and 5 × 5 × 5 pointy (61), set through the tuning (`3-Grid`,
   `3-Grid-Parallelogram`, `3-Grid-Uneven`, `3-Grid-Pointy`); and under the session menu a pick
   selects nothing.
+  As of M1, `CheckTables` after `CheckGrid`: the index lists 17 sets; each reads with four
+  orders; `european_ionian`'s melodies, notes and notes after `7`; an unlisted set is not found.
 - **Runs (2026-11-15):** `m0-setup` and `m0-setup2` on `main` (exit 0; the second left the tree
-  clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean).
+  clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean). M1: EditMode tests 69 of 69;
+  `m1-tables` on `m1-tables` (exit 0, 51 checks held, tree clean).
