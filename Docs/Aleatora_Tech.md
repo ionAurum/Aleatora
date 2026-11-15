@@ -10,6 +10,7 @@ One section per system, each with what was built under "As built". The plan is
 - *Differences from the template*
 - *Grid* (as found, the review, as built)
 - *Melody tables* (as built)
+- *Melody generator* (as built)
 - *Cell look* (the gel pad shader, as built)
 - *Checks*
 
@@ -22,7 +23,7 @@ All in Assembly-CSharp (no asmdefs), namespace `Aurumworks.Aleatora`, under
 |---|---|---|
 | `Grid/` | `HexCoord`, `HexDirection` (with `HexDirections`), `HexShape`, `HexLayout` (with `HexOrientation`, `HexPoint`): plain C#. `HexGrid`, `HexCellView`, `GridSelection` | The last three only |
 | `Music/` (M1; M2 from `Rng` on) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing` | No |
-| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`; later `MelodyTuning` | Yes |
+| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2) | Yes |
 | `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `MelodyStrip` | Yes |
 | (root) | `MainMenu`, `SessionMenu`, `SettingsMenu`, `MenuCheck` | Yes |
 | `Editor/`, `Editor/Tests/` | `PlayerBuild`, `TuningMaker` (*Aleatora > Make Tuning*), EditMode tests | Editor |
@@ -188,7 +189,7 @@ The board is MathWorld's k × m × n hexagonal grid graph, in cube coordinates (
 
 ## Cell look
 
-### As built (2026-11-15, outside the milestones, uncommitted)
+### As built (2026-11-15, outside the milestones; merged with M1)
 
 Built at Jon's request by Claude in the desktop app (not C2) from a study of the Intuitive
 Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath.
@@ -245,9 +246,48 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
 - **Left out of the package it came from:** `GelPadVisual` (a per-pad driver that would fight
   `HexCellView` for the property block) and `HexCapMeshGenerator` (the prefab has its own mesh).
 
+## Melody generator
+
+### As built (M2, 2026-11-15, branch `m2-generator`)
+
+- **`Music/Rng`**: xoshiro128**, seeded by SplitMix64 from a `ulong`. `NextUInt`, `NextDouble`
+  (53 bits from two draws), `Next(count)` (Lemire's, unbiased), `Reset(seed)`, `Seed`. Whole-number
+  arithmetic only; the tests pin the first numbers of three seeds to a reference worked out apart
+  from it.
+- **`Music/GeneratorSettings`**: a struct with public fields `Order`, `Temperature`, `Smoothing`,
+  `MinimumContext`, `ChromaticWeight`; `Default` (the plan's: 2, 1, 0, 3, 1) and `Clamped()`
+  (order 0–4, temperature at least 0.01, the rest at least 0, a NaN to its default).
+- **`Music/MelodyGenerator`**: as the plan's M2, task 3. The weights are the counts divided by the
+  largest first, then raised to 1/T, so temperature 0.01 can't overflow. A context is used only if
+  the table has it, it was heard at least `MinimumContext` times (order 0 always is) and some weight
+  is above 0; otherwise one order shorter. If even the unigram weighs nothing, every degree of the
+  mode as likely (it can't happen with the shipped sets). Every step makes one `NextDouble`, so
+  steps stay in step with the seed. `Settings` can be changed between steps.
+  Beyond the plan: **`MelodyStep.IsFirst`** (the first note, from `First`: `OrderUsed` 0,
+  `OrderAsked` 0, `ContextTotal` = the set's melodies); **`SetHistory(degrees)`**, to ask what
+  follows a given run (the tests' back-off cases, and the view later); `MaxOrder` (the table's).
+- **`Music/Voicing`**: `Voicing(tonic, low, high)`, `Place(degree)` (stateful: nearest the note
+  before, the tonic for the first), `Placement(degree, reference)` (no state), `Reset()`,
+  `Previous`. Beyond the plan: values are kept within 0–127, a backward range is swapped, and a
+  range narrower than 11 semitones is widened upward (downward at the top), so every degree has a
+  placement in it.
+  **The plan's leap test can't hold:** from a note near an edge, the nearest placement can be
+  outside the range, and moving it an octave inward makes a leap of 7 to 11 semitones (from G5
+  at the top of 55–79, degree 6 is A5 = 81, out, so A4 = 69: a leap of 10). The test asks instead
+  for no leap above a tritone from a note at least a tritone inside both edges, and no leap of an
+  octave anywhere. For Jon (*Open*): whether that is the voicing he wants.
+- **`Game/MelodyTuning`**, on `AleatoraTuning` as `Melodies` (added to `AleatoraTuning.asset`):
+  `Set` (`european_ionian`), the generator's five values as their own Inspector fields with
+  tooltips and ranges (`Generator` builds the struct; `Music/` can't use Unity's attributes),
+  `Tonic` 60, `Low` 55, `High` 79, `Seed` (a `long` in the Inspector, **default 1**: the plan
+  names none), `MakeVoicing()`. Nothing reads it in play yet; M3's page will.
+- **Stepping allocates nothing**, checked with the Unity Test Framework's `AllocatingGCMemory`
+  constraint (Unity's GC.Alloc recorder). The plan's `GC.GetAllocatedBytesForCurrentThread`
+  counts nothing on Unity's Mono; the test also checks that the recorder catches a 4 KB array.
+
 ## Checks
 
-- **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1:
+- **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2:
   - `HexCoordTests`: Q + R + S = 0; the directions as named; a neighbour is one step away and its
     opposite comes back; six distinct neighbours; distance symmetric with the triangle
     inequality; equality and hashing; rounding a centre gives the cell; points round a corner
@@ -266,7 +306,21 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
     the table's own API; contexts outside the table; 24 malformed tables, each with the error it
     must name; no text; the tiny table cut at every length; the cap on errors; CRLF as LF; the
     index.
-  - The tests draw no random numbers.
+  - `RngTests` (M2): the first numbers of three seeds and a `NextDouble` against the reference;
+    `Reset`; `NextDouble` in [0, 1) with mean ½; `Next(12)` even within 0.005; a count of 0 refused.
+  - `MelodyGeneratorTests` (M2), on the shipped tables: the plan's list (same seed, same 1,000
+    steps and distributions, another seed others, `Reset` repeats; order 0 as the unigram over
+    200,000 draws; after 7, 0.458 to 1, as handed back and as drawn over 40,000; no smoothing plays
+    only pairs heard; at order 4 each context used heard at least `MinimumContext` times; back-off
+    from a context never heard and from one heard twice; temperature 0.01 picks the likeliest
+    after each degree; `ChromaticWeight` 0 stays in the mode in all 17 sets; the distribution sums
+    to 1 and is the context's counts over their total; no allocation over 10,000 steps), and
+    beyond it: the first step from `First`, smoothing lets every note follow, bad input refused,
+    settings clamped, the history keeps four.
+  - `VoicingTests` (M2): in range and in pitch class over six ranges (to 0 and 127); the first note
+    nearest the tonic; a tritone tie toward the middle; a worked melody with an octave move at the
+    top; narrow, backward and out-of-MIDI ranges made whole; leaps (see *Melody generator*).
+  - Only the M2 tests draw random numbers, from `Rng` with fixed seeds.
 - **The menu check** (`MenuCheck.cs`), as of M0 (10 screenshots): the template's walk (main menu,
   Settings, Play, session menu and its Settings, Quit to Menu), with no volumes and no
   AudioSource in place of the mixer check; then `CheckGrid`: the bootstrap made the grid; the
@@ -277,6 +331,11 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
   selects nothing.
   As of M1, `CheckTables` after `CheckGrid`: the index lists 17 sets; each reads with four
   orders; `european_ionian`'s melodies, notes and notes after `7`; an unlisted set is not found.
+  As of M2, `CheckGenerator` after `CheckTables`: the tuning has its Melodies section; its set
+  reads; 200 steps twice from its seed are the same; every degree, order and note in range. It logs
+  the first 16 (`european_ionian`, seed 1, order 2: `3/64 1/60 1/60 7/59 6/57 5/55 …`).
 - **Runs (2026-11-15):** `m0-setup` and `m0-setup2` on `main` (exit 0; the second left the tree
   clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean). M1: EditMode tests 69 of 69;
-  `m1-tables` on `m1-tables` (exit 0, 51 checks held, tree clean).
+  `m1-tables` on `m1-tables` (exit 0, 51 checks held, tree clean). Before merging M1 (with the
+  gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
+  `m2-generator` (exit 0, 55 checks held, tree clean).

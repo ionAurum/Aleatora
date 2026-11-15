@@ -113,6 +113,9 @@ namespace Aurumworks.Aleatora
             // The melody tables came with the player and read.
             CheckTables();
 
+            // The generator makes melodies from the tuning's set, the same for the same seed, in range.
+            CheckGenerator();
+
             // The session menu, opened with Escape.
             yield return QueuedInput.Press(Key.Escape);
             SelfTest.Check(Menus.Count == 1 && MenuFocus.IsAnyOpen, "Escape opens the session menu");
@@ -223,7 +226,6 @@ namespace Aurumworks.Aleatora
             yield return ShowBoard(grid, tuning, 5, 5, 5, HexOrientation.Flat, 61, null);
         }
 
-        // Sets the board's shape on the tuning, which the grid sees on its next Update and rebuilds from.
         // The tables are in the player's Resources: the index lists them and each reads (a set that
         // doesn't logs an error, which fails the run by itself).
         private static void CheckTables()
@@ -246,6 +248,43 @@ namespace Aurumworks.Aleatora
             SelfTest.Check(!MarkovLibrary.TryGet("no_such_set", out _), "a set the index doesn't list is not found");
         }
 
+        // A melody from the tuning's Melodies section, as M3's page will make one: 200 steps, twice
+        // from the same seed; each degree a degree, each order used no more than asked, each note in
+        // the voicing's range.
+        private static void CheckGenerator()
+        {
+            MelodyTuning tuning = Aleatora.Instance != null ? Aleatora.Instance.Tuning.Melodies : null;
+            if (!SelfTest.Check(tuning != null, "the tuning has its Melodies section")
+                || !SelfTest.Check(MarkovLibrary.TryGet(tuning.Set, out MarkovTable table), $"the tuning's set '{tuning.Set}' reads"))
+            {
+                return;
+            }
+
+            var a = new MelodyGenerator(table, tuning.Generator, tuning.Seed);
+            var b = new MelodyGenerator(table, tuning.Generator, tuning.Seed);
+            Voicing voicing = tuning.MakeVoicing();
+            float[] distribution = new float[Degree.Count];
+            var melody = new System.Text.StringBuilder();
+            bool same = true;
+            bool sound = true;
+            for (int i = 0; i < 200; i++)
+            {
+                MelodyStep step = a.Next(distribution);
+                same &= b.Next(distribution).Degree == step.Degree;
+                int note = voicing.Place(step.Degree);
+                sound &= Degree.IsValid(step.Degree) && step.OrderUsed <= step.OrderAsked && note >= voicing.Low && note <= voicing.High;
+                if (i < 16)
+                {
+                    melody.Append(Degree.Name(step.Degree)).Append('/').Append(note).Append(' ');
+                }
+            }
+
+            Debug.Log($"Menu check: {table.Name}, seed {tuning.Seed}, order {tuning.Generator.Order}: {melody}…");
+            SelfTest.Check(same, "the same seed gives the same melody");
+            SelfTest.Check(sound, $"200 steps: degrees, orders and notes in {voicing.Low} to {voicing.High}");
+        }
+
+        // Sets the board's shape on the tuning, which the grid sees on its next Update and rebuilds from.
         private static IEnumerator ShowBoard(HexGrid grid, GridTuning tuning, int k, int m, int n, HexOrientation orientation,
             int cells, string shot)
         {
