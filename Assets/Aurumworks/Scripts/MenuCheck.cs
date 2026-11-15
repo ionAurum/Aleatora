@@ -16,8 +16,9 @@ namespace Aurumworks.Aleatora
     /// over it, Play, the session menu and Settings over that, and Quit to Menu. On the way it
     /// checks what the menu shell promises (what is under the top menu can't be used or navigated
     /// to, Escape and the gamepad's East and Start close one menu at a time, the selection comes
-    /// back) and that Settings lists no volumes (Aleatora makes no sound), then quits with exit code 1 if anything didn't
-    /// hold or any error was logged. -aleatoraScreenshots folder saves a screenshot of each menu. It
+    /// back), that Settings lists no volumes (Aleatora makes no sound), and the board behind the
+    /// menus (its 61 cells, picking them, its shapes in both orientations), then quits with exit code
+    /// 1 if anything didn't hold or any error was logged. -aleatoraScreenshots folder saves a screenshot of each menu. It
     /// saves no setting. Tools/menucheck.sh builds the player and runs it. Without the flag none of
     /// this runs.
     /// </summary>
@@ -105,6 +106,9 @@ namespace Aurumworks.Aleatora
             yield return new WaitForSecondsRealtime(1f);
             yield return SelfTest.Capture("3-Game");
 
+            // The board behind the menus: its cells, picking them, its shapes and orientations.
+            yield return CheckGrid();
+
             // The session menu, opened with Escape.
             yield return QueuedInput.Press(Key.Escape);
             SelfTest.Check(Menus.Count == 1 && MenuFocus.IsAnyOpen, "Escape opens the session menu");
@@ -118,6 +122,7 @@ namespace Aurumworks.Aleatora
             Debug.Log("Menu check: session menu: " + UiProbe.Texts(sessionMenu));
             SelfTest.Check(SelectedName() == "Button: Resume", "Resume has the selection: " + SelectedName());
             CheckNavigation("the session menu", sessionMenu);
+            CheckNoPickUnderAMenu();
             yield return SelfTest.Capture("4-SessionMenu");
 
             // Settings over it, closed with the gamepad's East (Cancel): one menu per press.
@@ -169,6 +174,86 @@ namespace Aurumworks.Aleatora
         }
 
         //----------
+
+        // The default board has its 61 cells; a pick at three cells' places on the screen selects
+        // each, and one off the board selects nothing; then the other shapes and the other
+        // orientation, set through the tuning as Jon would in the Inspector, each with a screenshot.
+        private static IEnumerator CheckGrid()
+        {
+            Aleatora game = Aleatora.Instance;
+            if (!SelfTest.Check(game != null && game.Grid != null && game.Selection != null, "the bootstrap made the grid and its selection"))
+            {
+                yield break;
+            }
+
+            HexGrid grid = game.Grid;
+            GridSelection selection = game.Selection;
+            GridTuning tuning = game.Tuning.Grid;
+            Camera camera = Camera.main;
+            Debug.Log($"Menu check: grid {tuning.K} × {tuning.M} × {tuning.N}, {tuning.Orientation}, {grid.CellCount} cells, tops at {grid.TopHeight:0.00}");
+            SelfTest.Check(tuning.K == 5 && tuning.M == 5 && tuning.N == 5 && tuning.Orientation == HexOrientation.Flat,
+                "the tuning's board is 5 × 5 × 5, flat");
+            SelfTest.Check(grid.CellCount == 61 && grid.Shape.Count == 61, $"the default board has 61 cells: {grid.CellCount}");
+            SelfTest.Check(!selection.HasSelection, "nothing is selected at the start");
+
+            foreach (HexCoord coord in new[] { new HexCoord(0, 0), new HexCoord(0, 4), new HexCoord(4, 4) })
+            {
+                Vector3 screen = camera.WorldToScreenPoint(grid.TopOf(coord));
+                bool onScreen = screen.z > 0f && screen.x >= 0f && screen.x <= Screen.width && screen.y >= 0f && screen.y <= Screen.height;
+                SelfTest.Check(onScreen, $"the cell {coord} is on the screen, at ({screen.x:0}, {screen.y:0})");
+                bool picked = selection.PickAt(screen);
+                SelfTest.Check(picked && selection.HasSelection && selection.Selected == coord
+                    && grid.TryGetCell(coord, out HexCellView cell) && cell.IsSelected,
+                    $"a pick at the cell {coord} selects it: {(selection.HasSelection ? selection.Selected.ToString() : "nothing")}");
+            }
+
+            yield return null;
+            yield return SelfTest.Capture("3-Grid");
+
+            selection.PickAt(new Vector2(2f, Screen.height - 2f)); // a corner of the screen, off the board
+            SelfTest.Check(!selection.HasSelection, "a pick off the board selects nothing");
+
+            yield return ShowBoard(grid, tuning, 7, 4, 1, HexOrientation.Flat, 28, "3-Grid-Parallelogram");
+            yield return ShowBoard(grid, tuning, 3, 5, 7, HexOrientation.Flat, 57, "3-Grid-Uneven");
+            yield return ShowBoard(grid, tuning, 5, 5, 5, HexOrientation.Pointy, 61, "3-Grid-Pointy");
+            yield return ShowBoard(grid, tuning, 5, 5, 5, HexOrientation.Flat, 61, null);
+        }
+
+        // Sets the board's shape on the tuning, which the grid sees on its next Update and rebuilds from.
+        private static IEnumerator ShowBoard(HexGrid grid, GridTuning tuning, int k, int m, int n, HexOrientation orientation,
+            int cells, string shot)
+        {
+            tuning.K = k;
+            tuning.M = m;
+            tuning.N = n;
+            tuning.Orientation = orientation;
+            yield return null;
+            yield return null; // the old cells are gone by the end of the frame that rebuilt
+            SelfTest.Check(grid.Shape.K == k && grid.Shape.M == m && grid.Shape.N == n && grid.Layout.Orientation == orientation
+                && grid.CellCount == cells && grid.GetComponentsInChildren<HexCellView>().Length == cells,
+                $"the board rebuilds as {k} × {m} × {n}, {orientation}, with {cells} cells: {grid.CellCount}");
+            SelfTest.Progress();
+            if (shot != null)
+            {
+                yield return new WaitForSecondsRealtime(0.5f);
+                yield return SelfTest.Capture(shot);
+            }
+        }
+
+        // With a menu open a click is the menu's: a pick at a cell's place selects nothing.
+        private static void CheckNoPickUnderAMenu()
+        {
+            Aleatora game = Aleatora.Instance;
+            if (game == null || game.Selection == null || Camera.main == null)
+            {
+                SelfTest.Check(false, "the grid is there under the session menu");
+                return;
+            }
+
+            game.Selection.Deselect();
+            bool picked = game.Selection.PickAt(Camera.main.WorldToScreenPoint(game.Grid.TopOf(new HexCoord(0, 4))));
+            SelfTest.Check(!picked && !game.Selection.HasSelection, "under the session menu a pick selects nothing");
+        }
 
         // Waits for something that takes a scene load. If it never comes the run is over: _arrived
         // is false, and the steps stop.
