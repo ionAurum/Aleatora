@@ -17,7 +17,8 @@ namespace Aurumworks.Aleatora
     /// checks what the menu shell promises (what is under the top menu can't be used or navigated
     /// to, Escape and the gamepad's East and Start close one menu at a time, the selection comes
     /// back), that Settings lists no volumes (Aleatora makes no sound), and the board behind the
-    /// menus (its 61 cells, picking them, its shapes in both orientations), then quits with exit code
+    /// menus (its 61 cells, picking them, its shapes in both orientations) and that the melody tables
+    /// came with the player and read, then quits with exit code
     /// 1 if anything didn't hold or any error was logged. -aleatoraScreenshots folder saves a screenshot of each menu. It
     /// saves no setting. Tools/menucheck.sh builds the player and runs it. Without the flag none of
     /// this runs.
@@ -108,6 +109,9 @@ namespace Aurumworks.Aleatora
 
             // The board behind the menus: its cells, picking them, its shapes and orientations.
             yield return CheckGrid();
+
+            // The melody tables came with the player and read.
+            CheckTables();
 
             // The session menu, opened with Escape.
             yield return QueuedInput.Press(Key.Escape);
@@ -220,6 +224,28 @@ namespace Aurumworks.Aleatora
         }
 
         // Sets the board's shape on the tuning, which the grid sees on its next Update and rebuilds from.
+        // The tables are in the player's Resources: the index lists them and each reads (a set that
+        // doesn't logs an error, which fails the run by itself).
+        private static void CheckTables()
+        {
+            IReadOnlyList<string> names = MarkovLibrary.Names;
+            SelfTest.Check(names.Count == 17, $"the index lists the 17 sets: {names.Count}");
+            int read = 0;
+            foreach (string name in names)
+            {
+                if (MarkovLibrary.TryGet(name, out MarkovTable table) && table.Name == name && table.MaxOrder == 4)
+                {
+                    read++;
+                }
+            }
+
+            SelfTest.Check(read == names.Count, $"every set reads, with its four orders: {read} of {names.Count}");
+            bool found = MarkovLibrary.TryGet("european_ionian", out MarkovTable ionian);
+            SelfTest.Check(found && ionian.Tunes == 7136 && ionian.Notes == 481199 && ionian.Total(new[] { 11 }) == 35562,
+                "european_ionian has its 7,136 melodies, 481,199 notes and 35,562 notes after 7");
+            SelfTest.Check(!MarkovLibrary.TryGet("no_such_set", out _), "a set the index doesn't list is not found");
+        }
+
         private static IEnumerator ShowBoard(HexGrid grid, GridTuning tuning, int k, int m, int n, HexOrientation orientation,
             int cells, string shot)
         {
