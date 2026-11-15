@@ -11,6 +11,7 @@ One section per system, each with what was built under "As built". The plan is
 - *Grid* (as found, the review, as built)
 - *Melody tables* (as built)
 - *Melody generator* (as built)
+- *Melodies page* (as built)
 - *Cell look* (the gel pad shader, as built)
 - *Checks*
 
@@ -23,8 +24,8 @@ All in Assembly-CSharp (no asmdefs), namespace `Aurumworks.Aleatora`, under
 |---|---|---|
 | `Grid/` | `HexCoord`, `HexDirection` (with `HexDirections`), `HexShape`, `HexLayout` (with `HexOrientation`, `HexPoint`): plain C#. `HexGrid`, `HexCellView`, `GridSelection` | The last three only |
 | `Music/` (M1; M2 from `Rng` on) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing` | No |
-| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2) | Yes |
-| `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip` | Yes |
+| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2), `MelodyViewTuning` (M3) | Yes |
+| `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip`; the static `ViewText` and `ViewMesh` | Yes |
 | (root) | `MainMenu`, `SessionMenu`, `SettingsMenu`, `MenuCheck` | Yes |
 | `Editor/`, `Editor/Tests/` | `PlayerBuild`, `TuningMaker` (*Aleatora > Make Tuning*), EditMode tests | Editor |
 
@@ -57,7 +58,8 @@ says, on 2026-11-15, without sound:
   `Assets/InputSystem_Actions.inputactions`; Unity regenerated `InputSystem_Actions.cs`.
 - Input System is 1.20.1 (the template's is 1.19.0). The manifest gained `com.aurumworks.core`
   and nothing else.
-- Player settings: only Resizable Window changed (off to on); the rest already matched.
+- Player settings: only Resizable Window changed (off to on); the rest already matched. The
+  default window became 1920 × 1080 in M4 (Design, ruling 23).
 - The first build rewrote `PC_RPAsset.asset`, `UniversalRenderPipelineGlobalSettings.asset` and
   `packages-lock.json`; committed as left, and later builds leave the tree clean.
 
@@ -147,15 +149,15 @@ The board is MathWorld's k × m × n hexagonal grid graph, in cube coordinates (
   off, so orbit and zoom wait for menus too. After a rebuild the selection stays if its cell is
   still on the board.
 - **`GridTuning`** (a section of `AleatoraTuning`): `K`, `M`, `N` (1 to 40; default 5, 5, 5),
-  `Orientation` (Flat), `Size` (1), `Gap` (0), `CellPrefab` (the found prefab), `Height` (1),
+  `Orientation` (Flat), `Size` (1), `Gap` (0; hidden and always 0 since M4, Design ruling 22), `CellPrefab` (the found prefab), `Height` (1),
   `RestColor` (white), `SelectedColor` (the found green). These reproduce the found look but for
   the board's shape. `RestGlow` (0) and `SelectedGlow` (1) came later (*Cell look*).
 - **Not carried over:** cells are on the prefab's layer, not *Hexagons* (Jon agreed); the old
   grid's half-cell centring error is gone.
 - **The cell's collider** stays on the prefab (Design, ruling 14): a non-convex MeshCollider on
   `Mesh-Hexagon-Collider.asset`, a full hexagon one unit to a corner, so at `Gap` 0 the colliders
-  tile without the visual gap. Picking doesn't use it. It scales with the cell, so a `Gap` above
-  0 parts the colliders too, which ruling 14 doesn't want (Design, *Open, from M0's report*).
+  tile without the visual gap. Picking doesn't use it. It scales with the cell; `Gap` is held at 0
+  (ruling 22), so the colliders always tile.
 - Unity's audio is disabled in Project Settings, and the *Hexagons* layer is gone (2026-11-15).
 
 ## Melody tables
@@ -230,8 +232,8 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
 - **`GridTuning`** gained `RestGlow` (0) and `SelectedGlow` (1), 0 to 1, read live; added to
   `AleatoraTuning.asset` with those values.
 - **What the glow wants from the scene:** Bloom, which Jon turned on in `SampleSceneProfile`
-  (intensity 15, 2026-11-15), and Dithering on the Main Camera (still off), or the smooth
-  gradients band. HDR is already on in `PC_RPAsset`. Jon also set the `Emitter` object inactive in
+  (intensity 15, 2026-11-15), and Dithering on the Main Camera (on since M4, ruling 24), or the
+  smooth gradients band. HDR is already on in `PC_RPAsset`. Jon also set the `Emitter` object inactive in
   the scene.
 - **Not modelled:** light from a lit cell onto its neighbours (a small, dim, shadowless point
   light under a lit cell would do it).
@@ -271,23 +273,74 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
   `Previous`. Beyond the plan: values are kept within 0–127, a backward range is swapped, and a
   range narrower than 11 semitones is widened upward (downward at the top), so every degree has a
   placement in it.
-  **The plan's leap test can't hold:** from a note near an edge, the nearest placement can be
-  outside the range, and moving it an octave inward makes a leap of 7 to 11 semitones (from G5
-  at the top of 55–79, degree 6 is A5 = 81, out, so A4 = 69: a leap of 10). The test asks instead
-  for no leap above a tritone from a note at least a tritone inside both edges, and no leap of an
-  octave anywhere. For Jon (*Open*): whether that is the voicing he wants.
+  **Leaps: an octave at most** (Design, ruling 20, replacing the plan's tritone). From a note
+  near an edge, the nearest placement can be outside the range, and moving it an octave inward
+  makes a leap of 7 to 11 semitones (from G5 at the top of 55–79, degree 6 is A5 = 81, out, so
+  A4 = 69: a leap of 10). `LeapsAreAnOctaveAtMost` asks for no leap above an octave anywhere, and
+  none above a tritone from a note at least a tritone inside both edges.
 - **`Game/MelodyTuning`**, on `AleatoraTuning` as `Melodies` (added to `AleatoraTuning.asset`):
   `Set` (`european_ionian`), the generator's five values as their own Inspector fields with
   tooltips and ranges (`Generator` builds the struct; `Music/` can't use Unity's attributes),
-  `Tonic` 60, `Low` 55, `High` 79, `Seed` (a `long` in the Inspector, **default 1**: the plan
-  names none), `MakeVoicing()`. Nothing reads it in play yet; M3's page will.
+  `Tonic` 60, `Low` 55, `High` 79, `Seed` (a `long` in the Inspector, **default 2112**, Design
+  ruling 21; it was 1 until M4), `MakeVoicing()`. Nothing reads it in play yet; M3's page will.
 - **Stepping allocates nothing**, checked with the Unity Test Framework's `AllocatingGCMemory`
   constraint (Unity's GC.Alloc recorder). The plan's `GC.GetAllocatedBytesForCurrentThread`
   counts nothing on Unity's Mono; the test also checks that the recorder catches a 4 KB array.
 
+## Melodies page
+
+### As built (M3, 2026-11-15, branch `m3-view`)
+
+- **`View/MelodiesPage`**: `MelodiesPage.Open(menus)` opens it with `MenuStack.Open` and adds the
+  component to the panel. From the main menu (*Melodies*, under *Play*) and the session menu
+  (*Melodies*, after *Settings*). It works on `MelodyTuning.Copy()`; the asset is never written.
+  Controls at the left, 560 px wide: *Set* (`ViewText.SetName`, read from the set's name so
+  listing them reads no table), *Order* (the kit's slider set to 0–4, whole numbers), *Temperature*
+  (0.25 × 16^v, 0.25–4), *Tonic* (C … B; keeps the tonic's octave), *Seed* (`InputField: Seed`,
+  a whole number from 0; anything else puts the seed back), *Generate* (accent), *Step*, *Back*.
+  At the right: the graph takes the height above the strip; *The set*, *Next note* and
+  *Transitions* are stacked at its left; *Melody* runs along the bottom.
+  Beyond the plan: **it makes a melody from the seed as it opens**; **its backdrop is the theme's
+  Background, opaque** (the stack's scrim let the main menu show through the panels); changing
+  *Set* makes a new melody from the seed; *Order* and *Temperature* apply from the next step;
+  *Tonic* places the melody so far again; *Next note*'s caption names the context used
+  ("after 5 3 · order 2 of 2 · 17,602 notes"; the first note "first note · from how 7,136
+  melodies begin"); a clicked row reads "after 5 · order 1 · 91,139 notes".
+- **`View/DegreeBars`** (a `MaskableGraphic`): twelve bars **scaled to the tallest** (the plan
+  says "the height its probability"; at full scale the unigram's tallest bar would be a fifth of
+  the panel); the share over each, the name under, the caption under all. In-mode bars in accent,
+  the rest muted; the chosen degree framed in the text colour.
+- **`View/TransitionGrid`**: as the plan. Names along both edges at 15 pt (in-mode in the text
+  colour, the rest muted); a row the table never heard is all panel colour. `RowAt` and
+  `OnPointerClick`.
+- **`View/TransitionGraph`** (a `MaskableGraphic`; ruling 18): nodes on a chromatic circle as
+  large as the panel allows once room is kept for the loops and their shares. **Arcs bow inward**:
+  a step clockwise (up to six semitones; six from the lower degree) by `ArcBend` of its chord,
+  the way back by twice it. Bowed outward to the right of travel (the first try), an arc between
+  degrees two apart ran through the node between them, its share on top of that node. Arc width
+  `Lerp(ThinnestArc, ThickestArc, share)`; ordinary arcs in muted at 60% alpha, the framed node's
+  in accent and drawn after; each share on a patch of the panel colour. A loop is the part of a
+  circle outside its node. `NodeAt`, `NodeCentre`, `ArcCount`, `SmallestShare`.
+- **`View/MelodyStrip`** (a `MaskableGraphic`): as the plan, the newest note's column framed and
+  the tonic's rows named at the left ("C4").
+- **`View/ViewText`**: shares as ".42", "<.01", "0", "1"; set, tonic and note names; counts with
+  commas. **Flat and sharp signs only if the font has them**: the theme sets no fonts, and
+  TextMeshPro's default LiberationSans has no ♭ or ♯, so the page writes `b3` and `#4`.
+  **`View/ViewMesh`**: rectangles, frames, thick polylines, discs, rings, triangles.
+- **`Game/MelodyViewTuning`**, on `AleatoraTuning` as `MelodyView` (added to the asset), read
+  live (the graph rebuilds when a value changes): `MinimumArcShare` 0.05, `NodeRadius` 24,
+  `ArcBend` 0.16, `ThinnestArc` 1.5, `ThickestArc` 9, `ArrowLength` 12, `ArcLabelSize` 15,
+  `NodeLabelSize` 20. Colours are the theme's.
+- `MelodyTuning` gained `Copy()` and a setter on `Tonic`.
+- **A `MaskableGraphic` of ours needs `[RequireComponent(typeof(CanvasRenderer))]`** (as `Image`
+  has). `Graphic` doesn't require one, and its getter adds one only when `GetComponent` gives a
+  true null: a player does, the Editor gives a fake null and adds none, so the raycaster threw
+  `MissingComponentException` as the pointer moved (found by Jon in the Editor; the menu check
+  moves no pointer and runs a player).
+
 ## Checks
 
-- **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2:
+- **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2, 131 as of M3:
   - `HexCoordTests`: Q + R + S = 0; the directions as named; a neighbour is one step away and its
     opposite comes back; six distinct neighbours; distance symmetric with the triangle
     inequality; equality and hashing; rounding a centre gives the cell; points round a corner
@@ -320,6 +373,9 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
   - `VoicingTests` (M2): in range and in pitch class over six ranges (to 0 and 127); the first note
     nearest the tonic; a tritone tie toward the middle; a worked melody with an octave move at the
     top; narrow, backward and out-of-MIDI ranges made whole; leaps (see *Melody generator*).
+  - `MelodiesPageTests` (M3): shares in hundredths at the edges; set names, and every shipped
+    set has a corpus and a mode; the temperature slider's ends, middle and round trip; each drawn
+    view has a CanvasRenderer (fails without the attribute, checked).
   - Only the M2 tests draw random numbers, from `Rng` with fixed seeds.
 - **The menu check** (`MenuCheck.cs`), as of M0 (10 screenshots): the template's walk (main menu,
   Settings, Play, session menu and its Settings, Quit to Menu), with no volumes and no
@@ -333,9 +389,20 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
   orders; `european_ionian`'s melodies, notes and notes after `7`; an unlisted set is not found.
   As of M2, `CheckGenerator` after `CheckTables`: the tuning has its Melodies section; its set
   reads; 200 steps twice from its seed are the same; every degree, order and note in range. It logs
-  the first 16 (`european_ionian`, seed 1, order 2: `3/64 1/60 1/60 7/59 6/57 5/55 …`).
+  the first 16 (`european_ionian`, seed 2112, order 2: `5/55 5/55 4/65 3/64 3/64 5/67 …`).
+  As of M3, `CheckMelodies`, from the main menu (all through) and from the session menu (opens,
+  then the gamepad's East): it opens over the menu with *Generate* selected, nothing under it
+  usable, navigation reaching all 8 controls and nothing else, 32 notes; seed 1 and *Generate*
+  twice make the same 32; the newest note's row and node framed; the graph's arcs (58 for
+  `european_ionian`), none under the minimum (`4-Melodies`); *Order* 4 and eight *Steps*, each
+  `OrderUsed` ≤ 4, `OrderAsked` 4, the bars summing to 1, the note outlined; a click on the node
+  of 5 and on the grid's row of ♭3 show those rows; *Tonic* D moves every note; *Set*
+  `irish_dorian` (52 arcs, "Irish · dorian"; `4-Dorian`); the asset's set unchanged; Escape
+  closes it and the selection returns to *Play* (*Resume* from the session menu). 12 screenshots.
+  `menucheck.sh` takes `WIDTH` and `HEIGHT` (1920 × 1080 unless given).
 - **Runs (2026-11-15):** `m0-setup` and `m0-setup2` on `main` (exit 0; the second left the tree
   clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean). M1: EditMode tests 69 of 69;
   `m1-tables` on `m1-tables` (exit 0, 51 checks held, tree clean). Before merging M1 (with the
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
-  `m2-generator` (exit 0, 55 checks held, tree clean).
+  `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128, then 131 of 131 after the CanvasRenderer fix; `m3` at
+  1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean).

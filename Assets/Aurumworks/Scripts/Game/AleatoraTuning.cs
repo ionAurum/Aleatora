@@ -19,6 +19,9 @@ namespace Aurumworks.Aleatora
         [Tooltip("Which set the melodies come from, how each note is chosen, the range they are played in, and the seed.")]
         [SerializeField] private MelodyTuning _melodies = new();
 
+        [Tooltip("How the Melodies page draws its transition graph: which arcs, how thick, how large.")]
+        [SerializeField] private MelodyViewTuning _melodyView = new();
+
         /// <summary>The tuning: the asset, or the defaults if there is none.</summary>
         public static AleatoraTuning Load()
         {
@@ -37,5 +40,8 @@ namespace Aurumworks.Aleatora
 
         /// <summary>The melodies' set, generator, voicing and seed.</summary>
         public MelodyTuning Melodies => _melodies;
+
+        /// <summary>How the Melodies page draws.</summary>
+        public MelodyViewTuning MelodyView => _melodyView;
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -16,9 +17,9 @@ namespace Aurumworks.Aleatora
     /// over it, Play, the session menu and Settings over that, and Quit to Menu. On the way it
     /// checks what the menu shell promises (what is under the top menu can't be used or navigated
     /// to, Escape and the gamepad's East and Start close one menu at a time, the selection comes
-    /// back), that Settings lists no volumes (Aleatora makes no sound), and the board behind the
-    /// menus (its 61 cells, picking them, its shapes in both orientations) and that the melody tables
-    /// came with the player and read, then quits with exit code
+    /// back), that Settings lists no volumes (Aleatora makes no sound), the Melodies page from both
+    /// menus, and the board behind the menus (its 61 cells, picking them, its shapes in both
+    /// orientations) and that the melody tables came with the player and read, then quits with exit code
     /// 1 if anything didn't hold or any error was logged. -aleatoraScreenshots folder saves a screenshot of each menu. It
     /// saves no setting. Tools/menucheck.sh builds the player and runs it. Without the flag none of
     /// this runs.
@@ -100,6 +101,9 @@ namespace Aurumworks.Aleatora
             yield return QueuedInput.Press(Key.Escape);
             SelfTest.Check(Menus.Count == 0 && MainMenu.IsShowing, "Escape on the main menu opens no session menu");
 
+            // The Melodies page from the main menu, all through; Escape closes it.
+            yield return CheckMelodies(mainMenu, "Button: Play", true);
+
             // Into the game.
             Press(mainMenu, "Button: Play");
             yield return null;
@@ -142,6 +146,9 @@ namespace Aurumworks.Aleatora
             yield return QueuedInput.Press(GamepadButton.East);
             SelfTest.Check(Menus.Count == 1 && Menus.Top == sessionMenu, "the gamepad's East closes Settings only");
             SelfTest.Check(SelectedName() == "Button: Resume", "Resume has the selection again: " + SelectedName());
+
+            // The Melodies page from the session menu too, closed with the gamepad's East.
+            yield return CheckMelodies(sessionMenu, "Button: Resume", false);
 
             // The gamepad's Start (Menu) closes the session menu and opens it again.
             yield return QueuedInput.Press(GamepadButton.Start);
@@ -282,6 +289,209 @@ namespace Aurumworks.Aleatora
             Debug.Log($"Menu check: {table.Name}, seed {tuning.Seed}, order {tuning.Generator.Order}: {melody}…");
             SelfTest.Check(same, "the same seed gives the same melody");
             SelfTest.Check(sound, $"200 steps: degrees, orders and notes in {voicing.Low} to {voicing.High}");
+        }
+
+        // The Melodies page (M3), opened from a menu by its Melodies button: it opens over it with
+        // Generate selected, and navigation reaches every control from there and nothing under it.
+        // All through (from the main menu): seed 1 and Generate make 32 notes, the same again; the
+        // graph draws arcs, none under the tuning's minimum; Order 4 and eight Steps, each within
+        // order 4 and its bars summing to 1; a click on a node and on a grid row shows that row;
+        // the Tonic moves every note; another set; then Escape. Else the gamepad's East closes it.
+        // Either way the selection goes back to the menu under it, to its main action.
+        private static IEnumerator CheckMelodies(RectTransform under, string mainAction, bool full)
+        {
+            int before = Menus.Count;
+            Press(under, "Button: Melodies");
+            yield return null;
+            yield return null; // a frame for the layout
+            MelodiesPage page = Menus.Count == before + 1 ? Menus.Top.GetComponent<MelodiesPage>() : null;
+            if (!SelfTest.Check(page != null, "Melodies opens its page over the menu"))
+            {
+                yield break;
+            }
+
+            RectTransform top = Menus.Top;
+            SelfTest.Check(SelectedName() == "Button: Generate", "Generate has the selection: " + SelectedName());
+            SelfTest.Check(!UiProbe.HasInteractable(under), "nothing under the Melodies page can be used");
+            SelfTest.Check(MenuFocus.IsAnyOpen, "the Melodies page holds the controls");
+            CheckNavigation("the Melodies page", top);
+            List<Selectable> reached = UiProbe.Reachable();
+            var unreached = new List<string>();
+            foreach (Selectable control in top.GetComponentsInChildren<Selectable>())
+            {
+                if (control.IsInteractable() && !reached.Contains(control))
+                {
+                    unreached.Add(control.transform.parent.name + "/" + control.name);
+                }
+            }
+
+            SelfTest.Check(unreached.Count == 0, "navigation reaches every control from Generate: " +
+                (unreached.Count == 0 ? reached.Count + " controls" : "not " + string.Join(", ", unreached)));
+            SelfTest.Check(page.Strip.Count == MelodiesPage.MelodyLength, $"it opens with a melody of 32 notes: {page.Strip.Count}");
+
+            if (full)
+            {
+                Debug.Log("Menu check: Melodies: " + UiProbe.Texts(top));
+                MelodyViewTuning view = Aleatora.Instance != null ? Aleatora.Instance.Tuning.MelodyView : null;
+
+                TMP_InputField seed = UiProbe.Find<TMP_InputField>(top, "InputField: Seed");
+                if (SelfTest.Check(seed != null, "the page has its Seed field"))
+                {
+                    seed.text = "1";
+                    seed.onEndEdit.Invoke("1");
+                }
+
+                SelfTest.Check(page.Work.Seed == 1, "the seed is 1: " + page.Work.Seed);
+                Press(top, "Button: Generate");
+                yield return null;
+                var first = new List<int>(page.Degrees);
+                SelfTest.Check(page.Strip.Count == 32 && first.Count == 32, $"Generate makes 32 notes, all in the strip: {first.Count}, {page.Strip.Count}");
+                Press(top, "Button: Generate");
+                yield return null;
+                SelfTest.Check(SameDegrees(first, page.Degrees), "Generate again from seed 1 makes the same melody");
+                CheckNewestFramed(page);
+                SelfTest.Check(page.Graph.ArcCount > 0 && view != null && page.Graph.SmallestShare >= view.MinimumArcShare - 1e-6f,
+                    $"the graph draws {page.Graph.ArcCount} arcs, the smallest {page.Graph.SmallestShare:0.000}, none under the minimum {view?.MinimumArcShare:0.00}");
+                yield return new WaitForSecondsRealtime(0.3f);
+                yield return SelfTest.Capture("4-Melodies");
+
+                Slider order = Control<Slider>(top, "Slider: Order");
+                if (SelfTest.Check(order != null, "the page has its Order slider"))
+                {
+                    order.value = 4f;
+                }
+
+                SelfTest.Check(page.Work.Generator.Order == 4, "Order is 4: " + page.Work.Generator.Order);
+                bool steps = true;
+                var said = new System.Text.StringBuilder();
+                for (int i = 0; i < 8; i++)
+                {
+                    Press(top, "Button: Step");
+                    yield return null;
+                    float sum = 0f;
+                    foreach (float value in page.NextBars.Values)
+                    {
+                        sum += value;
+                    }
+
+                    bool stepped = page.TryGetLastStep(out MelodyStep step);
+                    steps &= stepped && step.OrderUsed <= 4 && step.OrderAsked == 4 && Mathf.Abs(sum - 1f) < 1e-4f
+                        && page.NextBars.Outlined == step.Degree && page.Degrees.Count == 33 + i;
+                    said.Append(step.OrderUsed).Append(' ');
+                }
+
+                SelfTest.Check(steps, $"eight Steps at order 4: each order used ≤ 4 ({said}), the bars sum to 1, the note outlined");
+                SelfTest.Check(page.Strip.Count == 32, "the strip shows the last 32 notes of 40: " + page.Strip.Count);
+                Debug.Log("Menu check: Next note says: " + page.NextBars.Caption);
+                CheckNewestFramed(page);
+
+                // A click on the node of 5, then on the grid's row of ♭3: Next note shows what follows each.
+                Click(page.Graph.gameObject, page.Graph.transform.TransformPoint(page.Graph.NodeCentre(7)));
+                SelfTest.Check(page.NextBars.Caption.StartsWith("after " + ViewText.DegreeName(7) + " · order 1", StringComparison.Ordinal)
+                    && page.NextBars.Outlined == -1, "a click on the node of 5 shows what follows 5: " + page.NextBars.Caption);
+                var gridRect = (RectTransform)page.Grid.transform;
+                Rect cells = gridRect.rect;
+                Click(page.Grid.gameObject, gridRect.TransformPoint(new Vector2(cells.center.x, cells.yMax - 3.5f * cells.height / Degree.Count)));
+                SelfTest.Check(page.NextBars.Caption.StartsWith("after " + ViewText.DegreeName(3) + " · order 1", StringComparison.Ordinal),
+                    "a click on the grid's row of ♭3 shows what follows it: " + page.NextBars.Caption);
+
+                // The tonic to D: every note moves with it.
+                TMP_Dropdown tonic = Control<TMP_Dropdown>(top, "Dropdown: Tonic");
+                if (SelfTest.Check(tonic != null, "the page has its Tonic dropdown"))
+                {
+                    tonic.value = 2;
+                }
+
+                yield return null;
+                bool moved = page.Work.Tonic % 12 == 2 && page.Strip.Count == 32;
+                IReadOnlyList<int> notes = page.Strip.Notes;
+                for (int i = 0; i < notes.Count; i++)
+                {
+                    int degree = page.Degrees[page.Degrees.Count - notes.Count + i];
+                    moved &= notes[i] % 12 == (2 + degree) % 12;
+                }
+
+                SelfTest.Check(moved, $"with the tonic on D every note is its degree above D: tonic {page.Work.Tonic}");
+
+                // Another set: irish_dorian.
+                TMP_Dropdown set = Control<TMP_Dropdown>(top, "Dropdown: Set");
+                int dorian = -1;
+                for (int i = 0; i < MarkovLibrary.Names.Count; i++)
+                {
+                    if (MarkovLibrary.Names[i] == "irish_dorian")
+                    {
+                        dorian = i;
+                    }
+                }
+
+                if (SelfTest.Check(set != null && dorian >= 0, "the page has its Set dropdown, listing irish_dorian"))
+                {
+                    set.value = dorian;
+                }
+
+                yield return null;
+                SelfTest.Check(page.Table != null && page.Table.Name == "irish_dorian" && page.Strip.Count == 32 && page.Graph.ArcCount > 0,
+                    $"the set is irish_dorian, with a melody and {page.Graph.ArcCount} arcs: {page.Table?.Name}");
+                SelfTest.Check(set != null && set.captionText.text == "Irish · dorian", "the set reads 'Irish · dorian': " + set?.captionText.text);
+                SelfTest.Check(Aleatora.Instance == null || Aleatora.Instance.Tuning.Melodies.Set == "european_ionian",
+                    "the tuning asset's set is unchanged: the page works on a copy");
+                SelfTest.Progress();
+                yield return new WaitForSecondsRealtime(0.3f);
+                yield return SelfTest.Capture("4-Dorian");
+                yield return QueuedInput.Press(Key.Escape);
+            }
+            else
+            {
+                yield return QueuedInput.Press(GamepadButton.East);
+            }
+
+            SelfTest.Check(Menus.Count == before && Menus.Top == (before > 0 ? under : null),
+                "Cancel closes the Melodies page, and only it");
+            SelfTest.Check(UiProbe.HasInteractable(under), "the menu under it can be used again");
+            SelfTest.Check(SelectedName() == mainAction, $"{mainAction} has the selection again: " + SelectedName());
+        }
+
+        private static bool SameDegrees(List<int> a, IReadOnlyList<int> b)
+        {
+            bool same = a.Count == b.Count;
+            for (int i = 0; same && i < a.Count; i++)
+            {
+                same = a[i] == b[i];
+            }
+
+            return same;
+        }
+
+        private static void CheckNewestFramed(MelodiesPage page)
+        {
+            int newest = page.Degrees.Count > 0 ? page.Degrees[page.Degrees.Count - 1] : -1;
+            SelfTest.Check(newest >= 0 && page.Grid.Framed == newest && page.Graph.Framed == newest,
+                $"the newest note's row and node are framed: {newest}, {page.Grid.Framed}, {page.Graph.Framed}");
+        }
+
+        // A click through the event system on a point of the canvas (an overlay: world is screen).
+        private static void Click(GameObject target, Vector3 world)
+        {
+            var click = new PointerEventData(EventSystem.current)
+            {
+                button = PointerEventData.InputButton.Left,
+                position = RectTransformUtility.WorldToScreenPoint(null, world),
+            };
+            ExecuteEvents.Execute(target, click, ExecuteEvents.pointerClickHandler);
+        }
+
+        // A kit control's component, on a child of the row the kit names ("Slider: Order" holds its Slider on "Track").
+        private static T Control<T>(RectTransform root, string name) where T : Component
+        {
+            foreach (Transform child in root.GetComponentsInChildren<Transform>())
+            {
+                if (child.name == name)
+                {
+                    return child.GetComponentInChildren<T>();
+                }
+            }
+
+            return null;
         }
 
         // Sets the board's shape on the tuning, which the grid sees on its next Update and rebuilds from.

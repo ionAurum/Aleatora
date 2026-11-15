@@ -27,8 +27,9 @@ namespace Aurumworks.Aleatora
         [SerializeField] private HexOrientation _orientation = HexOrientation.Flat;
         [Tooltip("A hexagon's centre to its corner, in metres. The cell prefab is scaled by it, so the prefab's own corner should be 1 from its centre.")]
         [SerializeField, Min(0.01f)] private float _size = 1f;
-        [Tooltip("The space between neighbours' sides, in metres. 0: they touch.")]
-        [SerializeField, Min(0f)] private float _gap;
+        // Hidden and held at 0 (Jon, 2026-11-15, ruling 22): the cells touch, so the colliders tile
+        // (ruling 14); the gap between the pads is in the cell's mesh.
+        [SerializeField, HideInInspector] private float _gap;
 
         [Header("Look")]
         [Tooltip("What each cell is made from. Modelled flat-topped (a corner on its x axis) and one unit to a corner; its colliders are not used.")]
@@ -75,8 +76,8 @@ namespace Aurumworks.Aleatora
         /// <summary>A hexagon's centre to its corner.</summary>
         public float Size => Mathf.Max(_size, 0.01f);
 
-        /// <summary>The space between neighbours' sides.</summary>
-        public float Gap => Mathf.Max(_gap, 0f);
+        /// <summary>The space between neighbours' sides: always 0, whatever the asset holds (ruling 22).</summary>
+        public float Gap => Mathf.Clamp(_gap, 0f, 0f);
 
         /// <summary>What each cell is made from; null until the tuning asset names one.</summary>
         public GameObject CellPrefab

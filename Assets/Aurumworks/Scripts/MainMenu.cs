@@ -6,7 +6,7 @@ namespace Aurumworks.Aleatora
 {
     /// <summary>
     /// The main menu, built in code in the frame every Aurumworks game's has (MainMenuFrame): the
-    /// title, Play under it, and along the bottom Settings and Quit with the version. It is drawn
+    /// title, Play and Melodies under it, and along the bottom Settings and Quit with the version. It is drawn
     /// over the scene the game starts in, which runs behind it; Play hides it, and Quit to Menu
     /// (SessionMenu) loads that scene afresh and shows it again. While it shows it counts as an open
     /// menu (MenuFocus): whatever steers a character or turns a camera checks MenuFocus.IsAnyOpen
@@ -77,6 +77,7 @@ namespace Aurumworks.Aleatora
 
             MainMenuFrame frame = MainMenuFrame.On(_screen, _title);
             UiKit.Button(frame.Choices, "Play", OnPlay, 64f, UiKit.Theme.Accent);
+            UiKit.Button(frame.Choices, "Melodies", OnMelodies, 56f);
             frame.FootButton("Settings", OnSettings, 190f);
             frame.FootButton("Quit", OnQuit, 150f);
         }
@@ -99,6 +100,8 @@ namespace Aurumworks.Aleatora
                 EventSystem.current.SetSelectedGameObject(null);
             }
         }
+
+        private void OnMelodies() => MelodiesPage.Open(Menus);
 
         private void OnSettings()
         {

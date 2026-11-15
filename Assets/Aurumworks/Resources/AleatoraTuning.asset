@@ -35,4 +35,13 @@ MonoBehaviour:
     _tonic: 60
     _low: 55
     _high: 79
-    _seed: 1
+    _seed: 2112
+  _melodyView:
+    _minimumArcShare: 0.05
+    _nodeRadius: 24
+    _arcBend: 0.16
+    _thinnestArc: 1.5
+    _thickestArc: 9
+    _arrowLength: 12
+    _arcLabelSize: 15
+    _nodeLabelSize: 20

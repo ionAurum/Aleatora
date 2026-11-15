@@ -3,7 +3,8 @@
 # Unity runs headless on the project itself, so the build refuses while an Editor has it open.
 # The screenshots and the player's log land in $TEMP/<game>-runs/<name>; the player stays in $TEMP/<game>-runs/build.
 # Usage: menucheck.sh <name>
-#   NOBUILD=1 reuses the last build (an Editor may be open then); BUILDONLY=1 stops after building.
+#   NOBUILD=1 reuses the last build (an Editor may be open then); BUILDONLY=1 stops after building;
+#   WIDTH and HEIGHT set the window (1920 × 1080 unless given).
 # Exits with the player's exit code: 0 when every check held and no error was logged.
 set -u
 # The game's own: its product name (Player Settings), its namespace, and the prefix of its command-line flags.
@@ -45,7 +46,7 @@ rm -rf "$out"; mkdir -p "$out/shots"
 key="HKCU\\Software\\Aurumworks\\$product"
 saved=
 reg export "$key" "$(w "$out/prefs.reg")" //y > /dev/null 2>&1 && saved=1
-"$runs/build/$product.exe" -screen-fullscreen 0 -screen-width 1920 -screen-height 1080 "-${game}MenuCheck" \
+"$runs/build/$product.exe" -screen-fullscreen 0 -screen-width "${WIDTH:-1920}" -screen-height "${HEIGHT:-1080}" "-${game}MenuCheck" \
   "-${game}Screenshots" "$(w "$out/shots")" -logFile "$(w "$out/player.log")"
 code=$?
 reg delete "$key" //f > /dev/null 2>&1
