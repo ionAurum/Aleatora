@@ -64,10 +64,16 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     applies when the player runs windowed; it starts in Fullscreen Window.
 24. **Dithering is on for the Main Camera** (2026-11-15), set by Jon, for the gel glow's gradients.
 25. **`m3-view` merges to `main`** (2026-11-15), ending M4.
+26. **MIDI comes first of decision 7's plans** (2026-11-15). Its first proof: decide on and
+    integrate a MIDI library, or build our own; a MIDI device selection screen (Jon uses loopMIDI
+    between Aleatora and Reaper); a MIDI channel button, a BPM box and the usual playback
+    controls, loop included, on the *Melodies* page; note on and off on that channel, driven by
+    the generated melody, as quarter notes at the BPM. One direction only; MIDI in comes later.
+    The plan: `Docs/Aleatora_Midi_Plan.md`.
 
 ## Open, each its own plan later (the plan's decision 7)
 
 - What the grid means musically (the three axes are ready to carry, say, an interval each).
 - How the generator drives the grid.
-- How notes leave Aleatora as MIDI and OSC.
+- How notes leave Aleatora as MIDI (planned first, ruling 26) and OSC.
 

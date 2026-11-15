@@ -1,22 +1,25 @@
 # Aleatora: hand-off
 
-Status (2026-11-15): **M4 done; the Markov plan is finished.** `m3-view` is merged to `main`
-(`--no-ff`). M0 to M3 and the gel pads are all on `main`. Jon's M4 rulings are Design 21 to 25:
-the seed defaults to 2112, `Gap` is hidden and held at 0, the default window is 1920 × 1080
-(he wrote "1920x180", read as 1080; confirm), Dithering is on, and the merge. 131 EditMode tests
-pass; the menu check passed after the rulings (`m4-rulings`, 0 errors).
+Status (2026-11-15): **the MIDI plan is written (`Docs/Aleatora_Midi_Plan.md`), waiting for
+Jon's go-ahead and his answers to its *Decisions for Jon*.** Jon's brief is Design ruling 26: MIDI
+out first, one direction, the *Melodies* melody as quarter notes at a BPM on a channel, into
+Reaper through loopMIDI. The Markov plan is finished and on `main` (M0 to M4; rulings to 25).
+131 EditMode tests pass; the menu check passes.
 
 Open for Jon:
-- Confirm the window size: 1920 × 1080 (ruling 23).
+- The MIDI plan's eleven decisions, each with a default. The ones most worth a look: 1 (our own
+  `winmm` wrapper rather than DryWetMIDI or RtMidi), 3 (hide Windows' GS Wavetable Synth), 4
+  (the channel as a dropdown, though he said "button"), 7 (loop repeats the melody) and 10 (Run In
+  Background on).
+- Confirm the default window, 1920 × 1080 (Design, ruling 23; he wrote "1920x180").
 
-## Next: decision 7's plans
+## Next: MIDI-1, the port (branch `midi-1-port`, from `main`)
 
-Each needs Jon's direction before planning (Design, *Open, each its own plan later*): what the
-grid means musically, how the generator drives the grid, and how notes leave as MIDI and OSC.
-Ask Jon which comes first and what he wants from it; then write its plan as its own document,
-like `Docs/Aleatora_Markov_Plan.md` (read its *How we work* section for the form).
+On Jon's go-ahead, with his rulings written into `Docs/Aleatora_Design.md` and the plan.
 
-Read: `Docs/Aleatora_Design.md` (*Decided by Jon*, rulings 14 and 18 to 25; *Open*).
+Read: `Docs/Aleatora_Midi_Plan.md` (all of it: it is short); `Docs/Aleatora_Markov_Plan.md`
+(*How we work*, *Engineering rules*); `Assets/Aurumworks/Scripts/Game/AleatoraTuning.cs`,
+`Game/Aleatora.cs`, `Editor/TuningMaker.cs`; `../Framework/README.md` (*Settings*).
 
 ## Not in any repository
 
