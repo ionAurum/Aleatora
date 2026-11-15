@@ -68,7 +68,11 @@ namespace Aurumworks.Aleatora
         }
 
         /// <summary>The tonic, as a MIDI note number.</summary>
-        public int Tonic => _tonic;
+        public int Tonic
+        {
+            get => _tonic;
+            set => _tonic = value;
+        }
 
         /// <summary>The lowest note, as a MIDI note number (Voicing widens a range narrower than eleven semitones).</summary>
         public int Low => _low;
@@ -82,6 +86,9 @@ namespace Aurumworks.Aleatora
             get => unchecked((ulong)_seed);
             set => _seed = unchecked((long)value);
         }
+
+        /// <summary>A copy to change freely: the Melodies page works on one, never on the asset.</summary>
+        public MelodyTuning Copy() => (MelodyTuning)MemberwiseClone();
 
         /// <summary>A voicing with this tuning's tonic and range.</summary>
         public Voicing MakeVoicing() => new Voicing(_tonic, _low, _high);

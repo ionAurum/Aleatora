@@ -5,7 +5,7 @@ namespace Aurumworks.Aleatora
 {
     /// <summary>
     /// The in-game menu, built in code on the framework's menu shell (SessionMenuPage): Resume,
-    /// Settings and Quit to Menu. The UI Menu action (Escape, the gamepad's Start) opens it during
+    /// Settings, Melodies and Quit to Menu. The UI Menu action (Escape, the gamepad's Start) opens it during
     /// play; Menu or UI Cancel (Escape, the gamepad's East) closes the menu on top. It doesn't pause
     /// anything; what the player steers checks MenuFocus.IsAnyOpen.
     ///
@@ -93,6 +93,7 @@ namespace Aurumworks.Aleatora
                 Leave = OnQuitToMenu,
                 Closed = () => _page = null,
             };
+            _page.Button("Melodies", () => MelodiesPage.Open(Menus));
             _page.Open(Menus);
         }
 
