@@ -9,7 +9,7 @@ Cinemachine 3.1.7, uGUI with TextMeshPro. Brought up to the Aurumworks framework
 **Read `Docs/Aleatora_Handoff.md` first.** It is the hand-off doc: the state, what comes next and
 what to read for it. Jon's rulings are in `Docs/Aleatora_Design.md`; how each system is built is
 in `Docs/Aleatora_Tech.md`; the plans with their milestones are `Docs/Aleatora_Markov_Plan.md` (finished) and
-`Docs/Aleatora_Midi_Plan.md` (MIDI out, in hand: MIDI-1 built). Read
+`Docs/Aleatora_Midi_Plan.md` (MIDI out, in hand: MIDI-1 and MIDI-2 built). Read
 the sections the hand-off names, not all of them.
 
 ## Layout

@@ -181,7 +181,7 @@ Each has the default this plan builds if Jon doesn't say otherwise.
    real thread with a `RecordingOutput`: 16 notes at 300 BPM, each note on within 5 ms of its time
    (the spread logged).
 
-**Done when** the tests pass.
+**Done when** the tests pass. **Built** 2026-11-15 (Tech, *MIDI*, *As built (MIDI-2)*).
 
 ## MIDI-3 — The screens (branch `midi-3-page`)
 

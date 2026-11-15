@@ -385,10 +385,49 @@ Our own wrapper over `winmm.dll` (Design, ruling 27), plain C# in `Midi/`.
   is how the EditMode test finds one to open. Windows MIDI Services is installed (`wdmaud2.drv`,
   `MidisrvTransferComplete`), and winmm sees the ports through it.
 
+### As built (MIDI-2, 2026-11-15, branch `midi-2-player`)
+
+- **`Midi/NotePlayer`**: the schedule, no clock of its own; every call says the time (seconds).
+  Its own lock, so the clock thread and the main thread may both call it. A copy of the notes;
+  `SetBpm` (20–300), `SetChannel`, `Velocity`, `NoteLength`, `Loop`, `Endless` (each turns the
+  other off), `Source`; `Play(now)`, `Pause(output)`, `Stop(output)`, `Release(output)`,
+  `Panic(output)`, `Advance(now, output)`; `IsPlaying`, `IsPaused`, `Position`, `Sounding`,
+  `Count`, `NoteAt`. The limits and defaults are its constants (`MidiTuning` refers to them, so
+  `Midi/` needs nothing from `Game/`). Readings where the plan was silent, flagged for Jon:
+  - *Pause*, then *Play*: the next note goes on at once, and the beats run from it.
+  - *BPM* while playing: the next note goes on a beat at the new tempo after the last note
+    went on (at once if that time is past); the note sounding keeps its length unless the next
+    note comes first.
+  - A note on found more than a beat late (the clock held up) goes on now and the beats run from
+    it, rather than the missed notes in a burst.
+  - `SetNotes(notes)` starts from the first on the next beat (*Generate*);
+    `SetNotes(notes, keepPosition: true)` plays on from the playhead (*Step*, *Tonic*). The note
+    sounding goes to its note off either way.
+  - The end (loop off) is found at the beat after the last note: playing until then, then
+    `Position` −1 and *Play* starts from the first.
+  - `Position` is the note whose beat it is: framed through its gap to the next beat, kept while
+    paused, −1 when stopped.
+- **`Midi/INoteSource`**: `TryNext(out note)`, *Endless*'s next note. Called **on the clock
+  thread inside the player's lock**, past the last note, once a beat. The page's source (MIDI-3)
+  needs its own lock around the generator and voicing, a queue of what it made for the main
+  thread to show, and must never call the player while holding that lock (the lock order is
+  `MidiPlayback`'s, then the player's, then the source's or the output's).
+- **`Game/MidiPlayback`** gains the player and the clock: `Player` (to read, and for what sends
+  nothing), `Now` (its `Stopwatch`), `SetNotes`, `Bpm`, `Channel` (a change ends the note on the
+  old channel), `Play`, `Pause`, `Stop`, `Panic` (the player's: playing goes on), `Shutdown`
+  (stops the player, ends the thread, closes; `OnDisable` and quitting call it), `IsClockRunning`.
+  The thread starts on *Play* and ends by itself once the player isn't playing: background,
+  above normal priority, `timeBeginPeriod(1)` for its life (`WinMm.BeginMillisecondTimer`),
+  `Advance` under the playback's lock, then `Sleep(1)`. An exception stops the player and is
+  logged from `Update`. A change of port (`Choose`, `Use`) ends the note on the old port and plays
+  on, on the new one. `Begin` takes the tuning's BPM, velocity and note length too.
+- **Measured** (EditMode, 2026-11-15, Jon's machine): 16 notes at 300 BPM through the thread,
+  mean 0.57 ms late, worst 1.18 ms.
+
 ## Checks
 
 - **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2, 131 as of M3,
-  166 as of MIDI-1:
+  166 as of MIDI-1, 193 as of MIDI-2:
   - `HexCoordTests`: Q + R + S = 0; the directions as named; a neighbour is one step away and its
     opposite comes back; six distinct neighbours; distance symmetric with the triangle
     inequality; equality and hashing; rounding a centre gives the cell; points round a corner
@@ -435,6 +474,17 @@ Our own wrapper over `winmm.dll` (Design, ruling 27), plain C# in `Midi/`.
     `MidiPlayback` with a recording: `Panic`, `Close`'s All Notes Off on the channel in use,
     another output closing the first, the channel clamped; `MidiTuning`'s defaults. `Begin` is
     never called, so no saved port opens.
+  - `NotePlayerTests` (MIDI-2), on made-up times advanced every millisecond: four notes at 120
+    on at 0, 0.5, 1, 1.5 and off 0.45 after each; channel and velocity in the bytes; a repeated
+    note off then on at the same time; loop off ends with nothing sounding and *Play* restarts;
+    loop on wraps; *Loop* and *Endless* exclusive; *Pause* and *Stop* leave nothing sounding,
+    *Play* resumes or restarts; *Endless* plays 12 notes past 4 from the generator, the same as
+    *Step* from the seed; no source ends it; *Panic* leaves the next note on its beat; *BPM*
+    slower and faster; clamped; a channel change ends the note on the old; new notes from the
+    next beat, or from the playhead; a note found late; no output; nothing to play.
+  - `MidiPlaybackTests` (MIDI-2): the clock thread plays 16 notes at 300 BPM, each within 5 ms
+    (the spread logged); *Pause* and *Stop* end the thread with nothing sounding, *Play* resumes;
+    `Shutdown` while playing; a change of port while playing.
   - Only the M2 tests draw random numbers, from `Rng` with fixed seeds.
 - **The menu check** (`MenuCheck.cs`), as of M0 (10 screenshots): the template's walk (main menu,
   Settings, Play, session menu and its Settings, Quit to Menu), with no volumes and no
@@ -469,4 +519,4 @@ Our own wrapper over `winmm.dll` (Design, ruling 27), plain C# in `Midi/`.
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
   `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128, then 131 of 131 after the CanvasRenderer fix; `m3` at
   1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean). MIDI-1: EditMode tests 166 of 166 (the loopMIDI test
-  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots).
+  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged).

@@ -6,8 +6,9 @@ namespace Aurumworks.Aleatora
 {
     /// <summary>
     /// Static: the calls into Windows' winmm.dll that Aleatora's MIDI uses (Design, ruling 27): list
-    /// the output ports, open one, send it a short message, reset and close it, and say what an
-    /// error means. Only MidiPorts and WinMmOutput call them, and only on Windows.
+    /// the output ports, open one, send it a short message, reset and close it, say what an
+    /// error means, and ask for the clock thread's 1 ms timer. Only MidiPorts, WinMmOutput and
+    /// MidiPlayback's clock call them, and only on Windows.
     /// </summary>
     internal static class WinMm
     {
@@ -50,8 +51,43 @@ namespace Aurumworks.Aleatora
         [DllImport("winmm.dll")]
         public static extern uint midiOutClose(IntPtr handle);
 
+        [DllImport("winmm.dll")]
+        private static extern uint timeBeginPeriod(uint milliseconds);
+
+        [DllImport("winmm.dll")]
+        private static extern uint timeEndPeriod(uint milliseconds);
+
         [DllImport("winmm.dll", CharSet = CharSet.Unicode)]
         private static extern uint midiOutGetErrorTextW(uint error, StringBuilder text, uint size);
+
+        /// <summary>
+        /// Asks Windows for a 1 ms timer, so Thread.Sleep(1) sleeps about a millisecond, not about 15
+        /// (the MIDI plan's Risks). True if granted; each grant is ended with EndMillisecondTimer.
+        /// </summary>
+        public static bool BeginMillisecondTimer()
+        {
+            try
+            {
+                return MidiPorts.IsSupported && timeBeginPeriod(1) == NoError;
+            }
+            catch (Exception)
+            {
+                return false; // No winmm: Sleep keeps its own resolution.
+            }
+        }
+
+        /// <summary>Ends a grant BeginMillisecondTimer made.</summary>
+        public static void EndMillisecondTimer()
+        {
+            try
+            {
+                timeEndPeriod(1);
+            }
+            catch (Exception)
+            {
+                // No winmm: nothing was granted.
+            }
+        }
 
         /// <summary>Windows' words for an error code, or the code if it has none.</summary>
         public static string ErrorText(uint error)

@@ -13,10 +13,10 @@ namespace Aurumworks.Aleatora
     public class MidiTuning
     {
         /// <summary>The slowest BPM.</summary>
-        public const int LowestBpm = 20;
+        public const int LowestBpm = NotePlayer.LowestBpm;
 
         /// <summary>The fastest BPM.</summary>
-        public const int HighestBpm = 300;
+        public const int HighestBpm = NotePlayer.HighestBpm;
 
         [Tooltip("The channel the Melodies page starts on, 1 to 16.")]
         [SerializeField, Range(MidiMessage.LowestChannel, MidiMessage.HighestChannel)] private int _channel = 1;
@@ -25,7 +25,7 @@ namespace Aurumworks.Aleatora
         [Tooltip("How hard each note is played, 1 to 127.")]
         [SerializeField, Range(1, MidiMessage.HighestData)] private int _velocity = 100;
         [Tooltip("How long a note sounds, as a share of its beat: 0.9 lets it go a tenth of a beat before the next. 1 holds it to the next note.")]
-        [SerializeField, Range(0.05f, 1f), FormerlySerializedAs("_gate")] private float _noteLength = 0.9f;
+        [SerializeField, Range(NotePlayer.ShortestNoteLength, 1f), FormerlySerializedAs("_gate")] private float _noteLength = 0.9f;
 
         /// <summary>The starting channel, 1–16.</summary>
         public int Channel => MidiMessage.ClampChannel(_channel);
@@ -37,6 +37,6 @@ namespace Aurumworks.Aleatora
         public int Velocity => Math.Clamp(_velocity, 1, MidiMessage.HighestData);
 
         /// <summary>How long a note sounds, as a share of its beat.</summary>
-        public float NoteLength => Mathf.Clamp(_noteLength, 0.05f, 1f);
+        public float NoteLength => Mathf.Clamp(_noteLength, NotePlayer.ShortestNoteLength, 1f);
     }
 }
