@@ -38,6 +38,10 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     rigidbodies, and one striking a cell triggers a note or the like. Not in any milestone yet.
 15. **Unity's audio is disabled** (2026-11-15). Project Settings > Audio > Disable Unity Audio.
 16. **The *Hexagons* layer is removed** (2026-11-15). Layer 10 is unnamed again.
+17. **The cells are gel pads** (2026-11-15). Soft, frosted silicone that glows from inside, after
+    the Intuitive Instruments Exquis: the `Aurumworks/GelHexPad` shader, on
+    `Rounded Hexagonal Prism.prefab` through `Gel Hex Pad.mat`. A cell's state colour is the colour
+    it glows (Tech, *Cell look*).
 
 ## Open, each its own plan later (the plan's decision 7)
 

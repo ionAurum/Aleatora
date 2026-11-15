@@ -9,6 +9,8 @@ One section per system, each with what was built under "As built". The plan is
 - *Building in code*
 - *Differences from the template*
 - *Grid* (as found, the review, as built)
+- *Melody tables* (as built)
+- *Cell look* (the gel pad shader, as built)
 - *Checks*
 
 ## Code layout
@@ -19,8 +21,8 @@ All in Assembly-CSharp (no asmdefs), namespace `Aurumworks.Aleatora`, under
 | Folder | Holds | Unity in it? |
 |---|---|---|
 | `Grid/` | `HexCoord`, `HexDirection` (with `HexDirections`), `HexShape`, `HexLayout` (with `HexOrientation`, `HexPoint`): plain C#. `HexGrid`, `HexCellView`, `GridSelection` | The last three only |
-| `Music/` (M1, M2) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing` | No |
-| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`; later `MelodyTuning`, `MarkovLibrary` | Yes |
+| `Music/` (M1; M2 from `Rng` on) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing` | No |
+| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`; later `MelodyTuning` | Yes |
 | `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `MelodyStrip` | Yes |
 | (root) | `MainMenu`, `SessionMenu`, `SettingsMenu`, `MenuCheck` | Yes |
 | `Editor/`, `Editor/Tests/` | `PlayerBuild`, `TuningMaker` (*Aleatora > Make Tuning*), EditMode tests | Editor |
@@ -134,7 +136,8 @@ The board is MathWorld's k × m × n hexagonal grid graph, in cube coordinates (
   transform at the board's middle). With no prefab on the tuning it logs an error once and draws
   nothing.
 - **`HexCellView`**: `Coord`, `IsSelected`; colour through one shared `MaterialPropertyBlock`
-  (`_BaseColor`) on the cell's renderers. States: at rest, selected.
+  (`_BaseColor`) on the cell's renderers. States: at rest, selected. Since 2026-11-15 also
+  `_Glow` and `_GlowColor` on a material that has them (*Cell look*).
 - **`GridSelection`**: a press of `Player/Left Click` casts the pointer's ray onto the plane at
   `TopHeight` and asks `Layout.Pick`; a point off the board deselects. `Player/Focus` has the
   Cinemachine camera follow the selected cell, or `Centre` with none. `PickAt(screenPoint)`,
@@ -145,7 +148,7 @@ The board is MathWorld's k × m × n hexagonal grid graph, in cube coordinates (
 - **`GridTuning`** (a section of `AleatoraTuning`): `K`, `M`, `N` (1 to 40; default 5, 5, 5),
   `Orientation` (Flat), `Size` (1), `Gap` (0), `CellPrefab` (the found prefab), `Height` (1),
   `RestColor` (white), `SelectedColor` (the found green). These reproduce the found look but for
-  the board's shape.
+  the board's shape. `RestGlow` (0) and `SelectedGlow` (1) came later (*Cell look*).
 - **Not carried over:** cells are on the prefab's layer, not *Hexagons* (Jon agreed); the old
   grid's half-cell centring error is gone.
 - **The cell's collider** stays on the prefab (Design, ruling 14): a non-convex MeshCollider on
@@ -154,9 +157,97 @@ The board is MathWorld's k × m × n hexagonal grid graph, in cube coordinates (
   0 parts the colliders too, which ruling 14 doesn't want (Design, *Open, from M0's report*).
 - Unity's audio is disabled in Project Settings, and the *Hexagons* layer is gone (2026-11-15).
 
+## Melody tables
+
+### As built (M1, 2026-11-15, branch `m1-tables`)
+
+- **The tables** are in `Assets/Aurumworks/Resources/Markov/`: 17 sets and `Index.txt`, 1.8 MB of
+  LF text, in git as text. `python -I Tools/markov.py Tools/Markov/Source
+  Assets/Aurumworks/Resources/Markov` writes them again (it rewrites nothing that is identical).
+  Every set has orders 1 to 4. `german_dorian` has 11 order-1 rows, not 12: a degree never
+  played has no row.
+- **`Music/Degree`**: `Count`, `IsValid`, `Name` (as on disk), `Display` (♭ and ♯), `TryParse`
+  for a string and for a span.
+- **`Music/ModeScale`**: `Mask(mode)`, `Has(mask, degree)`, `Contains(mode, degree)`, `All`
+  (4095, an unknown mode's).
+- **`Music/MarkovTable`**: as the plan's M1, task 4. A context is packed base 12, oldest degree
+  most significant; per order a `Dictionary<int, int>` gives its row's offset in one flat
+  `int[]`. Beyond the plan: **an empty context is order 0** (`TryGetCounts` gives the unigram,
+  `Total` gives `Notes`, `Contexts(0)` the one empty context), ready for M2's back-off;
+  `ContextCount(order)`; `HighestOrder` = 8 (12⁸ still packs into an int).
+- **`Music/MarkovTableReader`**: `Read(text, out table)` never throws; errors carry line numbers
+  and stop being listed after 20. It makes every check of the plan's *The tables on disk*, and
+  also refuses: a header line missing, twice, or after the first `order`; orders out of turn
+  (they run 1, 2, …); an unknown line. Blank lines and spaces at a line's end are passed over.
+  `ReadIndex(text)` reads `Index.txt`.
+  **What it can't tell:** a file cut exactly at the end of an order reads as a whole table of
+  fewer orders (the format has no last line). The menu check and the tests ask for four orders.
+- **`Game/MarkovLibrary`**: `Names`, `TryGet(name, out table)`. A set the index doesn't list is
+  not found and logs nothing. A set whose file is missing, fails to read, or whose `set` line is
+  not its file's name logs one error and is not tried again.
+
+## Cell look
+
+### As built (2026-11-15, outside the milestones, uncommitted)
+
+Built at Jon's request by Claude in the desktop app (not C2) from a study of the Intuitive
+Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath.
+
+- **`Assets/Aurumworks/Shaders/GelHexPad.shader`** (`Aurumworks/GelHexPad`), hand-written URP
+  HLSL, desktop only. Passes: ForwardLit, ShadowCaster, DepthOnly, DepthNormals (SSAO). Main and
+  additional lights with shadows, Forward+ (`_FORWARD_PLUS` before Unity 6.1,
+  `_CLUSTER_LIGHT_LOOP` after), SSAO, reflection probes, fog. Two layers:
+  - *Gel surface*, always on: wrapped diffuse with a subsurface tint (a soft terminator),
+    back-light transmission through the thin top edges, rough GGX "frost" specular with a little
+    normal noise, rim scatter at silhouettes, contact darkening at the base.
+  - *LED glow*: a virtual LED on the cell's axis. Its light falls off as e^(−density·d)/d through
+    the gel, normalised so the top centre is 1: `_GlowIntensity` is the HDR brightness there at
+    `_Glow` 1, and `_ScatterDensity` only sets the contrast. The brightest part turns toward white
+    (`Hot Core *`; light glows stay saturated), the silhouettes darken (`Glow Rim`), and a thin
+    highlight follows the rounded top edge (`Bevel Edge Catch`, picked by object-space normal.y).
+- **Object space is the shader's frame**: +Y up, the cell on the Y axis. `_CapBase` is the
+  object-space y of the cell's bottom, `_CapHeight` its height, `_CapApothem` centre to flat side.
+  The cell's scale (Size, Height) doesn't change object space, so the glow keeps its shape. Batching
+  that bakes meshes into world space would break it; the cells are made at run time and aren't
+  batched.
+- **`Rounded Hexagonal Prism.fbx`, measured** (from the file): Y up, pivot at the centre,
+  x ±0.929 (corners, rounded), z ±0.823 (flats), y ±0.5, rounded top and bottom edges, 1,092
+  vertices. Normals are calculated on import (smoothing angle 60°).
+- **`Assets/Aurumworks/Materials/Gel Hex Pad.mat`** is on `Rounded Hexagonal Prism.prefab` (its one
+  material slot) in place of `Hexagon-Leather035D_1K`, which stays, unused. Where it differs from
+  the shader's defaults: `_CapBase` −0.5, `_CapHeight` 1, `_CapApothem` 0.82, `_LedHeight` 0.35
+  (inside the cell: the prism is tall, and with the LED under it the side walls' bases were nearer
+  the LED than the top and burned out white) and `_ScatterDensity` 1.8. Every look value is on the
+  material, for Jon to tune in the Inspector, live.
+- **Per cell**, `HexCellView` writes the shared `MaterialPropertyBlock`: `_BaseColor` = the
+  material's own base colour × `RestColor`; `_GlowColor` = the state's colour (`RestColor` or
+  `SelectedColor`); `_Glow` = `RestGlow` or `SelectedGlow`. It reads each renderer's
+  `sharedMaterial` once, in `Place`. On a material without `_Glow` and `_GlowColor` it does what it
+  did: the selected colour replaces the base colour. One change for every material: at rest the
+  base colour is now the material's times `RestColor`, as the tooltip always said, instead of
+  `RestColor` alone (the same at white).
+- **`GridTuning`** gained `RestGlow` (0) and `SelectedGlow` (1), 0 to 1, read live; added to
+  `AleatoraTuning.asset` with those values.
+- **What the glow wants from the scene:** Bloom, which Jon turned on in `SampleSceneProfile`
+  (intensity 15, 2026-11-15), and Dithering on the Main Camera (still off), or the smooth
+  gradients band. HDR is already on in `PC_RPAsset`. Jon also set the `Emitter` object inactive in
+  the scene.
+- **Not modelled:** light from a lit cell onto its neighbours (a small, dim, shadowless point
+  light under a lit cell would do it).
+- **`.meta` files:** `GelHexPad.shader.meta` (`72dc08d87857432990edacf3ef687e69`) and `Gel Hex Pad.mat.meta` (`0d53381a64324f70b2563f1e5f0b4a65`)
+  were written by hand with new GUIDs, against the rule in `CLAUDE.md`, because the prefab had to
+  name the material before Unity had imported it. Don't regenerate them; the prefab and material
+  reference those GUIDs. Unity made `Assets/Aurumworks/Shaders.meta`.
+- **Verified:** every pass and keyword variant compiles with DXC against the URP 17.0 shader
+  library (`6000.0/staging`); the C# compiles against stand-ins for UnityEngine; the material
+  values were chosen from a software render of the shader's maths on the measured mesh. Seen by Jon
+  in the Editor; the 69 EditMode tests pass with it. **Not verified:** the menu check.
+- **Left out of the package it came from:** `GelPadVisual` (a per-pad driver that would fight
+  `HexCellView` for the property block) and `HexCapMeshGenerator` (the prefab has its own mesh).
+
 ## Checks
 
-- **EditMode tests** (`Editor/Tests/`), 21 as of M0:
+- **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1:
   - `HexCoordTests`: Q + R + S = 0; the directions as named; a neighbour is one step away and its
     opposite comes back; six distinct neighbours; distance symmetric with the triangle
     inequality; equality and hashing; rounding a centre gives the cell; points round a corner
@@ -168,6 +259,13 @@ The board is MathWorld's k × m × n hexagonal grid graph, in cube coordinates (
   - `HexLayoutTests`, both orientations: `Pick(Position(c)) == c` on 7 × 5 × 3, and for a point
     inside each cell; neighbours √3 · Size + Gap apart; a centred board's middle at the origin;
     +K east in Pointy and north in Flat; Flat at Size 1, Gap 0 spaced as the old grid.
+  - `DegreeTests` (M1): names as on disk and back; what is no degree; ♭ and ♯; each mode's
+    degrees; an unknown mode has all twelve.
+  - `MarkovTableTests` (M1): all 17 sets load from `Resources`, through the reader and the
+    library; `european_ionian`'s known values; the invariants for every set and order, through
+    the table's own API; contexts outside the table; 24 malformed tables, each with the error it
+    must name; no text; the tiny table cut at every length; the cap on errors; CRLF as LF; the
+    index.
   - The tests draw no random numbers.
 - **The menu check** (`MenuCheck.cs`), as of M0 (10 screenshots): the template's walk (main menu,
   Settings, Play, session menu and its Settings, Quit to Menu), with no volumes and no
@@ -177,5 +275,8 @@ The board is MathWorld's k × m × n hexagonal grid graph, in cube coordinates (
   3 × 5 × 7 (57) and 5 × 5 × 5 pointy (61), set through the tuning (`3-Grid`,
   `3-Grid-Parallelogram`, `3-Grid-Uneven`, `3-Grid-Pointy`); and under the session menu a pick
   selects nothing.
+  As of M1, `CheckTables` after `CheckGrid`: the index lists 17 sets; each reads with four
+  orders; `european_ionian`'s melodies, notes and notes after `7`; an unlisted set is not found.
 - **Runs (2026-11-15):** `m0-setup` and `m0-setup2` on `main` (exit 0; the second left the tree
-  clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean).
+  clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean). M1: EditMode tests 69 of 69;
+  `m1-tables` on `m1-tables` (exit 0, 51 checks held, tree clean).

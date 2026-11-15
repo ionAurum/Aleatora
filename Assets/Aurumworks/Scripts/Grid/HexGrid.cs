@@ -8,8 +8,8 @@ namespace Aurumworks.Aleatora
     /// (HexShape), laid out flat or pointy (HexLayout) with its middle on this object, one
     /// HexCellView a cell, made from the tuning's prefab. It reads the tuning every frame: a change
     /// to the dimensions, orientation, size, gap or prefab rebuilds the board (Rebuilt), and a
-    /// change to the height or the colours shows at once, so the look can be tuned in play. Made by
-    /// the bootstrap (Aleatora), not in a scene.
+    /// change to the height, the colours or the glow shows at once, so the look can be tuned in
+    /// play. Made by the bootstrap (Aleatora), not in a scene.
     /// </summary>
     public class HexGrid : MonoBehaviour
     {
@@ -24,6 +24,7 @@ namespace Aurumworks.Aleatora
         private float _size, _gap, _height;
         private GameObject _prefab;
         private Color _restColor, _selectedColor;
+        private float _restGlow, _selectedGlow;
 
         /// <summary>The board's shape; null before it is first built.</summary>
         public HexShape Shape { get; private set; }
@@ -84,7 +85,8 @@ namespace Aurumworks.Aleatora
                 Rebuilt?.Invoke();
             }
             else if (!Mathf.Approximately(_tuning.Height, _height) || _tuning.RestColor != _restColor
-                || _tuning.SelectedColor != _selectedColor)
+                || _tuning.SelectedColor != _selectedColor || !Mathf.Approximately(_tuning.RestGlow, _restGlow)
+                || !Mathf.Approximately(_tuning.SelectedGlow, _selectedGlow))
             {
                 ApplyLook();
             }
@@ -151,6 +153,8 @@ namespace Aurumworks.Aleatora
             _height = _tuning.Height;
             _restColor = _tuning.RestColor;
             _selectedColor = _tuning.SelectedColor;
+            _restGlow = _tuning.RestGlow;
+            _selectedGlow = _tuning.SelectedGlow;
 
             var scale = new Vector3(_size, _height, _size);
             foreach (HexCellView cell in _cells)

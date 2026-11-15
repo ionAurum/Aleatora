@@ -5,10 +5,10 @@ namespace Aurumworks.Aleatora
 {
     /// <summary>
     /// The grid's tuning, a section of AleatoraTuning: the board's three dimensions, which way its
-    /// hexagons face, their size and spacing, and how a cell looks. HexGrid reads it every frame: a
-    /// change to the shape rebuilds the board, a change to the look shows at once, so all of it
-    /// can be tuned in play. The defaults are the grid as it was found (Docs/Aleatora_Tech.md,
-    /// Grid), but for its shape.
+    /// hexagons face, their size and spacing, and how a cell looks (its colours and glow). HexGrid
+    /// reads it every frame: a change to the shape rebuilds the board, a change to the look shows
+    /// at once, so all of it can be tuned in play. The defaults are the grid as it was found
+    /// (Docs/Aleatora_Tech.md, Grid), but for its shape and the glow.
     /// </summary>
     [Serializable]
     public class GridTuning
@@ -37,8 +37,12 @@ namespace Aurumworks.Aleatora
         [SerializeField, Min(0.01f)] private float _height = 1f;
         [Tooltip("A cell's colour at rest: the material's base colour is multiplied by it. White leaves the material as it is.")]
         [SerializeField] private Color _restColor = Color.white;
-        [Tooltip("The selected cell's colour.")]
+        [Tooltip("The selected cell's colour. On a material with a glow (the gel pad shader) it is the colour the cell lights up with; on any other it replaces the base colour.")]
         [SerializeField] private Color _selectedColor = new(68f / 255f, 214f / 255f, 44f / 255f);
+        [Tooltip("How brightly a cell at rest glows in the rest colour, 0 to 1. Only on a material with a glow; its brightness at 1 is the material's Glow Intensity.")]
+        [SerializeField, Range(0f, 1f)] private float _restGlow;
+        [Tooltip("How brightly the selected cell glows in the selected colour, 0 to 1. Only on a material with a glow; its brightness at 1 is the material's Glow Intensity.")]
+        [SerializeField, Range(0f, 1f)] private float _selectedGlow = 1f;
 
         /// <summary>Cells along the k axis, 1 to LongestSide.</summary>
         public int K
@@ -89,5 +93,11 @@ namespace Aurumworks.Aleatora
 
         /// <summary>The selected cell's colour.</summary>
         public Color SelectedColor => _selectedColor;
+
+        /// <summary>How brightly a cell at rest glows, 0 to 1, on a material with a glow.</summary>
+        public float RestGlow => Mathf.Clamp01(_restGlow);
+
+        /// <summary>How brightly the selected cell glows, 0 to 1, on a material with a glow.</summary>
+        public float SelectedGlow => Mathf.Clamp01(_selectedGlow);
     }
 }

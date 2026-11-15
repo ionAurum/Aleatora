@@ -13,7 +13,8 @@ the sections the hand-off names, not all of them.
 
 ## Layout
 - Everything of ours is under `Assets/Aurumworks/`: `Materials/`, `Meshes/`, `Physics Materials/`,
-  `Prefabs/`, `Textures/` (moved there by Jon, 2026-11-15), `Resources/`, `ScriptableObjects/`.
+  `Prefabs/`, `Textures/` (moved there by Jon, 2026-11-15), `Resources/`, `ScriptableObjects/`,
+  `Shaders/` (the cells' gel pad shader, `GelHexPad.shader`: `Docs/Aleatora_Tech.md`, *Cell look*).
 - `Assets/Aurumworks/Scripts/`: our code, in Assembly-CSharp, namespace `Aurumworks.Aleatora`.
   The folders under it are in `Docs/Aleatora_Tech.md` (*Code layout*). The grid's coordinates,
   shapes and layout, and everything under `Music/`, are plain C# with no `UnityEngine` in them, so
@@ -63,7 +64,10 @@ the sections the hand-off names, not all of them.
 - **Deterministic.** Every random draw comes from the project's own seeded generator
   (`Music/Rng`, M2), never `UnityEngine.Random` or `System.Random`.
 - **No material instances at run time.** Per-cell colour goes through a `MaterialPropertyBlock`,
-  never `renderer.material`.
+  never `renderer.material`. `HexCellView` owns the cells' block: `_BaseColor`, and on the gel
+  material `_Glow` and `_GlowColor`. The gel's look is on `Gel Hex Pad.mat`; its glow reads object
+  space, so keep the cells out of static batching and keep `_CapBase`, `_CapHeight` and
+  `_CapApothem` matched to the cell's mesh.
 
 ## Code style
 `../Framework/README.md` (*Code style*): braces on their own lines, `_camelCase` private fields,

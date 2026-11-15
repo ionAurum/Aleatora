@@ -1,0 +1,18 @@
+// The sets in this folder, one per line (Tools/markov.py writes it).
+chinese_han_gong
+chinese_han_yu
+chinese_han_zhi
+european_aeolian
+european_dorian
+european_harmonic_minor
+european_ionian
+european_mixolydian
+german_aeolian
+german_dorian
+german_harmonic_minor
+german_ionian
+german_mixolydian
+irish_aeolian
+irish_dorian
+irish_ionian
+irish_mixolydian
