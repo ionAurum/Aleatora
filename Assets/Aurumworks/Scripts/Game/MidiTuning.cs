@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Aurumworks.Aleatora
 {
@@ -24,7 +25,7 @@ namespace Aurumworks.Aleatora
         [Tooltip("How hard each note is played, 1 to 127.")]
         [SerializeField, Range(1, MidiMessage.HighestData)] private int _velocity = 100;
         [Tooltip("How long a note sounds, as a share of its beat: 0.9 lets it go a tenth of a beat before the next. 1 holds it to the next note.")]
-        [SerializeField, Range(0.05f, 1f)] private float _gate = 0.9f;
+        [SerializeField, Range(0.05f, 1f), FormerlySerializedAs("_gate")] private float _noteLength = 0.9f;
 
         /// <summary>The starting channel, 1–16.</summary>
         public int Channel => MidiMessage.ClampChannel(_channel);
@@ -36,6 +37,6 @@ namespace Aurumworks.Aleatora
         public int Velocity => Math.Clamp(_velocity, 1, MidiMessage.HighestData);
 
         /// <summary>How long a note sounds, as a share of its beat.</summary>
-        public float Gate => Mathf.Clamp(_gate, 0.05f, 1f);
+        public float NoteLength => Mathf.Clamp(_noteLength, 0.05f, 1f);
     }
 }

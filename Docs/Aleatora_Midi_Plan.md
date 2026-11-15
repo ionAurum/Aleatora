@@ -87,7 +87,7 @@ Each has the default this plan builds if Jon doesn't say otherwise.
    (*Later*).
 5. **The BPM box.** A text field like *Seed*: whole numbers, 20 to 300, **default 120**; anything
    else puts the last value back. Its default is on the tuning asset.
-6. **The note.** A quarter note at the BPM; the note off at **90%** of the beat (the gate), at
+6. **The note.** A quarter note at the BPM; the note off at **90%** of the beat (the note length), at
    velocity **100**. Both are on the tuning asset (a new `Midi` section), not on the page.
 7. **The transport.** **Default:** *Play* (it becomes *Pause* while playing; *Play* again resumes),
    *Stop* (all notes off, back to the first note) and *Loop* (a toggle, off by default). It plays
@@ -130,12 +130,12 @@ Each has the default this plan builds if Jon doesn't say otherwise.
   - `RecordingOutput`: an `IMidiOutput` that keeps what it was sent and when, for the tests and
     the menu check.
   - `NotePlayer`: the schedule, with no clock of its own. It holds a copy of the notes, the BPM,
-    gate, channel, velocity and loop. `Play(now)`, `Pause(now)`, `Stop()`, `SetNotes`, `SetBpm`,
+    note length, channel, velocity and loop. `Play(now)`, `Pause(now)`, `Stop()`, `SetNotes`, `SetBpm`,
     `SetChannel`, `Endless` with the source of its next note, and `Advance(now, output)`, which sends everything due by `now` in order (a note
     off before a note on at the same time, so a repeated note sounds twice); `Position`, the
     sounding note. A test drives it with made-up times.
 - **`Scripts/Game/`**:
-  - `MidiTuning` (on `AleatoraTuning` as `Midi`): `Channel` 1, `Bpm` 120, `Velocity` 100, `Gate`
+  - `MidiTuning` (on `AleatoraTuning` as `Midi`): `Channel` 1, `Bpm` 120, `Velocity` 100, `NoteLength`
     0.9.
   - `MidiPlayback` (a MonoBehaviour, made by the `Aleatora` bootstrap): owns the open port and the
     clock thread; opens the saved port at start; `Play`, `Pause`, `Stop`, `Position`, `Panic`;

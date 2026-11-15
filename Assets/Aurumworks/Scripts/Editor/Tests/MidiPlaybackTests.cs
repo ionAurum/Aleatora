@@ -133,7 +133,7 @@ namespace Aurumworks.Aleatora.Tests
             Assert.That(tuning.Channel, Is.EqualTo(1));
             Assert.That(tuning.Bpm, Is.EqualTo(120));
             Assert.That(tuning.Velocity, Is.EqualTo(100));
-            Assert.That(tuning.Gate, Is.EqualTo(0.9f));
+            Assert.That(tuning.NoteLength, Is.EqualTo(0.9f));
             Assert.That(AleatoraTuning.Load().Midi, Is.Not.Null, "the asset has its Midi section");
         }
     }

@@ -369,7 +369,8 @@ Our own wrapper over `winmm.dll` (Design, ruling 27), plain C# in `Midi/`.
   given), and what is sounding (note on adds; note off, note on at 0 or CC 123 on its channel
   removes; `Dispose` clears). Thread-safe.
 - **`Game/MidiTuning`**, on `AleatoraTuning` as `Midi` (added to the asset): `Channel` 1, `Bpm` 120
-  (20–300), `Velocity` 100, `Gate` 0.9 (0.05–1).
+  (20–300), `Velocity` 100, `NoteLength` 0.9
+  (0.05–1; a share of the beat, called `Gate` until Jon asked for a clearer name).
 - **`Game/MidiPlayback`**, added to the `Aleatora` object by the bootstrap (`Aleatora.Midi`):
   `Begin` takes the tuning's channel and opens the saved port (`Aurumworks.Midi.Output`, "" for
   None), **but none in a self-test**. `Choose(name)` saves (and `Settings.Save`s) and opens;

@@ -49,4 +49,4 @@ MonoBehaviour:
     _channel: 1
     _bpm: 120
     _velocity: 100
-    _gate: 0.9
+    _noteLength: 0.9
