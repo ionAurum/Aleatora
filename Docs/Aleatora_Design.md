@@ -69,3 +69,17 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
   tritone" can't hold. Built as the plan says; the test was changed (Tech, *Melody generator*).
   Jon: keep it, or another rule (say, the nearest placement inside the range)?
 - The seed's default is 1; the plan names none.
+
+## Open, from M3's report (2026-11-15)
+
+M3's hard stop: Jon looks at the *Melodies* page and rules on its layout and colours. Beyond
+the plan, for him to rule on (Tech, *Melodies page*):
+
+- **The layout.** The graph takes the height above the strip, with the bars and the grid stacked
+  at its left (the plan had the bars across the top; the graph needed the room).
+- **The graph's arcs bow inward**, the two directions of a pair by `ArcBend` and twice it.
+  Ordinary arcs muted at 60%; the newest note's in accent.
+- **Bars scaled to the tallest**, not to a probability of 1.
+- **The page opens with a melody made**, and covers what it opens over (Background, opaque).
+- **No flat or sharp signs**: the theme sets no fonts and the default has neither, so `b3`,
+  `#4`. A font with them in the theme's *Body* shows ♭3 and ♯4.

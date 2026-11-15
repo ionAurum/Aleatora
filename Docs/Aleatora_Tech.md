@@ -11,6 +11,7 @@ One section per system, each with what was built under "As built". The plan is
 - *Grid* (as found, the review, as built)
 - *Melody tables* (as built)
 - *Melody generator* (as built)
+- *Melodies page* (as built)
 - *Cell look* (the gel pad shader, as built)
 - *Checks*
 
@@ -23,8 +24,8 @@ All in Assembly-CSharp (no asmdefs), namespace `Aurumworks.Aleatora`, under
 |---|---|---|
 | `Grid/` | `HexCoord`, `HexDirection` (with `HexDirections`), `HexShape`, `HexLayout` (with `HexOrientation`, `HexPoint`): plain C#. `HexGrid`, `HexCellView`, `GridSelection` | The last three only |
 | `Music/` (M1; M2 from `Rng` on) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing` | No |
-| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2) | Yes |
-| `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip` | Yes |
+| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2), `MelodyViewTuning` (M3) | Yes |
+| `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip`; the static `ViewText` and `ViewMesh` | Yes |
 | (root) | `MainMenu`, `SessionMenu`, `SettingsMenu`, `MenuCheck` | Yes |
 | `Editor/`, `Editor/Tests/` | `PlayerBuild`, `TuningMaker` (*Aleatora > Make Tuning*), EditMode tests | Editor |
 
@@ -285,9 +286,55 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
   constraint (Unity's GC.Alloc recorder). The plan's `GC.GetAllocatedBytesForCurrentThread`
   counts nothing on Unity's Mono; the test also checks that the recorder catches a 4 KB array.
 
+## Melodies page
+
+### As built (M3, 2026-11-15, branch `m3-view`)
+
+- **`View/MelodiesPage`**: `MelodiesPage.Open(menus)` opens it with `MenuStack.Open` and adds the
+  component to the panel. From the main menu (*Melodies*, under *Play*) and the session menu
+  (*Melodies*, after *Settings*). It works on `MelodyTuning.Copy()`; the asset is never written.
+  Controls at the left, 560 px wide: *Set* (`ViewText.SetName`, read from the set's name so
+  listing them reads no table), *Order* (the kit's slider set to 0–4, whole numbers), *Temperature*
+  (0.25 × 16^v, 0.25–4), *Tonic* (C … B; keeps the tonic's octave), *Seed* (`InputField: Seed`,
+  a whole number from 0; anything else puts the seed back), *Generate* (accent), *Step*, *Back*.
+  At the right: the graph takes the height above the strip; *The set*, *Next note* and
+  *Transitions* are stacked at its left; *Melody* runs along the bottom.
+  Beyond the plan: **it makes a melody from the seed as it opens**; **its backdrop is the theme's
+  Background, opaque** (the stack's scrim let the main menu show through the panels); changing
+  *Set* makes a new melody from the seed; *Order* and *Temperature* apply from the next step;
+  *Tonic* places the melody so far again; *Next note*'s caption names the context used
+  ("after 5 3 · order 2 of 2 · 17,602 notes"; the first note "first note · from how 7,136
+  melodies begin"); a clicked row reads "after 5 · order 1 · 91,139 notes".
+- **`View/DegreeBars`** (a `MaskableGraphic`): twelve bars **scaled to the tallest** (the plan
+  says "the height its probability"; at full scale the unigram's tallest bar would be a fifth of
+  the panel); the share over each, the name under, the caption under all. In-mode bars in accent,
+  the rest muted; the chosen degree framed in the text colour.
+- **`View/TransitionGrid`**: as the plan. Names along both edges at 15 pt (in-mode in the text
+  colour, the rest muted); a row the table never heard is all panel colour. `RowAt` and
+  `OnPointerClick`.
+- **`View/TransitionGraph`** (a `MaskableGraphic`; ruling 18): nodes on a chromatic circle as
+  large as the panel allows once room is kept for the loops and their shares. **Arcs bow inward**:
+  a step clockwise (up to six semitones; six from the lower degree) by `ArcBend` of its chord,
+  the way back by twice it. Bowed outward to the right of travel (the first try), an arc between
+  degrees two apart ran through the node between them, its share on top of that node. Arc width
+  `Lerp(ThinnestArc, ThickestArc, share)`; ordinary arcs in muted at 60% alpha, the framed node's
+  in accent and drawn after; each share on a patch of the panel colour. A loop is the part of a
+  circle outside its node. `NodeAt`, `NodeCentre`, `ArcCount`, `SmallestShare`.
+- **`View/MelodyStrip`** (a `MaskableGraphic`): as the plan, the newest note's column framed and
+  the tonic's rows named at the left ("C4").
+- **`View/ViewText`**: shares as ".42", "<.01", "0", "1"; set, tonic and note names; counts with
+  commas. **Flat and sharp signs only if the font has them**: the theme sets no fonts, and
+  TextMeshPro's default LiberationSans has no ♭ or ♯, so the page writes `b3` and `#4`.
+  **`View/ViewMesh`**: rectangles, frames, thick polylines, discs, rings, triangles.
+- **`Game/MelodyViewTuning`**, on `AleatoraTuning` as `MelodyView` (added to the asset), read
+  live (the graph rebuilds when a value changes): `MinimumArcShare` 0.05, `NodeRadius` 24,
+  `ArcBend` 0.16, `ThinnestArc` 1.5, `ThickestArc` 9, `ArrowLength` 12, `ArcLabelSize` 15,
+  `NodeLabelSize` 20. Colours are the theme's.
+- `MelodyTuning` gained `Copy()` and a setter on `Tonic`.
+
 ## Checks
 
-- **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2:
+- **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2, 128 as of M3:
   - `HexCoordTests`: Q + R + S = 0; the directions as named; a neighbour is one step away and its
     opposite comes back; six distinct neighbours; distance symmetric with the triangle
     inequality; equality and hashing; rounding a centre gives the cell; points round a corner
@@ -320,6 +367,8 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
   - `VoicingTests` (M2): in range and in pitch class over six ranges (to 0 and 127); the first note
     nearest the tonic; a tritone tie toward the middle; a worked melody with an octave move at the
     top; narrow, backward and out-of-MIDI ranges made whole; leaps (see *Melody generator*).
+  - `MelodiesPageTests` (M3): shares in hundredths at the edges; set names, and every shipped
+    set has a corpus and a mode; the temperature slider's ends, middle and round trip.
   - Only the M2 tests draw random numbers, from `Rng` with fixed seeds.
 - **The menu check** (`MenuCheck.cs`), as of M0 (10 screenshots): the template's walk (main menu,
   Settings, Play, session menu and its Settings, Quit to Menu), with no volumes and no
@@ -334,8 +383,19 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
   As of M2, `CheckGenerator` after `CheckTables`: the tuning has its Melodies section; its set
   reads; 200 steps twice from its seed are the same; every degree, order and note in range. It logs
   the first 16 (`european_ionian`, seed 1, order 2: `3/64 1/60 1/60 7/59 6/57 5/55 …`).
+  As of M3, `CheckMelodies`, from the main menu (all through) and from the session menu (opens,
+  then the gamepad's East): it opens over the menu with *Generate* selected, nothing under it
+  usable, navigation reaching all 8 controls and nothing else, 32 notes; seed 1 and *Generate*
+  twice make the same 32; the newest note's row and node framed; the graph's arcs (58 for
+  `european_ionian`), none under the minimum (`4-Melodies`); *Order* 4 and eight *Steps*, each
+  `OrderUsed` ≤ 4, `OrderAsked` 4, the bars summing to 1, the note outlined; a click on the node
+  of 5 and on the grid's row of ♭3 show those rows; *Tonic* D moves every note; *Set*
+  `irish_dorian` (52 arcs, "Irish · dorian"; `4-Dorian`); the asset's set unchanged; Escape
+  closes it and the selection returns to *Play* (*Resume* from the session menu). 12 screenshots.
+  `menucheck.sh` takes `WIDTH` and `HEIGHT` (1920 × 1080 unless given).
 - **Runs (2026-11-15):** `m0-setup` and `m0-setup2` on `main` (exit 0; the second left the tree
   clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean). M1: EditMode tests 69 of 69;
   `m1-tables` on `m1-tables` (exit 0, 51 checks held, tree clean). Before merging M1 (with the
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
-  `m2-generator` (exit 0, 55 checks held, tree clean).
+  `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128; `m3` at
+  1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean).

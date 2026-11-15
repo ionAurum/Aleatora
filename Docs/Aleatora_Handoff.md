@@ -1,32 +1,35 @@
 # Aleatora: hand-off
 
-Status (2026-11-15): **M2 built on branch `m2-generator`, waiting for Jon's go-ahead to merge.**
-M0, M1 and the gel pads are on `main` (M1 merged `--no-ff` with the gel pads and Jon's Bloom 15
-and `Emitter` off). M2: `Music/Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`,
-`Voicing`, and `Game/MelodyTuning` on the tuning asset (`Melodies`). 107 EditMode tests pass; the
-menu check passes (55 checks, tree clean). What was built: `Docs/Aleatora_Tech.md` (*Melody
-generator*, "As built"). The plan is `Docs/Aleatora_Markov_Plan.md`; Jon's rulings are in
-`Docs/Aleatora_Design.md`.
+Status (2026-11-15): **M3 built on branch `m3-view`; hard stop, Jon looks at the *Melodies*
+page.** M0, M1, M2 and the gel pads are on `main` (M2 merged `--no-ff`). Ruling 18 (Design): a
+transition graph beside the grid, committed to `main` before branching. M3: `View/MelodiesPage`,
+`DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip`, `ViewText`, `ViewMesh`;
+`Game/MelodyViewTuning` on the tuning asset (`Melody View`). 128 EditMode tests pass; the menu
+check passes at 1920 × 1080 and 1280 × 720 (94 checks, 12 screenshots, tree clean). What was
+built: `Docs/Aleatora_Tech.md` (*Melodies page*). The plan is `Docs/Aleatora_Markov_Plan.md`.
 
 Open for Jon:
-- From M2 (`Docs/Aleatora_Design.md`, *Open, from M2's report*): the voicing's leaps at the
-  range's edges (the plan's test couldn't hold; changed); the seed's default (1).
-- Beyond the plan, for him to know: `MelodyStep.IsFirst`; `MelodyGenerator.SetHistory`; the
-  generator's settings are their own Inspector fields on `MelodyTuning`; the allocation test uses
-  Unity's recorder, since Mono's counter counts nothing.
+- From M3 (`Docs/Aleatora_Design.md`, *Open, from M3's report*): the layout (graph full height
+  at the right), arcs bowing inward, bars scaled to the tallest, a melody made on opening, the
+  opaque backdrop, no ♭/♯ in the default font.
+- From M2 (Design, *Open, from M2's report*): the voicing's leaps at the range's edges; the
+  seed's default (1).
 - Dithering on the Main Camera, which the gel glow wants (Tech, *Cell look*).
-- From M0 (`Docs/Aleatora_Design.md`, *Open, from M0's report*): the window size; the cell
-  colliders part when `Gap` is above 0 (ruling 14).
+- From M0 (Design, *Open, from M0's report*): the window size; the cell colliders part when `Gap`
+  is above 0 (ruling 14).
 
-## Next: merge M2, then M3, the view (branch `m3-view`, from `main`)
+## Next: Jon's rulings on the page, then M4
 
-On Jon's go-ahead: merge `m2-generator` into `main` (`--no-ff`), then branch. M3 ends in a hard
-stop: Jon looks at the *Melodies* page.
+Jon opens *Melodies* from the main menu (or Escape in play, then *Melodies*) and tries it. The
+graph's look is on `AleatoraTuning.asset` > *Melody View*, live. His rulings go into
+`Docs/Aleatora_Design.md` (*Decided by Jon*, dated); changes to the page are made on `m3-view`,
+then the menu check is run again (`bash Tools/menucheck.sh <name>`, with `WIDTH=1280
+HEIGHT=720` for the small size) and the screenshots looked at. On his go-ahead, M4: `m3-view`
+merges to `main` (`--no-ff`).
 
-Read: `Docs/Aleatora_Markov_Plan.md` (*Decisions for Jon* 4, *M3*); `Docs/Aleatora_Tech.md`
-(*Melody generator*, *Checks*); `Assets/Aurumworks/Scripts/Music/MelodyGenerator.cs`,
-`MelodyStep.cs`; `Game/MelodyTuning.cs`; the menus (`MainMenu.cs`, `SessionMenu.cs`) and
-`../Framework/README.md` for the UI kit.
+Read: `Docs/Aleatora_Design.md` (*Open, from M3's report*); `Docs/Aleatora_Tech.md` (*Melodies
+page*); `Docs/Aleatora_Markov_Plan.md` (*M3*, *M4*); the file under `Assets/Aurumworks/Scripts/View/`
+the ruling touches.
 
 ## Not in any repository
 
