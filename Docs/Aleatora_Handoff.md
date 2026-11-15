@@ -1,29 +1,22 @@
 # Aleatora: hand-off
 
-Status (2026-11-15): **M3 accepted by Jon (Design, ruling 19); M4 under way on branch
-`m3-view`, not yet merged.** M0, M1, M2 and the gel pads are on `main` (M2 merged `--no-ff`).
-M3 built the *Melodies* page (`Docs/Aleatora_Tech.md`, *Melodies page*). Ruling 20: the voicing
-may leap up to and including an octave; the code already did (at most 11), so only
-`VoicingTests.LeapsAreAnOctaveAtMost` and the docs changed. 131 EditMode tests pass. The menu
-check last passed before the CanvasRenderer fix (a player was never affected) and has not been
-run since; nothing it checks has changed.
+Status (2026-11-15): **M4 done; the Markov plan is finished.** `m3-view` is merged to `main`
+(`--no-ff`). M0 to M3 and the gel pads are all on `main`. Jon's M4 rulings are Design 21 to 25:
+the seed defaults to 2112, `Gap` is hidden and held at 0, the default window is 1920 × 1080
+(he wrote "1920x180", read as 1080; confirm), Dithering is on, and the merge. 131 EditMode tests
+pass; the menu check passed after the rulings (`m4-rulings`, 0 errors).
 
 Open for Jon:
-- Whether `m3-view` merges to `main` now (the plan's M4 merges it after his rulings and tuning).
-- From M2 (Design, *Open, from M2's report*): the seed's default (1).
-- Dithering on the Main Camera, which the gel glow wants (Tech, *Cell look*).
-- From M0 (Design, *Open, from M0's report*): the window size; the cell colliders part when `Gap`
-  is above 0 (ruling 14).
+- Confirm the window size: 1920 × 1080 (ruling 23).
 
-## Next: M4, then decision 7's plans
+## Next: decision 7's plans
 
-Jon tries the sets, orders and temperatures on the *Melodies* page; tuning he likes goes on
-`AleatoraTuning.asset`, rulings into `Docs/Aleatora_Design.md` (*Decided by Jon*, dated). On his
-go-ahead, `m3-view` merges to `main` (`--no-ff`). Then the plans for decision 7 (Design, *Open,
-each its own plan later*): what the grid means musically, how the generator drives it, MIDI and
-OSC out. Each needs Jon's direction before planning.
+Each needs Jon's direction before planning (Design, *Open, each its own plan later*): what the
+grid means musically, how the generator drives the grid, and how notes leave as MIDI and OSC.
+Ask Jon which comes first and what he wants from it; then write its plan as its own document,
+like `Docs/Aleatora_Markov_Plan.md` (read its *How we work* section for the form).
 
-Read: `Docs/Aleatora_Markov_Plan.md` (*M4*); `Docs/Aleatora_Design.md` (*Open* sections).
+Read: `Docs/Aleatora_Design.md` (*Decided by Jon*, rulings 14 and 18 to 25; *Open*).
 
 ## Not in any repository
 

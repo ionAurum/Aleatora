@@ -58,7 +58,8 @@ says, on 2026-11-15, without sound:
   `Assets/InputSystem_Actions.inputactions`; Unity regenerated `InputSystem_Actions.cs`.
 - Input System is 1.20.1 (the template's is 1.19.0). The manifest gained `com.aurumworks.core`
   and nothing else.
-- Player settings: only Resizable Window changed (off to on); the rest already matched.
+- Player settings: only Resizable Window changed (off to on); the rest already matched. The
+  default window became 1920 × 1080 in M4 (Design, ruling 23).
 - The first build rewrote `PC_RPAsset.asset`, `UniversalRenderPipelineGlobalSettings.asset` and
   `packages-lock.json`; committed as left, and later builds leave the tree clean.
 
@@ -148,15 +149,15 @@ The board is MathWorld's k × m × n hexagonal grid graph, in cube coordinates (
   off, so orbit and zoom wait for menus too. After a rebuild the selection stays if its cell is
   still on the board.
 - **`GridTuning`** (a section of `AleatoraTuning`): `K`, `M`, `N` (1 to 40; default 5, 5, 5),
-  `Orientation` (Flat), `Size` (1), `Gap` (0), `CellPrefab` (the found prefab), `Height` (1),
+  `Orientation` (Flat), `Size` (1), `Gap` (0; hidden and always 0 since M4, Design ruling 22), `CellPrefab` (the found prefab), `Height` (1),
   `RestColor` (white), `SelectedColor` (the found green). These reproduce the found look but for
   the board's shape. `RestGlow` (0) and `SelectedGlow` (1) came later (*Cell look*).
 - **Not carried over:** cells are on the prefab's layer, not *Hexagons* (Jon agreed); the old
   grid's half-cell centring error is gone.
 - **The cell's collider** stays on the prefab (Design, ruling 14): a non-convex MeshCollider on
   `Mesh-Hexagon-Collider.asset`, a full hexagon one unit to a corner, so at `Gap` 0 the colliders
-  tile without the visual gap. Picking doesn't use it. It scales with the cell, so a `Gap` above
-  0 parts the colliders too, which ruling 14 doesn't want (Design, *Open, from M0's report*).
+  tile without the visual gap. Picking doesn't use it. It scales with the cell; `Gap` is held at 0
+  (ruling 22), so the colliders always tile.
 - Unity's audio is disabled in Project Settings, and the *Hexagons* layer is gone (2026-11-15).
 
 ## Melody tables
@@ -231,8 +232,8 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
 - **`GridTuning`** gained `RestGlow` (0) and `SelectedGlow` (1), 0 to 1, read live; added to
   `AleatoraTuning.asset` with those values.
 - **What the glow wants from the scene:** Bloom, which Jon turned on in `SampleSceneProfile`
-  (intensity 15, 2026-11-15), and Dithering on the Main Camera (still off), or the smooth
-  gradients band. HDR is already on in `PC_RPAsset`. Jon also set the `Emitter` object inactive in
+  (intensity 15, 2026-11-15), and Dithering on the Main Camera (on since M4, ruling 24), or the
+  smooth gradients band. HDR is already on in `PC_RPAsset`. Jon also set the `Emitter` object inactive in
   the scene.
 - **Not modelled:** light from a lit cell onto its neighbours (a small, dim, shadowless point
   light under a lit cell would do it).
@@ -280,8 +281,8 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
 - **`Game/MelodyTuning`**, on `AleatoraTuning` as `Melodies` (added to `AleatoraTuning.asset`):
   `Set` (`european_ionian`), the generator's five values as their own Inspector fields with
   tooltips and ranges (`Generator` builds the struct; `Music/` can't use Unity's attributes),
-  `Tonic` 60, `Low` 55, `High` 79, `Seed` (a `long` in the Inspector, **default 1**: the plan
-  names none), `MakeVoicing()`. Nothing reads it in play yet; M3's page will.
+  `Tonic` 60, `Low` 55, `High` 79, `Seed` (a `long` in the Inspector, **default 2112**, Design
+  ruling 21; it was 1 until M4), `MakeVoicing()`. Nothing reads it in play yet; M3's page will.
 - **Stepping allocates nothing**, checked with the Unity Test Framework's `AllocatingGCMemory`
   constraint (Unity's GC.Alloc recorder). The plan's `GC.GetAllocatedBytesForCurrentThread`
   counts nothing on Unity's Mono; the test also checks that the recorder catches a 4 KB array.
@@ -388,7 +389,7 @@ Instruments Exquis pads: frosted silicone hex caps that glow from an LED beneath
   orders; `european_ionian`'s melodies, notes and notes after `7`; an unlisted set is not found.
   As of M2, `CheckGenerator` after `CheckTables`: the tuning has its Melodies section; its set
   reads; 200 steps twice from its seed are the same; every degree, order and note in range. It logs
-  the first 16 (`european_ionian`, seed 1, order 2: `3/64 1/60 1/60 7/59 6/57 5/55 …`).
+  the first 16 (`european_ionian`, seed 2112, order 2: `5/55 5/55 4/65 3/64 3/64 5/67 …`).
   As of M3, `CheckMelodies`, from the main menu (all through) and from the session menu (opens,
   then the gamepad's East): it opens over the menu with *Generate* selected, nothing under it
   usable, navigation reaching all 8 controls and nothing else, 32 notes; seed 1 and *Generate*

@@ -35,7 +35,7 @@ MonoBehaviour:
     _tonic: 60
     _low: 55
     _high: 79
-    _seed: 1
+    _seed: 2112
   _melodyView:
     _minimumArcShare: 0.05
     _nodeRadius: 24

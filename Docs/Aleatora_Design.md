@@ -55,6 +55,15 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 20. **The voicing may leap up to an octave** (2026-11-15). Any leap up to and including an octave,
     up or down, is allowed; it replaces the plan's "no leap larger than a tritone". Ruling 7
     stands: nearest the note before, an octave inward at the range's edges (leaps of 7 to 11 there).
+21. **The seed's default is 2112** (2026-11-15), a nod to Rush. On `MelodyTuning` and the tuning
+    asset.
+22. **`Gap` is never above 0, and the Inspector hides it** (2026-11-15). The cells touch, so the
+    colliders tile as ruling 14 wants; the visual gap between pads is in the cell's mesh. This
+    settles M0's open item on parting colliders.
+23. **The default window is 1920 × 1080** (2026-11-15; Jon wrote "1920x180", read as 1080). It
+    applies when the player runs windowed; it starts in Fullscreen Window.
+24. **Dithering is on for the Main Camera** (2026-11-15), set by Jon, for the gel glow's gradients.
+25. **`m3-view` merges to `main`** (2026-11-15), ending M4.
 
 ## Open, each its own plan later (the plan's decision 7)
 
@@ -62,13 +71,3 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 - How the generator drives the grid.
 - How notes leave Aleatora as MIDI and OSC.
 
-## Open, from M0's report (2026-11-15)
-
-- The default window size is 1024 × 768 (the template's is 1920 × 1080); left as found.
-- **Not yet as ruling 14 says:** the collider scales with the cell and `Gap` moves cells apart,
-  so a `Gap` above 0 opens real gaps between colliders. To be built when the emitter and its
-  bodies get a plan: the colliders keep tiling at every `Gap` and only the visual shrinks.
-
-## Open, from M2's report (2026-11-15)
-
-- The seed's default is 1; the plan names none.

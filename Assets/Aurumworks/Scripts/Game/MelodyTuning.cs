@@ -36,8 +36,8 @@ namespace Aurumworks.Aleatora
         [SerializeField, Range(0, Voicing.HighestNote)] private int _high = 79;
 
         [Header("Seed")]
-        [Tooltip("Where the random draws start: one seed is one melody, in the Editor and in a player alike.")]
-        [SerializeField] private long _seed = 1;
+        [Tooltip("Where the random draws start: one seed is one melody, in the Editor and in a player alike. 2112, for Rush.")]
+        [SerializeField] private long _seed = 2112;
 
         /// <summary>The set's name, as the index lists it.</summary>
         public string Set
