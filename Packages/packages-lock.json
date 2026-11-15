@@ -1,5 +1,14 @@
 {
   "dependencies": {
+    "com.aurumworks.core": {
+      "version": "file:../../Framework/com.aurumworks.core",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.unity.inputsystem": "1.19.0",
+        "com.unity.ugui": "2.0.0"
+      }
+    },
     "com.unity.burst": {
       "version": "1.8.30",
       "depth": 2,
