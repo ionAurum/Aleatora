@@ -19,7 +19,9 @@ namespace Aurumworks.Aleatora
     /// to, Escape and the gamepad's East and Start close one menu at a time, the selection comes
     /// back), that Settings lists no volumes (Aleatora makes no sound), the Melodies page from both
     /// menus, and the board behind the menus (its 61 cells, picking them, its shapes in both
-    /// orientations) and that the melody tables came with the player and read, then quits with exit code
+    /// orientations) and that the melody tables came with the player and read, MIDI out (the MIDI page
+    /// from Settings and from Output, the transport on the Melodies page, into a RecordingOutput: no
+    /// port is opened), then quits with exit code
     /// 1 if anything didn't hold or any error was logged. -aleatoraScreenshots folder saves a screenshot of each menu. It
     /// saves no setting. Tools/menucheck.sh builds the player and runs it. Without the flag none of
     /// this runs.
@@ -91,6 +93,9 @@ namespace Aurumworks.Aleatora
             SelfTest.Check(UnityEngine.Object.FindObjectsByType<AudioSource>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length == 0,
                 "nothing in the game has an AudioSource");
             yield return SelfTest.Capture("2-Settings");
+
+            // The MIDI page from Settings' MIDI row (MIDI-3), closed with Escape.
+            yield return CheckMidiPage(Menus.Top, "Button: MIDI", "Button: Back", true);
 
             yield return QueuedInput.Press(Key.Escape);
             SelfTest.Check(Menus.Count == 0 && MainMenu.IsShowing, "Escape closes Settings, back to the main menu");
@@ -394,6 +399,9 @@ namespace Aurumworks.Aleatora
                 yield return new WaitForSecondsRealtime(0.3f);
                 yield return SelfTest.Capture("4-Melodies");
 
+                // The transport (MIDI-3), into a recording; it ends with Generate's 32 notes again.
+                yield return CheckTransport(page, top);
+
                 Slider order = Control<Slider>(top, "Slider: Order");
                 if (SelfTest.Check(order != null, "the page has its Order slider"))
                 {
@@ -477,7 +485,20 @@ namespace Aurumworks.Aleatora
                 SelfTest.Progress();
                 yield return new WaitForSecondsRealtime(0.3f);
                 yield return SelfTest.Capture("4-Dorian");
+
+                // Escape while playing: the page closes with nothing sounding.
+                Press(top, "Button: Play");
+                yield return new WaitForSecondsRealtime(0.3f);
                 yield return QueuedInput.Press(Key.Escape);
+                yield return null; // the page's OnDestroy has run
+                MidiPlayback midi = page != null ? page.Midi : Aleatora.Instance?.Midi;
+                var recording = midi != null ? midi.Output as RecordingOutput : null;
+                SelfTest.Check(midi != null && recording != null && !midi.Player.IsPlaying && recording.SoundingCount == 0
+                    && recording.Count > 0, $"closing the page while playing stops it with nothing sounding: {recording?.SoundingCount}");
+                if (midi != null)
+                {
+                    midi.Close(); // the recording out: CheckMidi finds no port open
+                }
             }
             else
             {
@@ -488,6 +509,248 @@ namespace Aurumworks.Aleatora
                 "Cancel closes the Melodies page, and only it");
             SelfTest.Check(UiProbe.HasInteractable(under), "the menu under it can be used again");
             SelfTest.Check(SelectedName() == mainAction, $"{mainAction} has the selection again: " + SelectedName());
+        }
+
+        // The MIDI page (MIDI-3), opened by a button on the menu under it: None first, then the ports,
+        // never GS Wavetable; Refresh builds it again; Escape closes it, and the selection goes back to
+        // mainAction under it. It presses no port: that would open one.
+        private static IEnumerator CheckMidiPage(RectTransform under, string button, string mainAction, bool shoot)
+        {
+            int before = Menus.Count;
+            Press(under, button);
+            yield return null;
+            RectTransform top = Menus.Count == before + 1 ? Menus.Top : null;
+            if (!SelfTest.Check(top != null && top.name == "MIDI", $"{button} opens the MIDI page over the menu"))
+            {
+                yield break;
+            }
+
+            CheckMidiList(top);
+            SelfTest.Check(!UiProbe.HasInteractable(under), "nothing under the MIDI page can be used");
+            CheckNavigation("the MIDI page", top);
+            Debug.Log("Menu check: MIDI page: " + UiProbe.Texts(top));
+            if (shoot)
+            {
+                yield return new WaitForSecondsRealtime(0.2f);
+                yield return SelfTest.Capture("5-Midi");
+            }
+
+            Press(top, "Button: Refresh");
+            yield return null;
+            SelfTest.Check(Menus.Count == before + 1 && Menus.Top != top && Menus.Top.name == "MIDI"
+                && SelectedName() == "Button: Refresh", "Refresh builds the MIDI page again, Refresh selected: " + SelectedName());
+            CheckMidiList(Menus.Top);
+
+            yield return QueuedInput.Press(Key.Escape);
+            SelfTest.Check(Menus.Count == before && Menus.Top == under, "Escape closes the MIDI page, and only it");
+            SelfTest.Check(SelectedName() == mainAction, $"{mainAction} has the selection again: " + SelectedName());
+        }
+
+        private static void CheckMidiList(RectTransform page)
+        {
+            Button[] buttons = page.GetComponentsInChildren<Button>();
+            var names = new List<string>();
+            bool hidden = true;
+            int accent = 0;
+            foreach (Button button in buttons)
+            {
+                names.Add(button.name);
+                hidden &= !button.name.Contains("Microsoft GS Wavetable");
+                accent += button.targetGraphic != null && button.targetGraphic.color == UiKit.Theme.Accent ? 1 : 0;
+            }
+
+            SelfTest.Check(buttons.Length >= 3 && buttons[0].name == "Button: None" && names.Contains("Button: Refresh")
+                && names.Contains("Button: Back"), "the MIDI page lists None first, then Refresh and Back: " + string.Join(" | ", names));
+            SelfTest.Check(hidden, "the MIDI page doesn't list Microsoft GS Wavetable Synth");
+            SelfTest.Check(accent == 1, "one port, the chosen one, is in the accent colour: " + accent);
+        }
+
+        // The transport on the Melodies page (MIDI-3), with a RecordingOutput in place of a port:
+        // Channel 3, BPM 300, Play: the first four note ons are the melody's first four on channel 3,
+        // about 0.2 s apart, each with its note off; the playhead framed; Stop leaves nothing sounding;
+        // Loop with four notes wraps; Endless plays past the last note and the strip grows, the page's
+        // notes the player's; Panic sends the 2,048 and playing goes on; Output opens the MIDI page,
+        // which doesn't stop playback.
+        private static IEnumerator CheckTransport(MelodiesPage page, RectTransform top)
+        {
+            MidiPlayback midi = page.Midi;
+            if (!SelfTest.Check(midi != null && !midi.IsOpen, "the page has MidiPlayback, with no port open"))
+            {
+                yield break;
+            }
+
+            var recording = new RecordingOutput("Menu check");
+            midi.Use(recording);
+            yield return null;
+            Button output = UiProbe.Find<Button>(top, "Button: Output");
+            string shows = output != null ? output.GetComponentInChildren<TMP_Text>().text : null;
+            SelfTest.Check(shows == "Menu check", "Output shows the output's name: " + shows);
+
+            TMP_Dropdown channel = Control<TMP_Dropdown>(top, "Dropdown: Channel");
+            if (SelfTest.Check(channel != null && channel.options.Count == 16, "the page has its Channel dropdown, 1 to 16"))
+            {
+                channel.value = 2;
+            }
+
+            SelfTest.Check(midi.Channel == 3, "Channel 3: " + midi.Channel);
+            TMP_InputField bpm = UiProbe.Find<TMP_InputField>(top, "InputField: BPM");
+            if (SelfTest.Check(bpm != null, "the page has its BPM field"))
+            {
+                bpm.text = "300";
+                bpm.onEndEdit.Invoke("300");
+                SelfTest.Check(midi.Bpm == 300 && bpm.text == "300", "BPM 300: " + midi.Bpm);
+                bpm.text = "301";
+                bpm.onEndEdit.Invoke("301");
+                SelfTest.Check(midi.Bpm == 300 && bpm.text == "300", "BPM 301 puts 300 back: " + bpm.text);
+            }
+
+            // Play: the first four notes, a fifth of a second apart, each with its note off.
+            var first = new List<int>(page.Notes);
+            Press(top, "Button: Play");
+            yield return new WaitForSecondsRealtime(0.95f);
+            yield return null;
+            string label = UiProbe.Find<Button>(top, "Button: Play")?.GetComponentInChildren<TMP_Text>().text;
+            SelfTest.Check(midi.Player.IsPlaying && label == "Pause", "Play plays, and reads Pause: " + label);
+            RecordingOutput.Sent[] sent = recording.Messages;
+            var onAt = new List<int>(); // the note ons' indices in sent
+            for (int i = 0; i < sent.Length; i++)
+            {
+                if (MidiMessage.IsNoteOn(sent[i].Message))
+                {
+                    onAt.Add(i);
+                }
+            }
+
+            bool beats = onAt.Count >= 4;
+            var said = new System.Text.StringBuilder();
+            for (int i = 0; beats && i < 4; i++)
+            {
+                RecordingOutput.Sent on = sent[onAt[i]];
+                beats &= MidiMessage.Channel(on.Message) == 3 && MidiMessage.Data1(on.Message) == first[i];
+                if (i > 0)
+                {
+                    double gap = on.Time - sent[onAt[i - 1]].Time;
+                    beats &= Math.Abs(gap - 0.2) < 0.015;
+                    said.Append($"{gap * 1000d:0.0} ");
+                }
+
+                beats &= HasNoteOff(sent, onAt[i], 0.18);
+            }
+
+            SelfTest.Check(beats, $"the first four note ons are the melody's first four on channel 3, 0.2 s apart (ms: {said}), each with its note off 0.18 s on: {onAt.Count} on");
+            int position = midi.Player.Position;
+            SelfTest.Check(page.Strip.PlayheadColumn >= 0 && Math.Abs(page.Strip.Playhead - position) <= 1,
+                $"the strip frames the note playing: {page.Strip.Playhead}, the player's {position}");
+            yield return SelfTest.Capture("5-Playing");
+
+            Press(top, "Button: Stop");
+            yield return null;
+            SelfTest.Check(!midi.Player.IsPlaying && recording.SoundingCount == 0 && page.Strip.PlayheadColumn == -1,
+                "Stop leaves nothing sounding and nothing framed");
+
+            // Loop, with four notes: the fifth note on is the first again.
+            Toggle loop = Control<Toggle>(top, "Toggle: Loop");
+            Toggle endless = Control<Toggle>(top, "Toggle: Endless");
+            if (!SelfTest.Check(loop != null && endless != null, "the page has its Loop and Endless toggles"))
+            {
+                yield break;
+            }
+
+            loop.isOn = true;
+            midi.SetNotes(first.GetRange(0, 4));
+            recording.Clear();
+            Press(top, "Button: Play");
+            yield return new WaitForSecondsRealtime(1.1f);
+            List<int> ons = NoteOns(recording);
+            SelfTest.Check(midi.Player.Loop && midi.Player.IsPlaying && ons.Count >= 5 && ons[4] == first[0] && ons[3] == first[3],
+                "Loop on, with four notes, wraps to the first: " + string.Join(" ", ons));
+            Press(top, "Button: Stop");
+            SelfTest.Progress();
+
+            // Endless: past the last of Generate's 32, the page's generator makes the next.
+            endless.isOn = true;
+            SelfTest.Check(midi.Player.Endless && !midi.Player.Loop && !loop.isOn, "Endless on turns Loop off");
+            Press(top, "Button: Generate");
+            yield return null;
+            recording.Clear();
+            Press(top, "Button: Play");
+            float start = Time.realtimeSinceStartup;
+            while (midi.Player.Count < MelodiesPage.MelodyLength + 3 && Time.realtimeSinceStartup - start < 10f)
+            {
+                yield return null;
+            }
+
+            yield return null;
+            SelfTest.Progress();
+            ons = NoteOns(recording);
+            bool same = page.Notes.Count == midi.Player.Count;
+            for (int i = 0; same && i < page.Notes.Count; i++)
+            {
+                same = page.Notes[i] == midi.Player.NoteAt(i);
+            }
+
+            SelfTest.Check(midi.Player.IsPlaying && page.Degrees.Count > MelodiesPage.MelodyLength && page.Strip.Count == MelodyStrip.Columns
+                && ons.Count > MelodiesPage.MelodyLength && ons[MelodiesPage.MelodyLength] == page.Notes[MelodiesPage.MelodyLength],
+                $"Endless plays past the last note and the melody grows: {page.Degrees.Count} notes, {ons.Count} played");
+            SelfTest.Check(same, "the page's melody is the player's, note for note: " + page.Notes.Count);
+            SelfTest.Check(page.Strip.PlayheadColumn >= MelodyStrip.Columns - 2, "the playhead is at the strip's right: " + page.Strip.PlayheadColumn);
+
+            // Panic! while playing: the 2,048, and playing goes on.
+            recording.Clear();
+            Press(top, "Button: Panic!");
+            int offs = 0;
+            foreach (RecordingOutput.Sent one in recording.Messages)
+            {
+                offs += MidiMessage.IsNoteOff(one.Message) ? 1 : 0;
+            }
+
+            SelfTest.Check(offs >= MidiMessage.PanicCount && midi.Player.IsPlaying,
+                $"Panic! sends {MidiMessage.PanicCount} note offs and playing goes on: {offs}");
+
+            // Output opens the MIDI page over the page; playing goes on under it.
+            yield return CheckMidiPage(top, "Button: Output", "Button: Generate", false);
+            SelfTest.Check(midi.Player.IsPlaying, "the MIDI page over the Melodies page doesn't stop playback");
+
+            Press(top, "Button: Stop");
+            endless.isOn = false;
+            Press(top, "Button: Generate");
+            yield return null;
+            SelfTest.Check(!midi.Player.IsPlaying && recording.SoundingCount == 0 && page.Degrees.Count == MelodiesPage.MelodyLength,
+                "stopped, with nothing sounding, and 32 notes again");
+            SelfTest.Progress();
+        }
+
+        // Whether the note on at sent[index] has its note off, on its channel, length seconds after it (to 15 ms):
+        // the first message after it that ends that note.
+        private static bool HasNoteOff(RecordingOutput.Sent[] sent, int index, double length)
+        {
+            RecordingOutput.Sent on = sent[index];
+            int note = MidiMessage.Data1(on.Message);
+            int channel = MidiMessage.Channel(on.Message);
+            for (int i = index + 1; i < sent.Length; i++)
+            {
+                int message = sent[i].Message;
+                if (MidiMessage.IsNoteOff(message) && MidiMessage.Data1(message) == note && MidiMessage.Channel(message) == channel)
+                {
+                    return Math.Abs(sent[i].Time - on.Time - length) < 0.015;
+                }
+            }
+
+            return false;
+        }
+
+        private static List<int> NoteOns(RecordingOutput recording)
+        {
+            var notes = new List<int>();
+            foreach (RecordingOutput.Sent one in recording.Messages)
+            {
+                if (MidiMessage.IsNoteOn(one.Message))
+                {
+                    notes.Add(MidiMessage.Data1(one.Message));
+                }
+            }
+
+            return notes;
         }
 
         private static bool SameDegrees(List<int> a, IReadOnlyList<int> b)

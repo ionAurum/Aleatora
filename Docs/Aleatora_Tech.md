@@ -424,10 +424,46 @@ Our own wrapper over `winmm.dll` (Design, ruling 27), plain C# in `Midi/`.
 - **Measured** (EditMode, 2026-11-15, Jon's machine): 16 notes at 300 BPM through the thread,
   mean 0.57 ms late, worst 1.18 ms.
 
+### As built (MIDI-3, 2026-11-15, branch `midi-3-page`)
+
+- **`Midi/MelodySource`** (not named in the plan): the page's generator and voicing behind their
+  own lock, Endless's `INoteSource`. `Begin(generator, voicing, mask)`, `SetVoicing`,
+  `SetSettings`, `Step()` (the page's), `TryNext` (the clock thread's). Every note made, from
+  either, goes into one queue in the order made; `Drain(list, distribution)` hands them to the
+  page with the last note's distribution. It never calls the player.
+- **`NotePlayer.SyncRoot`** (new): the player's lock. The page holds it while it changes its melody
+  and the player's notes together (*Generate*, *Step*, *Tonic*: take what Endless made, change,
+  `SetNotes`), so Endless can't add a note between them. Lock order: `MidiPlayback`'s, the
+  player's, the source's or the output's. Each frame the page drains the queue (no player lock)
+  and grows the strip, the bars and the lists; its melody and the player's are the same note for
+  note (tested on made-up times and on a real thread).
+- **`View/MidiPage`** (static, a dialog): *MIDI*, *Output*, then *None* and each port as buttons,
+  the saved one in accent (so it is selected as the page opens); a saved port not listed shows
+  as "Greedo (not found)"; `MidiPlayback.Error` in the danger colour under the list; *Refresh*,
+  *Back*. Pressing a port `Choose`s it, then the page **closes and opens again**, built afresh
+  (*Refresh* the same, with *Refresh* selected). `OutputName`: the open output's name, "None", or
+  the saved name with "(not open)" or "(not found)".
+- **Settings**: a *MIDI* row (`SettingsPage.More`), a button reading "MIDI: Greedo" that opens the
+  MIDI page and reads the choice again as it closes. Only with the game's `MidiPlayback`.
+- **The transport** on `MelodiesPage`, a row across the top of the *Melody* panel: *Play* (reads
+  *Pause* while playing), *Stop*, *Loop*, *Endless*, *Panic!*, *Channel* (1–16), *BPM*
+  (`InputField: BPM`; 20–300, anything else puts the last back), *Output* (the port's name only,
+  the button's object `Button: Output`). Widths are fixed but *Output*'s, which takes the rest
+  (about 170 px of the 1,920 canvas). The panels above gave height: *The set* 0.805–1, *Next note*
+  0.61–0.795, *Transitions* and the graph from 0.28, *Melody* 0–0.27. The page's controls start as
+  the player stands: Loop, Endless, Channel and BPM live on `MidiPlayback` for the run (the
+  tuning's at start), not saved. *Panic!* is a plain button, not the danger colour. Closing the
+  page (`OnDestroy`) stops playback and takes the source off the player; the MIDI page over it
+  doesn't. *Step* and *Tonic* play on from the playhead; *Generate* and a new *Set* start from
+  the first note on the next beat. The *Output* label follows the open output each frame.
+- **`MelodyStrip`**: `SetPlayhead(index in the melody)`, `Playhead`, `PlayheadColumn`; the note
+  playing framed 3 px in the theme's text colour, a little outside the strip; the newest note's
+  frame stays in Line. A note off the strip's left edge plays with nothing framed.
+
 ## Checks
 
 - **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2, 131 as of M3,
-  166 as of MIDI-1, 193 as of MIDI-2:
+  166 as of MIDI-1, 193 as of MIDI-2, 200 as of MIDI-3:
   - `HexCoordTests`: Q + R + S = 0; the directions as named; a neighbour is one step away and its
     opposite comes back; six distinct neighbours; distance symmetric with the triangle
     inequality; equality and hashing; rounding a centre gives the cell; points round a corner
@@ -485,6 +521,11 @@ Our own wrapper over `winmm.dll` (Design, ruling 27), plain C# in `Midi/`.
   - `MidiPlaybackTests` (MIDI-2): the clock thread plays 16 notes at 300 BPM, each within 5 ms
     (the spread logged); *Pause* and *Stop* end the thread with nothing sounding, *Play* resumes;
     `Shutdown` while playing; a change of port while playing.
+  - `MelodySourceTests` (MIDI-3): `Step` queues what the generator and voicing make, in order,
+    with the last distribution; `TryNext` the same notes; not ready makes nothing and Endless
+    ends; `Begin` drops what waited; voicing and settings from the next note; the page's melody
+    stays the player's with *Step* between Endless's notes, on made-up times and on a real thread
+    at 300 BPM (19 notes, 15 from *Step*, on the first run).
   - Only the M2 tests draw random numbers, from `Rng` with fixed seeds.
 - **The menu check** (`MenuCheck.cs`), as of M0 (10 screenshots): the template's walk (main menu,
   Settings, Play, session menu and its Settings, Quit to Menu), with no volumes and no
@@ -512,6 +553,18 @@ Our own wrapper over `winmm.dll` (Design, ruling 27), plain C# in `Midi/`.
   no port; the outputs (logged) don't list GS Wavetable; with a `RecordingOutput` in place,
   *Panic* sends 2,048 note offs and leaves nothing sounding; `Close` sends All Notes Off on the
   channel in use and disposes it.
+  As of MIDI-3, `CheckMidiPage` from Settings (*MIDI*): it opens over Settings; *None* first,
+  *Refresh* and *Back*, no GS Wavetable, one button in accent; navigation stays in it (`5-Midi`);
+  *Refresh* builds it again with *Refresh* selected; Escape closes it to Settings' *Back*. In
+  `CheckMelodies` (all through), `CheckTransport` after `4-Melodies`, with a `RecordingOutput`:
+  *Output* reads its name; *Channel* 3, *BPM* 300 (301 puts 300 back); *Play*: it reads *Pause*,
+  the first four note ons are the melody's first four on channel 3, 0.2 s apart (to 15 ms), each
+  note off 0.18 s on; the strip frames the player's note (`5-Playing`); *Stop* leaves nothing
+  sounding or framed; *Loop* with four notes wraps; *Endless* turns Loop off and plays past note
+  32, the page's melody the player's; *Panic!* sends 2,048 and playing goes on; *Output* opens the
+  MIDI page over the page (as from Settings) and playing goes on; *Stop*, *Generate* again. At
+  the end, Escape while playing closes the page with nothing sounding, and the recording is
+  closed for `CheckMidi`. 14 screenshots.
   `menucheck.sh` takes `WIDTH` and `HEIGHT` (1920 × 1080 unless given).
 - **Runs (2026-11-15):** `m0-setup` and `m0-setup2` on `main` (exit 0; the second left the tree
   clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean). M1: EditMode tests 69 of 69;
@@ -519,4 +572,4 @@ Our own wrapper over `winmm.dll` (Design, ruling 27), plain C# in `Midi/`.
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
   `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128, then 131 of 131 after the CanvasRenderer fix; `m3` at
   1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean). MIDI-1: EditMode tests 166 of 166 (the loopMIDI test
-  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged).
+  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots).

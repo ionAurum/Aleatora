@@ -203,7 +203,8 @@ Each has the default this plan builds if Jon doesn't say otherwise.
    reaches the new controls.
 5. Look at the screenshots: the transport legible, nothing overlapping at the small size.
 
-**Done when** the menu check passes with its new checks. **Hard stop.**
+**Done when** the menu check passes with its new checks. **Hard stop.** **Built** 2026-11-15 (Tech,
+*MIDI*, *As built (MIDI-3)*).
 
 ## MIDI-4 — Jon plays into Reaper
 

@@ -54,6 +54,13 @@ namespace Aurumworks.Aleatora
         private int _soundingChannel;
         private double _offTime;
 
+        /// <summary>
+        /// The player's lock. Hold it to change the Source's notes and the player's (SetNotes) as one,
+        /// so Endless can't make a note between them on the clock thread. Lock order: MidiPlayback's,
+        /// then this, then the Source's or the output's.
+        /// </summary>
+        public object SyncRoot => _lock;
+
         /// <summary>Whether it is playing: from Play until Pause, Stop or the end of the melody.</summary>
         public bool IsPlaying
         {
