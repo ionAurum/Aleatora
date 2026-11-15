@@ -7,7 +7,12 @@ the menu check passes (51 checks, tree clean). What was built is in `Docs/Aleato
 (*Melody tables*, "As built"). The plan is `Docs/Aleatora_Markov_Plan.md`; Jon's rulings are in
 `Docs/Aleatora_Design.md`.
 
+Also on 2026-11-15, outside the milestones: **the cells are gel pads** (Design, ruling 17;
+Tech, *Cell look*), committed on `m1-tables` at Jon's word. Jon turned Bloom on (intensity 15) and
+set the `Emitter` object inactive.
+
 Open for Jon, none blocking:
+- Dithering on the Main Camera, which the glow wants (Tech, *Cell look*).
 - From M1's report: nothing to rule on. Beyond the plan, for him to know: an empty context is
   order 0 (the unigram); the menu check now reads the tables; a set whose `set` line is not its
   file's name is refused.
