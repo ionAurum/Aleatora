@@ -147,6 +147,14 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     counts from 1; the output's own port is greyed by its label only.
 47. **The MIDI in branches merge to `main`** (2026-11-15): `in-1-input`, `in-2-clock` and
     `in-3-page`, through `in-3-page`, ending the MIDI in plan.
+48. **Aleatora will be sold** (2026-11-15). No data under a non-commercial licence goes into it,
+    so the CantusCorpus and SymbTr (both CC BY-NC-SA) are out.
+49. **The Hindu pentatonic is 1 3 4 5 ♭7** (2026-11-15).
+50. **New melody tables from theory, in the style of rock guitar virtuosos** (2026-11-15). Lydian,
+    Phrygian, Byzantine (double harmonic) and the Hindu pentatonic, inspired by Joe Satriani, Pete
+    Thorn, Kiko Loureiro's solo work, Andy Timmons and John Petrucci. No fetch, analyse and learn
+    pipeline: Jon: "generate the 1st through 4th order Markov chains based on standard Western
+    music theory". The plan: `Docs/Aleatora_Theory_Plan.md`.
 
 ## Open, each its own plan later (the plan's decision 7)
 
@@ -155,8 +163,5 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 - How notes leave Aleatora as OSC. MIDI out is built (rulings 26 to 36), and MIDI in with clock
   and sync (rulings 37 to 47). Jon means to teach Aleatora Reaper's OSC (ruling 39).
 - What the keyboard's notes do (ruling 37: chords and the like, later).
-- More modes for the Markov tables (Jon, 2026-11-15): Lydian, Phrygian, Byzantine (double
-  harmonic) and the Hindu scale, which matter to him. The folk corpora have none (the tables'
-  README: Lydian and Phrygian tunes were excluded as misread major tunes). Sources are being
-  weighed; see the hand-off.
+- More modes for the Markov tables: planned (rulings 48 to 50, `Docs/Aleatora_Theory_Plan.md`).
 

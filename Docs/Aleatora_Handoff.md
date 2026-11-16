@@ -1,52 +1,36 @@
 # Aleatora: hand-off
 
-Status (2026-11-15): **the MIDI in plan is finished and merged to `main`** (IN-1 to IN-4;
-Design, rulings 37 to 47). Jon ran IN-4: following Reaper, leading it with *Send clock*, and a
-keyboard into the *Monitor* all worked as expected; he accepted decisions 1, 6, 7 and 10 and the
-IN-2 and IN-3 readings as built. On `main`: the Markov plan, MIDI out, MIDI in with clock and
-sync. 268 EditMode tests; the menu check at 185 checks at both sizes.
+Status (2026-11-15): **the theory tables plan is written and waits for Jon's decisions**
+(`Docs/Aleatora_Theory_Plan.md`; Design, rulings 48 to 50). On `main`: the Markov plan, MIDI
+out, MIDI in with clock and sync (all finished, rulings to 47). 268 EditMode tests; the menu
+check at 185 checks at both sizes.
 
-Jon's loopMIDI ports are now "Aleatora to Reaper" (was Greedo), "Reaper to Aleatora" (was Han)
-and "Aleatora Test" (ruling 45). "Greedo" and "Han" in the docs, comments and tests are examples
-only.
+The brief: new Markov tables (orders 1 to 4) for Lydian, Phrygian, double harmonic and the Hindu
+pentatonic (1 3 4 5 ♭7), written from music theory in the style of rock guitar virtuosos
+(Satriani, Thorn, Loureiro, Timmons, Petrucci). Aleatora will be sold, so no non-commercial
+data (CantusCorpus and SymbTr are out). No fetch and analyse pipeline: a script writes phrases
+by rule and counts them into the tables' usual JSON.
 
-The keyboard's port shared by Reaper and Aleatora at once works too (Jon, after the merge;
-ruling 45).
+Jon's loopMIDI ports: "Aleatora to Reaper", "Reaper to Aleatora", "Aleatora Test" (ruling 45).
 
 A local change to `Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF -
 Fallback.asset` (the Editor's dynamic font atlas) is left uncommitted; it isn't ours.
 
-## In discussion: more modes for the Markov tables
+## Open for Jon
 
-Jon wants Lydian, Phrygian, Byzantine (double harmonic) and the Hindu scale (his words:
-"pentatonic phrygian dominant"; which notes that is, he hasn't said yet). The folk corpora we
-use have none of them. Sources C2 found (2026-11-15), each labelled by mode, so no inference
-from pitch content:
-- **Phrygian, and Lydian (weakly):** the CantusCorpus (github.com/bacor/CantusCorpus), plainchant
-  from the Cantus database in Volpiano, with the church mode per chant: modes 3/4 Phrygian, 5/6
-  Lydian (often sung with B♭, which makes it Ionian on F). CC BY-NC-SA 4.0. Chant is unmetered and
-  stepwise. For a folk Lydian: maybe the Polish Kolberg corpus (Podhale tunes), in Humdrum;
-  unchecked.
-- **Phrygian dominant:** Beregovski's klezmer tunes, mode-tagged *freygish*, in Humdrum
-  (shanahdt.github.io/mode_in_klezmer; licence unchecked); SymbTr's makam Hicaz.
-- **Double harmonic:** SymbTr (github.com/MTG/SymbTr; 2,200 Turkish makam pieces, makam per piece,
-  MusicXML and text; CC BY-NC-SA 4.0): makam Hicazkar (and Zirgüleli Hicaz). Its tuning is in
-  commas of 53; rounding to 12 semitones is needed.
-- **Hindu scale:** no corpus found; depends on which notes Jon means.
-Open for Jon: which Hindu scale; whether the NC licences suit Aleatora; then a plan
-(`Tools/Markov/Source/scripts` would read mode labels instead of inferring the mode).
+The plan's *Decisions for Jon*, 1 to 6: which modes beyond his four; the set names
+(`virtuoso_*`); the figures' weights; chromatic passing notes; 20,000 phrases a mode; Python's
+seeded generator in the offline script. Then the go-ahead for TH-1.
 
-## Next: Jon picks the next plan
+## Next: TH-1, once Jon rules
 
-Nothing is planned. The candidates: the modes above, or (Design, *Open, each its own plan later*): OSC (Jon means to
-teach Aleatora Reaper's OSC, ruling 39), what the keyboard's notes do, what the grid means
-musically, how the generator drives the grid. When Jon picks one, write its plan as
-`Docs/Aleatora_<Name>_Plan.md`, in the shape of `Docs/Aleatora_MidiIn_Plan.md` (*Read first*,
-*Decisions for Jon* with defaults, milestones, *Risks*), and stop for his rulings.
+Record his rulings in `Docs/Aleatora_Design.md`, then build TH-1 on `th-1-tables` from `main`.
 
 Read for it:
-- `Docs/Aleatora_Design.md`: *Open, each its own plan later*, and rulings 37 to 47.
-- `Docs/Aleatora_MidiIn_Plan.md`: *Later*, as a model of a plan.
+- `Docs/Aleatora_Theory_Plan.md`: all of it (it is short).
+- `Docs/Aleatora_Markov_Plan.md`: *The tables on disk*.
+- `Docs/Aleatora_Tech.md`: *Melody tables* and *Melody generator*.
+- `Tools/markov.py` (its docstring) and `Tools/Markov/Source/README.md`.
 
 ## Not in any repository
 
