@@ -232,6 +232,18 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     the aim point, no raise on the gamepad, *Spray* as two actions) wait for EM-5.
 75. **EM-3 works; go-ahead for EM-4** (2026-11-16). Jon: "EM-3 work. Go ahead with EM-4." The
     hits' notes reach Reaper; EM-3's readings stand.
+76. **EM-4 works well; go-ahead for EM-5** (2026-11-16). Jon: "I've tried EM-4 and it works
+    well. Start EM-5." EM-4's readings stand (the panel writes the tuning; hidden under a menu; H;
+    no orbit or zoom over it; the extra controls on it).
+77. **The emitter's controls: direct mouse control** (2026-11-16; EM-5's brief). Jon: "I want to
+    give the user direct mouse control over the Emitter." The player selects and deselects the
+    emitter; the mouse's X and Y tilt the cone 0–180° on each of two axes; left button down sprays,
+    up stops; the wheel sets the rate; right button with the wheel sets the spread, 0–180°, and the
+    yellow target matches it; W A S D still move it, Shift held locks the movement to the grid; Q
+    and E move it up and down. Later, not now: more modifiers for the wheel, and keys for scales,
+    keys, rhythm patterns and the like. He will play with mouse and keyboard, gamepad, a MIDI
+    control surface and a MIDI keyboard or pads, with his attention on Aleatora alone. Worked out
+    in `Docs/Aleatora_Emitter_Controls.md`, its open points with defaults.
 
 ## Open, each its own plan later (the plan's decision 7)
 

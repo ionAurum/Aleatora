@@ -238,6 +238,10 @@ control. With EM-4 in hand to try things on:
    shown to Jon.
 3. Jon picks and rules; the chosen scheme is written into this plan as EM-6.
 
+As written (2026-11-16): Jon gave the mouse scheme himself (ruling 77);
+`Docs/Aleatora_Emitter_Controls.md` works it out (scheme A) and proposes the gamepad (B) and MIDI
+controllers (M), with decisions and costs, no prototypes before EM-6. Waiting for Jon's rulings.
+
 ## EM-6 — The controls (branch `em-6-controls`, from `em-4-panel`)
 
 As EM-5 rules. Its tasks and checks are written then.
