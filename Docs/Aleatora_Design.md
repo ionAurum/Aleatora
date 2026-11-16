@@ -264,6 +264,9 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     **R** and **R3** point the cone straight down, **T** and **Y** put it back where it began,
     its height too. Changes B and B3's table in the controls doc (the left trigger no longer the
     D-pad's modifier).
+81. **EM-6 works well** (2026-11-16). Jon, after trying ruling 80's changes: "I've tried ruling
+    80's EM-6 changes and it works well." EM-6 is done; its readings (Tech, *As built (EM-6)*)
+    carry into EM-7, where Jon plays it.
 
 ## Open, each its own plan later (the plan's decision 7)
 
