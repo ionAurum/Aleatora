@@ -172,6 +172,8 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     first note always 1).
 54. **The double harmonic is shown as "Byzantine"** (2026-11-16, TH-2): "Virtuoso · Byzantine" on
     the *Melodies* page. The set keeps its name on disk, `virtuoso_double_harmonic`.
+55. **`th-2-tuning` merges to `main`** (2026-11-16). Jon: "Merge `th-2-tuning`." On the EditMode
+    tests (291 of 291); the menu check was not run for it.
 
 ## Open, each its own plan later (the plan's decision 7)
 
