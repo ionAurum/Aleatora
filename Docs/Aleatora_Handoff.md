@@ -1,36 +1,41 @@
 # Aleatora: hand-off
 
-Status (2026-11-15): **the theory tables plan is written and waits for Jon's decisions**
-(`Docs/Aleatora_Theory_Plan.md`; Design, rulings 48 to 50). On `main`: the Markov plan, MIDI
-out, MIDI in with clock and sync (all finished, rulings to 47). 268 EditMode tests; the menu
-check at 185 checks at both sizes.
+Status (2026-11-15): **TH-1 is built on `th-1-tables` but not yet run in Unity.** Jon's Editor
+had the project open, so the EditMode tests and the menu check haven't run. Jon took the theory
+plan's defaults (Design, ruling 51). On `main`: the Markov plan, MIDI out, MIDI in with clock and
+sync (all finished, rulings to 47). Expected: 291 EditMode tests (268 before), the menu check at
+186 checks (185 before).
 
-The brief: new Markov tables (orders 1 to 4) for Lydian, Phrygian, double harmonic and the Hindu
-pentatonic (1 3 4 5 ♭7), written from music theory in the style of rock guitar virtuosos
-(Satriani, Thorn, Loureiro, Timmons, Petrucci). Aleatora will be sold, so no non-commercial
-data (CantusCorpus and SymbTr are out). No fetch and analyse pipeline: a script writes phrases
-by rule and counts them into the tables' usual JSON.
+TH-1 (Tech, *Melody tables*, *As built (TH-1)*): `Tools/Markov/Theory/virtuoso.py` and
+`virtuoso.json` write 20,000 phrases a mode by rule. `markov.py` takes several source folders.
+The four `virtuoso_*` tables are in `Resources/Markov` (21 sets), and the 17 folk tables are
+unchanged byte for byte. `ModeScale` and `ViewText.SetName` have the four modes, and
+`TheoryTableTests` is new. The script's own checks all hold.
 
 Jon's loopMIDI ports: "Aleatora to Reaper", "Reaper to Aleatora", "Aleatora Test" (ruling 45).
 
 A local change to `Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF -
 Fallback.asset` (the Editor's dynamic font atlas) is left uncommitted; it isn't ours.
 
-## Open for Jon
+## Next: finish TH-1, then TH-2
 
-The plan's *Decisions for Jon*, 1 to 6: which modes beyond his four; the set names
-(`virtuoso_*`); the figures' weights; chromatic passing notes; 20,000 phrases a mode; Python's
-seeded generator in the offline script. Then the go-ahead for TH-1.
+1. With no Editor open (`Temp/UnityLockfile`): run the EditMode tests (291 expected), then
+   `bash Tools/menucheck.sh th1` on `th-1-tables`. Commit the `.meta` files Unity makes for the
+   four `virtuoso_*.txt` and `TheoryTableTests.cs` (an open Editor may already have made them).
+   Put the runs in Tech, *Checks*, *Runs*, and the menu check's logged order-4 melodies in the
+   report to Jon.
+2. TH-2 (`Docs/Aleatora_Theory_Plan.md`, *TH-2*): Jon plays each `Virtuoso · …` set into Reaper
+   and says what to change in `Tools/Markov/Theory/virtuoso.json`. Re-run
+   `python -I Tools/Markov/Theory/virtuoso.py`, then
+   `python -I Tools/markov.py Tools/Markov/Source Tools/Markov/Theory/Output Assets/Aurumworks/Resources/Markov`.
+   Merge once he approves.
 
-## Next: TH-1, once Jon rules
+Read for it: Tech, *As built (TH-1)* and *Checks* (TH-1 lines); the Theory plan, *TH-2* and
+*Risks*.
 
-Record his rulings in `Docs/Aleatora_Design.md`, then build TH-1 on `th-1-tables` from `main`.
-
-Read for it:
-- `Docs/Aleatora_Theory_Plan.md`: all of it (it is short).
-- `Docs/Aleatora_Markov_Plan.md`: *The tables on disk*.
-- `Docs/Aleatora_Tech.md`: *Melody tables* and *Melody generator*.
-- `Tools/markov.py` (its docstring) and `Tools/Markov/Source/README.md`.
+Open for Jon: the Lydian pull is the weakest (after ♯4: 5 39%, 3 33%). If he wants it stronger,
+raise `pull` or have pulls apply inside figures too. That second option changes the rules, so it
+is his call.
 
 ## Not in any repository
 

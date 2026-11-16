@@ -155,6 +155,13 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     Thorn, Kiko Loureiro's solo work, Andy Timmons and John Petrucci. No fetch, analyse and learn
     pipeline: Jon: "generate the 1st through 4th order Markov chains based on standard Western
     music theory". The plan: `Docs/Aleatora_Theory_Plan.md`.
+51. **The theory plan's decisions stand as their defaults; go-ahead for TH-1** (2026-11-15). Jon:
+    "defaults are fine." So: his four modes only (`lydian`, `phrygian`, `double_harmonic`,
+    `hindu_pentatonic`); the corpus `virtuoso`, the sets `virtuoso_<mode>`, 21 in all; the figures'
+    weights as written (runs 30%, sequences 25%, arpeggios 15%, pedals 15%, turns 10%, leaps 5%;
+    the colour note's pull followed 70%) in `Tools/Markov/Theory/virtuoso.json`; chromatic passing
+    notes in about 3% of notes, inside runs only; 20,000 phrases a mode; Python's seeded
+    `random.Random` in the offline script.
 
 ## Open, each its own plan later (the plan's decision 7)
 

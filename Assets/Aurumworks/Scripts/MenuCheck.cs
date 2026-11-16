@@ -244,21 +244,49 @@ namespace Aurumworks.Aleatora
         }
 
         // The tables are in the player's Resources: the index lists them and each reads (a set that
-        // doesn't logs an error, which fails the run by itself).
+        // doesn't logs an error, which fails the run by itself). Each makes a melody at order 4 that
+        // keeps to its mode at ChromaticWeight 0 (TH-1); the theory sets' melodies are logged.
         private static void CheckTables()
         {
             IReadOnlyList<string> names = MarkovLibrary.Names;
-            SelfTest.Check(names.Count == 17, $"the index lists the 17 sets: {names.Count}");
+            SelfTest.Check(names.Count == 21, $"the index lists the 21 sets: {names.Count}");
             int read = 0;
+            int inMode = 0;
+            GeneratorSettings settings = GeneratorSettings.Default;
+            settings.Order = 4;
+            settings.ChromaticWeight = 0f;
+            float[] distribution = new float[Degree.Count];
             foreach (string name in names)
             {
-                if (MarkovLibrary.TryGet(name, out MarkovTable table) && table.Name == name && table.MaxOrder == 4)
+                if (!MarkovLibrary.TryGet(name, out MarkovTable table) || table.Name != name || table.MaxOrder != 4)
                 {
-                    read++;
+                    continue;
+                }
+
+                read++;
+                int mask = ModeScale.Mask(table.Mode);
+                var generator = new MelodyGenerator(table, settings, 2112);
+                var melody = new System.Text.StringBuilder();
+                bool kept = true;
+                for (int i = 0; i < 200; i++)
+                {
+                    int degree = generator.Next(distribution).Degree;
+                    kept &= ModeScale.Has(mask, degree);
+                    if (i < 24)
+                    {
+                        melody.Append(Degree.Name(degree)).Append(' ');
+                    }
+                }
+
+                inMode += kept ? 1 : 0;
+                if (table.Corpus == "virtuoso")
+                {
+                    Debug.Log($"Menu check: {name}, seed 2112, order 4: {melody}…");
                 }
             }
 
             SelfTest.Check(read == names.Count, $"every set reads, with its four orders: {read} of {names.Count}");
+            SelfTest.Check(inMode == names.Count, $"every set's order-4 melody keeps to its mode at chromatic weight 0: {inMode} of {names.Count}");
             bool found = MarkovLibrary.TryGet("european_ionian", out MarkovTable ionian);
             SelfTest.Check(found && ionian.Tunes == 7136 && ionian.Notes == 481199 && ionian.Total(new[] { 11 }) == 35562,
                 "european_ionian has its 7,136 melodies, 481,199 notes and 35,562 notes after 7");

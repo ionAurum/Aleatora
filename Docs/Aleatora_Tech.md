@@ -192,6 +192,42 @@ The board is MathWorld's k × m × n hexagonal grid graph, in cube coordinates (
   not found and logs nothing. A set whose file is missing, fails to read, or whose `set` line is
   not its file's name logs one error and is not tried again.
 
+### As built (TH-1, 2026-11-15, branch `th-1-tables`)
+
+Four sets written from theory (`Docs/Aleatora_Theory_Plan.md`; Design, rulings 50 and 51):
+`virtuoso_lydian`, `virtuoso_phrygian`, `virtuoso_double_harmonic`, `virtuoso_hindu_pentatonic`,
+21 sets in all.
+
+- **`Tools/Markov/Theory/virtuoso.py`** writes 20,000 phrases a mode by the plan's rules and
+  counts them into `Tools/Markov/Theory/Output/virtuoso_<mode>.json` (the folk JSON's shape; its
+  docstring is the reference). `virtuoso.json` holds the modes, weights, seed (2112) and phrase
+  count. Each mode has its own `random.Random`, seeded from `"<seed>:<mode>"`, so a mode added
+  leaves the others as they were; the same seed writes the same files (checked).
+  Then `python -I Tools/markov.py Tools/Markov/Source Tools/Markov/Theory/Output
+  Assets/Aurumworks/Resources/Markov`: `markov.py` now takes any number of source folders, lists
+  every set by name in `Index.txt`, and refuses two sets of one name. The 17 folk tables came out
+  byte for byte as they were.
+- **Readings where the plan was silent:** a phrase is laid out on scale steps from two under the
+  low tonic to two over the high one, and starts in the middle octave; a figure's first note is a
+  step or a third away (2 : 1), its direction even, flipped if it would leave the range; a
+  sequence is two to four groups; a pedal's line starts one to three steps away and stays inside
+  the octave (in the pentatonic, an octave would repeat the pedal's degree); a turn goes either
+  way; the start is 1, 5, the 3rd or the colour at 3 : 2 : 2 : 2; a pull goes to the nearest
+  placement of its target the way it goes; the ending is stepwise to a tonic, through a pull into
+  1 at the pull's 70% where the mode has one (not Lydian), otherwise from the nearer side. The
+  chromatic weight is **0.23 per whole step in a run** (0.2 gave 2.6%): Lydian 3.1%, Phrygian
+  2.9%, double harmonic 0.6% (one whole step, 4 to 5), the pentatonic 1.6%.
+- **The script's checks** (it writes nothing if one fails): every phrase ends on 1 with 8 notes
+  or more; no degree twice running; nothing outside the mode but passing notes, each between two
+  scale notes a whole step apart; each pulled degree's likeliest next note is a target of its
+  pull; the sums. As run: after ♯4 in Lydian, 5 39% and 3 33% (the weakest pull); after ♭2 in
+  Phrygian, 1 54%; double harmonic ♭2 → 1 51%, 7 → 1 48%, ♭6 → 5 40% (7 37%); the pentatonic
+  ♭7 → 1 44% (5 35%), 4 → 3 45%.
+- About 27 to 28 notes a phrase, 547k to 565k notes a set; the tables are 25 to 88 KB (narrower
+  than a folk set: the rules make fewer contexts).
+- **`ModeScale`**: `lydian`, `phrygian`, `double_harmonic`, `hindu_pentatonic` (the last
+  1 3 4 5 ♭7, ruling 49). **`ViewText.SetName`** knows them: "Virtuoso · double harmonic".
+
 ## Cell look
 
 ### As built (2026-11-15, outside the milestones; merged with M1)
@@ -639,7 +675,8 @@ and IN-2's keys.
 ## Checks
 
 - **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2, 131 as of M3,
-  166 as of MIDI-1, 193 as of MIDI-2, 200 as of MIDI-3, 241 as of IN-1, 265 as of IN-2, 268 as of IN-3:
+  166 as of MIDI-1, 193 as of MIDI-2, 200 as of MIDI-3, 241 as of IN-1, 265 as of IN-2, 268 as of IN-3,
+  291 as of TH-1:
   - `HexCoordTests`: Q + R + S = 0; the directions as named; a neighbour is one step away and its
     opposite comes back; six distinct neighbours; distance symmetric with the triangle
     inequality; equality and hashing; rounding a centre gives the cell; points round a corner
@@ -738,6 +775,14 @@ and IN-2's keys.
     message); the clock's line on Aleatora's own clock, with Send clock, with a clock chosen whose
     input isn't open, and following a fed clock before its tempo is known, playing on beat 3 at
     150.0 and stopped.
+  - TH-1: `TheoryTableTests`, for each of the four theory sets: corpus, mode, 20,000 phrases,
+    four orders; no phrase begins outside the mode; every order-1 row sums to its unigram (less
+    the phrases for 1: every phrase ends on 1); under 5% of notes outside the mode; each colour
+    note's likeliest next note is its pull (seven cases); an order-4 melody at ChromaticWeight 0
+    stays in the mode and finds its order-4 context on more than 90% of 4,000 steps (a Python
+    re-run of the generator found 99.9%). `DegreeTests` gains the four modes' masks (an unknown
+    mode is now `locrian`, as `phrygian` was); `MelodiesPageTests` their names; the set count is
+    21.
   - Only the M2 tests draw random numbers, from `Rng` with fixed seeds.
 - **The menu check** (`MenuCheck.cs`), as of M0 (10 screenshots): the template's walk (main menu,
   Settings, Play, session menu and its Settings, Quit to Menu), with no volumes and no
@@ -794,6 +839,9 @@ and IN-2's keys.
   (each within 5 ms), Stop, nothing sounding. The feeds close and Send clock goes off.
   `CheckReachesAll` (the Melodies page's old check, made a helper) runs on the MIDI page from
   Settings and the monitor too. 185 checks, 17 screenshots.
+  As of TH-1, `CheckTables` counts 21 sets and makes a 200-note melody from each at order 4 and
+  chromatic weight 0, every note in its mode; the four theory sets' first 24 are logged. 186
+  checks.
   `menucheck.sh` takes `WIDTH` and `HEIGHT` (1920 × 1080 unless given).
 - **Runs (2026-11-15):** `m0-setup` and `m0-setup2` on `main` (exit 0; the second left the tree
   clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean). M1: EditMode tests 69 of 69;
