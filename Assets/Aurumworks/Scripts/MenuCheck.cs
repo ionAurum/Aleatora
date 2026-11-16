@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -129,6 +130,9 @@ namespace Aurumworks.Aleatora
 
             // The emitter's panel (EM-4): its controls each change what they name, H hides it, clicks on it stay on it.
             yield return CheckPanel();
+
+            // The controls (EM-6): taking the emitter, the tilt, the wheel, the target, the gamepad, Grid Lock.
+            yield return CheckControls();
 
             // The melody tables came with the player and read.
             CheckTables();
@@ -779,6 +783,289 @@ namespace Aurumworks.Aleatora
             }
 
             return -1;
+        }
+
+        // The controls (EM-6; the controls doc, schemes A and B): a click on the cone takes the
+        // emitter, picks no cell and sprays nothing; held, the pointer is locked, a click picks
+        // nothing, the camera's input is off, the left button sprays while down; the mouse's
+        // movement tilts the cone on the camera's axes, to the horizon and back at once; the target
+        // is where the spray lands; the wheel steps Rate between its limits, with the right button
+        // Spread; G lets go and takes, Escape lets go and opens the menu; the gamepad's right stick
+        // tilts, its trigger sprays by pressure, the D-pad steps, LB and RB lower and raise; Grid
+        // Lock's moves end on a cell's middle, in both orientations.
+        private static IEnumerator CheckControls()
+        {
+            Aleatora game = Aleatora.Instance;
+            Emitter emitter = game != null ? game.Emitter : null;
+            Camera camera = Camera.main;
+            if (!SelfTest.Check(emitter != null && camera != null, "the emitter and the camera are there for the controls"))
+            {
+                yield break;
+            }
+
+            EmitterTuning tuning = game.Tuning.Emitter;
+            HexGrid grid = game.Grid;
+            GridSelection selection = game.Selection;
+            CinemachineInputAxisController cameraInput = UnityEngine.Object.FindAnyObjectByType<CinemachineInputAxisController>();
+            float rateBefore = tuning.Rate, spreadBefore = tuning.Spread, jitterBefore = tuning.SpeedJitter, swingBefore = tuning.Swing;
+            Vector3 placeBefore = emitter.transform.position;
+            tuning.Swing = 0f;
+            tuning.Rate = 4f;
+            emitter.Clear();
+            emitter.Spraying = false;
+            emitter.SetTilt(0, 0);
+            selection.Deselect();
+            yield return MoveMouse(new Vector2(2f, 2f));
+
+            // Taking it by a click on the cone.
+            Vector2 onCone = camera.WorldToScreenPoint(emitter.GetComponentInChildren<Renderer>().bounds.center);
+            SelfTest.Check(emitter.IsOnCone(onCone) && !emitter.Held, $"the cone is on the screen at ({onCone.x:0}, {onCone.y:0}), not held");
+            int launched = emitter.Launched;
+            yield return ClickAt(onCone);
+            SelfTest.Check(emitter.Held && Cursor.lockState == CursorLockMode.Locked && !Cursor.visible,
+                "a click on the cone takes the emitter, the pointer locked and hidden");
+            SelfTest.Check(!selection.HasSelection && emitter.Launched == launched, "the click that takes it picks no cell and sprays nothing");
+            SelfTest.Check(cameraInput != null && !cameraInput.enabled, "while it is held the camera neither orbits nor zooms");
+
+            // Held: a click picks nothing, the left button sprays while down.
+            Mouse mouse = Mouse.current;
+            Vector2 onCell = camera.WorldToScreenPoint(grid.TopOf(game.Board.Notes.Centre));
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = onCell }.WithButton(MouseButton.Left));
+            yield return new WaitForSecondsRealtime(0.6f);
+            SelfTest.Check(!selection.HasSelection, "held, a click picks no cell");
+            SelfTest.Check(emitter.CurrentRate == tuning.Rate && emitter.Launched > launched,
+                $"held, the left button sprays while down: {emitter.Launched - launched} launched at {emitter.CurrentRate}/s");
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = onCell });
+            yield return null;
+            yield return null;
+            launched = emitter.Launched;
+            yield return new WaitForSecondsRealtime(0.4f);
+            SelfTest.Check(emitter.CurrentRate == 0f && emitter.Launched == launched, "let go, the spray stops");
+            emitter.Clear();
+            SelfTest.Progress();
+
+            // The tilt: the mouse's movement on the camera's axes (A3).
+            Vector3 right = camera.transform.right;
+            right.y = 0f;
+            right.Normalize();
+            float counts = 200f;
+            float degrees = counts * tuning.TiltSensitivity;
+            float landedX = camera.WorldToScreenPoint(emitter.AimPoint).x;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = onCell, delta = new Vector2(counts, 0f) });
+            yield return null;
+            yield return null;
+            SelfTest.Check(Math.Abs(emitter.TiltX - (degrees * right.x)) < 0.5 && Math.Abs(emitter.TiltZ - (degrees * right.z)) < 0.5,
+                $"the mouse moved right {counts} counts tilts the cone {degrees:0.#}° along the camera's right: {emitter.TiltX:0.#}, {emitter.TiltZ:0.#}");
+            float nowX = camera.WorldToScreenPoint(emitter.AimPoint).x;
+            SelfTest.Check(nowX > landedX + 20f, $"the target moves right on the screen: {landedX:0} to {nowX:0}");
+
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = onCell, delta = new Vector2(20000f, 20000f) });
+            yield return null;
+            yield return null;
+            SelfTest.Check(emitter.Axis.y > -0.01f && Math.Abs(emitter.TiltX) <= ConeTilt.Limit && Math.Abs(emitter.TiltZ) <= ConeTilt.Limit,
+                $"pushed far, the cone stops at the horizon: its axis {emitter.Axis}, tilt {emitter.TiltX:0.#}, {emitter.TiltZ:0.#}");
+            double atX = emitter.TiltX, atZ = emitter.TiltZ;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = onCell, delta = new Vector2(-counts, -counts) });
+            yield return null;
+            yield return null;
+            SelfTest.Check(Math.Abs(emitter.TiltX - atX) + Math.Abs(emitter.TiltZ - atZ) > degrees * 0.5,
+                $"and comes back from it at once: {emitter.TiltX:0.#}, {emitter.TiltZ:0.#}");
+            Vector3 flat = emitter.AimPoint - emitter.Nozzle;
+            flat.y = 0f;
+            SelfTest.Check(flat.magnitude > 1f, $"near the horizon the target still lands, {flat.magnitude:0.0} units out");
+            tuning.Spread = 60f;
+            yield return null;
+            yield return SelfTest.Capture("3-Controls-Horizon");
+
+            // The target is where the spray lands (A4): a jet at a tilt, its first hits near it.
+            tuning.Spread = 0f;
+            tuning.SpeedJitter = 0f;
+            emitter.SetTilt(15, 10);
+            yield return null;
+            Vector3 local = grid.transform.InverseTransformPoint(emitter.AimPoint);
+            HexCoord target = grid.Layout.Pick(local.x, local.z);
+            var hits = new List<EmitterHit>();
+            void OnHit(EmitterHit hit) => hits.Add(hit);
+            emitter.Hit += OnHit;
+            emitter.Spraying = true;
+            yield return new WaitForSecondsRealtime(1.5f);
+            emitter.Spraying = false;
+            emitter.Hit -= OnHit;
+            if (grid.Shape.Contains(target))
+            {
+                SelfTest.Check(hits.Count > 0 && HexCoord.Distance(hits[0].Cell, target) <= 1,
+                    $"a jet's first hit is on or beside the target's cell {target}: " + (hits.Count > 0 ? hits[0].Cell.ToString() : "no hit"));
+            }
+            else
+            {
+                SelfTest.Check(false, $"the target {target} at a tilt of 15°, 10° is on the board");
+            }
+
+            tuning.SpeedJitter = jitterBefore;
+            tuning.Spread = 60f;
+            yield return new WaitForSecondsRealtime(0.3f);
+            yield return SelfTest.Capture("3-Controls-Held");
+            emitter.Clear();
+            emitter.SetTilt(0, 0);
+            SelfTest.Progress();
+
+            // The wheel (A6): Rate by Wheel Step, between its limits; with the right button, Spread.
+            Vector3 cameraAt = camera.transform.position;
+            tuning.Rate = 4f;
+            tuning.Spread = 20f;
+            yield return Wheel(mouse, onCell, 1, false);
+            SelfTest.Check(Mathf.Abs(tuning.Rate - (4f * tuning.WheelStep)) < 1e-3f, $"a notch up multiplies Rate by Wheel Step: {tuning.Rate}");
+            yield return Wheel(mouse, onCell, 40, false);
+            SelfTest.Check(tuning.Rate == EmitterTuning.MostRate, $"many notches up, Rate stops at {EmitterTuning.MostRate}: {tuning.Rate}");
+            yield return Wheel(mouse, onCell, -60, false);
+            SelfTest.Check(tuning.Rate == EmitterTuning.LeastWheelRate, $"many down, at {EmitterTuning.LeastWheelRate}: {tuning.Rate}");
+            yield return Wheel(mouse, onCell, 1, true);
+            SelfTest.Check(Mathf.Abs(tuning.Spread - (20f + tuning.SpreadStep)) < 1e-3f && tuning.Rate == EmitterTuning.LeastWheelRate,
+                $"with the right button a notch widens Spread by Spread Step, Rate unchanged: {tuning.Spread}");
+            yield return Wheel(mouse, onCell, 100, true);
+            SelfTest.Check(tuning.Spread == EmitterTuning.MostSpread, $"Spread stops at {EmitterTuning.MostSpread}: {tuning.Spread}");
+            yield return Wheel(mouse, onCell, -100, true);
+            SelfTest.Check(tuning.Spread == 0f, $"and at 0: {tuning.Spread}");
+            SelfTest.Check((camera.transform.position - cameraAt).magnitude < 1e-3f, "the wheel and the right button moved the camera not at all");
+            tuning.Rate = 4f;
+            tuning.Spread = 20f;
+            SelfTest.Progress();
+
+            // Letting go and taking: G, Escape.
+            yield return QueuedInput.Press(Key.G);
+            SelfTest.Check(!emitter.Held && Cursor.lockState == CursorLockMode.None && Cursor.visible && cameraInput.enabled,
+                "G lets it go: the pointer back, the camera's input on");
+            yield return QueuedInput.Press(Key.G);
+            SelfTest.Check(emitter.Held, "G takes it");
+            yield return QueuedInput.Press(Key.Escape);
+            SelfTest.Check(Menus.Count == 1 && !emitter.Held && Cursor.lockState == CursorLockMode.None, "Escape opens the session menu and lets it go");
+            yield return QueuedInput.Press(Key.Escape);
+            SelfTest.Check(Menus.Count == 0 && !emitter.Held, "closing the menu doesn't take it again");
+            SelfTest.Progress();
+
+            // The gamepad (B): the right stick tilts, the trigger sprays by pressure, the D-pad steps, LB and RB.
+            // A pad made for the run and made current: a real pad plugged in (an XInput controller)
+            // has its own state format, which a queued GamepadState doesn't fit. The later checks'
+            // gamepad presses (QueuedInput, on Gamepad.current) go to it too.
+            Debug.Log("Menu check: the gamepad before the controls' checks: "
+                + (Gamepad.current != null ? $"{Gamepad.current.name} ({Gamepad.current.layout}, {Gamepad.current.stateBlock.format})" : "none"));
+            Gamepad gamepad = InputSystem.AddDevice<Gamepad>("Menu Check Pad");
+            gamepad.MakeCurrent();
+
+            emitter.SetTilt(0, 0);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightStick = new Vector2(1f, 0f) });
+            yield return new WaitForSecondsRealtime(0.25f);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            yield return null;
+            double along = (emitter.TiltX * right.x) + (emitter.TiltZ * right.z);
+            SelfTest.Check(along > 10.0, $"the right stick tilts the cone along the camera's right, unheld: {along:0.#}°");
+            emitter.SetTilt(0, 0);
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 0.5f });
+            yield return null;
+            yield return null;
+            SelfTest.Check(Mathf.Abs(emitter.CurrentRate - (tuning.Rate * 0.5f)) < 0.05f, $"the right trigger half pressed sprays at half Rate: {emitter.CurrentRate}");
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            yield return null;
+            yield return null;
+            SelfTest.Check(emitter.CurrentRate == 0f, "let go, nothing sprays");
+            emitter.Clear();
+
+            yield return QueuedInput.Press(GamepadButton.DpadUp);
+            SelfTest.Check(Mathf.Abs(tuning.Rate - (4f * tuning.WheelStep)) < 1e-3f, $"the D-pad's up steps Rate as a notch: {tuning.Rate}");
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 1f }.WithButton(GamepadButton.DpadDown));
+            yield return null;
+            yield return null;
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            yield return null;
+            SelfTest.Check(Mathf.Abs(tuning.Spread - (20f - tuning.SpreadStep)) < 1e-3f, $"with the left trigger, its down narrows Spread: {tuning.Spread}");
+            tuning.Rate = 4f;
+            tuning.Spread = 20f;
+
+            float height = emitter.transform.position.y;
+            InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.RightShoulder));
+            yield return new WaitForSecondsRealtime(0.25f);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            yield return null;
+            float raised = emitter.transform.position.y;
+            InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.LeftShoulder));
+            yield return new WaitForSecondsRealtime(0.25f);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            yield return null;
+            SelfTest.Check(raised > height + 0.3f && emitter.transform.position.y < raised - 0.3f,
+                $"RB raises it ({height:0.00} to {raised:0.00}) and LB lowers it ({emitter.transform.position.y:0.00})");
+            SelfTest.Progress();
+
+            // Grid Lock (A9): Shift and D, then D let go: it ends on a cell's middle, to the right on the screen.
+            yield return Glide(game, HexOrientation.Flat);
+            yield return Glide(game, HexOrientation.Pointy);
+            yield return ShowBoard(grid, game.Tuning.Grid, 5, 5, 5, HexOrientation.Flat, 61, null);
+
+            emitter.transform.position = placeBefore;
+            emitter.SetTilt(0, 0);
+            emitter.Clear();
+            tuning.Rate = rateBefore;
+            tuning.Spread = spreadBefore;
+            tuning.SpeedJitter = jitterBefore;
+            tuning.Swing = swingBefore;
+            yield return MoveMouse(new Vector2(2f, 2f));
+        }
+
+        // Notches of the wheel while held, the right button down or not, through the input system as the mouse's own.
+        private static IEnumerator Wheel(Mouse mouse, Vector2 at, int notches, bool rightButton)
+        {
+            MouseState state = new MouseState { position = at, scroll = new Vector2(0f, notches * 120f) };
+            MouseState after = new MouseState { position = at };
+            if (rightButton)
+            {
+                state = state.WithButton(MouseButton.Right);
+                after = after.WithButton(MouseButton.Right);
+                InputSystem.QueueStateEvent(mouse, after);
+                yield return null;
+            }
+
+            InputSystem.QueueStateEvent(mouse, state);
+            yield return null;
+            yield return null;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = at });
+            yield return null;
+        }
+
+        // Shift and D held, then D let go with Shift still held: the emitter glides to the right on
+        // the screen along the grid's lines and stops on a cell's middle.
+        private static IEnumerator Glide(Aleatora game, HexOrientation orientation)
+        {
+            HexGrid grid = game.Grid;
+            Emitter emitter = game.Emitter;
+            Camera camera = Camera.main;
+            yield return ShowBoard(grid, game.Tuning.Grid, 5, 5, 5, orientation, 61, null);
+            Vector3 start = grid.TopOf(game.Board.Notes.Centre) + new Vector3(0.23f, 0f, 0.17f);
+            start.y = emitter.transform.position.y;
+            emitter.transform.position = start;
+            float startX = camera.WorldToScreenPoint(start).x;
+
+            Keyboard keyboard = Keyboard.current ?? InputSystem.AddDevice<Keyboard>();
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.LeftShift, Key.D));
+            yield return new WaitForSecondsRealtime(0.5f);
+            bool glided = emitter.Gliding;
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.LeftShift));
+            float waited = Time.realtimeSinceStartup;
+            while (emitter.Gliding && Time.realtimeSinceStartup - waited < 3f)
+            {
+                yield return null;
+            }
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+            yield return null;
+            Vector3 at = emitter.transform.position;
+            Vector3 local = grid.transform.InverseTransformPoint(at);
+            HexCoord cell = grid.Layout.Pick(local.x, local.z);
+            Vector3 middle = grid.TopOf(cell);
+            float off = new Vector2(at.x - middle.x, at.z - middle.z).magnitude;
+            float endX = camera.WorldToScreenPoint(at).x;
+            SelfTest.Check(glided && !emitter.Gliding && off < 0.01f && cell != game.Board.Notes.Centre && endX > startX + 10f,
+                $"{orientation}: Shift and D glide it along the grid, to the right on the screen ({startX:0} to {endX:0}), "
+                + $"and let go it stops on cell {cell}'s middle ({off:0.000} off)");
         }
 
         // The mouse moved to a point of the screen, queued as the device's own, with frames for the UI to see it.

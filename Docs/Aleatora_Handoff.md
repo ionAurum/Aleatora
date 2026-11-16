@@ -1,40 +1,41 @@
 # Aleatora: hand-off
 
-Status (2026-11-16): **EM-5, designing the controls, is written**: `Docs/Aleatora_Emitter_Controls.md`
-(the emitter plan, `Docs/Aleatora_Emitter_Plan.md`, *EM-5*). Jon tried EM-4: it works, its
-readings stand (ruling 76). Jon gave the mouse scheme himself (ruling 77); the doc works it out
-(scheme A), proposes the gamepad (B) and MIDI controllers (M), each decision with a default, each
-scheme with its cost. Committed on `em-4-panel` (docs only). **Waiting for Jon's rulings on it.**
+Status (2026-11-16): **EM-6, the controls, is built on `em-6-controls`** (from `em-4-panel`; the
+emitter plan, `Docs/Aleatora_Emitter_Plan.md`, *EM-6*; `Docs/Aleatora_Emitter_Controls.md`,
+schemes A and B as written, rulings 77 and 78). EditMode tests 383 of 383; the menu check `em6`
+exit 0, 329 checks held, 26 screenshots (Tech, *Emitter*, *As built (EM-6)*, *Checks*).
+Committed. **Waiting for Jon to try the controls in the Editor**, then EM-7.
 
 Finished on `main`: the Markov plan, MIDI out, MIDI in with clock and sync, the theory plan.
-`em-1-board` to `em-4-panel` aren't merged; the plan merges at EM-7.
+`em-1-board` to `em-6-controls` aren't merged; the plan merges at EM-7.
 Jon's loopMIDI ports: "Aleatora to Reaper", "Reaper to Aleatora", "Aleatora Test" (ruling 45).
 Reaper sends MIDI clock only while its transport runs (ruling 70).
+Jon has an XInput gamepad plugged in: the menu check's gamepad checks run on a pad of their own
+(Tech, *Checks*, as of EM-6).
 
 A local change to `Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF -
 Fallback.asset` (the Editor's dynamic font atlas) is left uncommitted; it isn't ours.
 
 ## Open, for Jon
 
-- **The controls doc**, *For Jon to rule*: the defaults A1–A11, B1–B3, M1–M5, and which schemes
-  EM-6 builds (C2's suggestion: A, B with it if wanted, M as its own milestone after). The ones
-  most likely to matter: A1 (G and a click on the cone take the emitter; Escape releases), A4 (the
-  target is where the spray lands, gravity included, not the straight cone), A5 (*Spread* becomes
-  the whole angle), A7 (no camera orbit or zoom while the emitter is held), A8 (Space stays as a
-  latch), A9 (Shift glides along the grid's six directions and stops on a cell's middle), M5 (which
-  MIDI controllers Jon has).
+- **Try EM-6** (Editor): G or a click on the cone takes the emitter; the mouse tilts it; the left
+  button sprays; the wheel sets *Rate*, the right button and the wheel *Spread*; Shift with W A S D
+  glides along the grid; G or Escape lets go. The gamepad: right stick, right trigger, D-pad (with
+  the left trigger for *Spread*), LB and RB, the left stick pressed for Grid Lock. The feel is on
+  `AleatoraTuning` (*Emitter: controls*: *Tilt Sensitivity*, *Swing*, *Stick Tilt Speed*, *Wheel
+  Step*, *Spread Step*; *Aim Line Width*, *Held Color* under the look).
+- **EM-6's readings** (Tech, *As built (EM-6)*): the target shows a middle-sized sphere at
+  *Speed*, so jitter and sizes scatter round it; the wheel writes the tuning, as the panel does
+  (in the Editor it stays on the asset after play); the gamepad's stick and D-pad work held or not.
 - **From EM-3** (Tech, *As built (EM-3)*): the grid sixteenth and strength 1 are C2's starting
   values; readings for EM-7.
 
-## Next: EM-6, the controls (once Jon has ruled on the doc)
+## Next: EM-7, Jon plays it (once he has tried EM-6)
 
-Write EM-6 into the plan from Jon's rulings (tasks, checks), branch `em-6-controls` from
-`em-4-panel`, build it. Read for it: `Docs/Aleatora_Emitter_Controls.md` (whole, with Jon's
-rulings), Design rulings 76 and 77; Tech, *Emitter* (*As built (EM-2)*: the controls, the aim
-marker; *As built (EM-4)*: the panel, `UiInput`, `GridSelection`); `Game/Emitter.cs`
-(`ReadControls`, `Orient`, `PlaceMarker`), `Grid/GridSelection.cs`, `Game/SprayDraws.cs`
-(*Spread* as the half-angle today), `Game/EmitterTuning.cs`, `Assets/InputSystem_Actions.inputactions`
-(`Player`), `Scripts/MenuCheck.cs` (the emitter's and the panel's checks).
+Jon sprays into Reaper and rules on the readings; merge the emitter branches into `main` once he
+approves (the plan, *EM-7*). Then the MIDI controls (scheme M, ruling 79: Reaper's CC streams onto
+the emitter's parameters) as its own plan or milestone. Read for it: the controls doc, *Scheme M*;
+the MIDI in plan's input thread (Tech, *MIDI*, *As built (IN-1)*: `FeedInput`, `HeldNotes`).
 
 Later, each its own plan (Design, *Open*): how the generator drives the grid, OSC out (ruling
 39), the keyboard's notes (ruling 37), rhythm for the *Melodies* page.
