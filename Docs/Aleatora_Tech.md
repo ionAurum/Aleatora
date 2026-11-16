@@ -14,7 +14,7 @@ One section per system, each with what was built under "As built". The plans are
 - *Melody generator* (as built)
 - *Melodies page* (as built)
 - *Board notes* (the emitter plan's EM-1, as built)
-- *Emitter* (the emitter plan's EM-2, as built)
+- *Emitter* (the emitter plan's EM-2 and EM-3, as built)
 - *Cell look* (the gel pad shader, as built)
 - *MIDI* (as built)
 - *Checks*
@@ -27,8 +27,8 @@ All in Assembly-CSharp (no asmdefs), namespace `Aurumworks.Aleatora`, under
 | Folder | Holds | Unity in it? |
 |---|---|---|
 | `Grid/` | `HexCoord`, `HexDirection` (with `HexDirections`), `HexShape`, `HexLayout` (with `HexOrientation`, `HexPoint`): plain C#. `HexGrid`, `HexCellView`, `GridSelection` | The last three only |
-| `Music/` (M1; M2 from `Rng` on) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing`; `CellNotes` (with `CellLayout`, EM-1) | No |
-| `Midi/` (MIDI-1) | `MidiMessage`, `IMidiOutput`, `MidiPorts`, `RecordingOutput`; internal `WinMm`, `WinMmOutput`; `NotePlayer`, `INoteSource`, `MelodySource` (MIDI-2, 3); `IMidiInput`, `TimedMessage`, `FeedInput`, `HeldNotes`, internal `WinMmInput` (IN-1); `IBeatSource`, `InternalBeatSource`, `ClockFollower`, `ClockSender` (IN-2) | No |
+| `Music/` (M1; M2 from `Rng` on) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing`; `CellNotes` (with `CellLayout`, EM-1); `Quantize` (with `QuantizeGrid`), `HitNote` (EM-3) | No |
+| `Midi/` (MIDI-1) | `MidiMessage`, `IMidiOutput`, `MidiPorts`, `RecordingOutput`; internal `WinMm`, `WinMmOutput`; `NotePlayer`, `INoteSource`, `MelodySource` (MIDI-2, 3); `IMidiInput`, `TimedMessage`, `FeedInput`, `HeldNotes`, internal `WinMmInput` (IN-1); `IBeatSource`, `InternalBeatSource`, `ClockFollower`, `ClockSender` (IN-2); `HitScheduler` (EM-3) | No |
 | `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2), `MelodyViewTuning` (M3), `MidiTuning`, `MidiPlayback` (MIDI-1); `EmitterTuning`, `BoardNotes` (EM-1); `Emitter`, `EmitterSphere`, and the plain C# `SprayDraws` (with `SprayDraw`) and `EmitterHit` (EM-2) | Yes, but for the plain C# |
 | `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip`; the static `ViewText` and `ViewMesh`; the static `MidiPage` (MIDI-3), `MidiMonitorPage` (IN-3) | Yes |
 | (root) | `MainMenu`, `SessionMenu`, `SettingsMenu`, `MenuCheck` | Yes |
@@ -377,6 +377,62 @@ The emitter plan's EM-2 (`Docs/Aleatora_Emitter_Plan.md`; rulings 59, 63, 69, 72
   - **Hits come thick**: 164 a second on the default board at 50 spheres a second, mostly
     bounces. The plan's *Too many notes* levers (*Min Speed*, *Max Voices*, the merge,
     *Bounciness*) will matter.
+
+### As built (EM-3, 2026-11-16, branch `em-3-notes`)
+
+The emitter plan's EM-3: hits as quantized MIDI notes on the clock (rulings 62, 64, 66, 70).
+
+- **`Music/Quantize`** (plain C#, with the enum `QuantizeGrid`: *Off*, quarter, eighth,
+  sixteenth, thirty-second, eighth triplet, sixteenth triplet). `Beats(grid)`; `NextPoint`;
+  `Start(b, g, s)` = b + s·(the next grid point − b), a point within 10⁻⁹ of a step counting as
+  on it, so never before b and on a grid point it stays; `Length(L, g, s)` = L + s·(Lq − L), Lq
+  the nearest whole steps, at least one. No grid: both unchanged.
+- **`Music/HitNote`** (plain C#): `Velocity(speed, …)`, *Min Speed* to *Max Speed* onto *Min
+  Velocity* to *Max Velocity*, the fraction raised to *Velocity Curve*, 1–127; `Length(size, …)`,
+  *Min Size* to *Max Size* onto *Shortest* to *Longest* beats (the two sizes equal: *Shortest*).
+- **`Midi/HitScheduler`** (plain C#): the notes waiting (a fixed array of 512) and sounding (128);
+  `Grid`, `Strength`, `QuantizeLength`, `MaxVoices`, `SetBpm`, `Follow`; `Add(now, channel, note,
+  velocity, length)` from the main thread; `Advance(now, output)` from the clock thread (offs
+  first, then the ons due, earliest first); `Release` (ends what sounds, keeps what waits: a change
+  of port), `Clear` (ends and forgets: shutting down), `Forget` (*Panic!*: the player's Panic sends
+  the offs); `BeatAt`, `Tempo`, `OnFollowedLine`, the counts `Added`, `Merged`, `Played`,
+  `Dropped`. Its own lock, after the player's. `Add` and `Advance` allocate nothing (tested).
+  - **The beat line** (decision 7, ruling 70): the followed clock's (`ClockFollower.BeatAt`) while
+    it runs; else its own `InternalBeatSource`, from beat 0 at time 0 on the playback's Stopwatch
+    at *BPM* (the MIDI page's), or, once a followed clock stops, from the beat it reached at the
+    last tempo it measured. `Advance` reads the line every time, so a start, stop or jump of the
+    followed clock is seen as it comes.
+  - **A note** goes on when the line reaches its beat; its off is its length later, in seconds at
+    the line's tempo then (as `NotePlayer`), so a stopped clock can't hold a note. The same pitch
+    and channel at the same beat (within 10⁻⁶) is one note, the louder velocity and the longer
+    length; a hit landing on the beat a note of its pitch has just gone on at counts as merged. A
+    pitch going on while it sounds: its off, then its on. Past *Max Voices* a note is dropped,
+    though a pitch already sounding still goes on again.
+- **`Game/MidiPlayback`**: `Scheduler`; `PlayHit(hit, tuning)` (velocity and length from the hit;
+  the tuning's grid, strength, *Quantize Length* and *Max Voices* onto the scheduler; `Add` at
+  `Now`; the clock thread started). The thread runs while the scheduler has work too, and advances
+  it after the player. `Bpm` sets both; a change of clock calls `Follow` before the follower's
+  reset; `Panic` forgets the scheduler's notes, then sends the player's Panic, under the playback's
+  lock; `Close` releases them on the old port; `Shutdown` and a clock-thread error clear them.
+- **`Game/Aleatora`**: `Emitter.Hit` → `Midi.PlayHit(hit, Tuning.Emitter)`.
+- **`EmitterTuning`** gained *Emitter: notes*: `Channel` 1, `Grid` sixteenth, `Strength` 1,
+  `QuantizeLength` on, `MaxSpeed` 15, `MinVelocity` 30, `MaxVelocity` 127, `VelocityCurve` 1,
+  `Shortest` ¼ and `Longest` 2 beats, `MaxVoices` 32 (decision 11's; the grid and strength, which
+  the plan doesn't give, are C2's starting point), all added to `AleatoraTuning.asset`. Read at
+  each hit, so they can be tuned in play.
+- **The plan's test "a stopped followed clock silent"** became, after ruling 70, "a stopped
+  followed clock plays on Aleatora's own line at its last tempo".
+- **Readings for Jon at EM-7:**
+  - **A hit is placed on the beat line when Unity reports it**, at the playback's clock then, not
+    at its physics step's time. Unity runs a frame's physics steps together at the frame's start,
+    so the hits of one frame arrive together: at strength 1 nothing changes; at strength 0 the
+    rhythm is as coarse as the frame (about 16 ms at 60 frames a second). Placing each at its own
+    step's time would cost a constant delay of a frame.
+  - **When the line changes** (Reaper starts, stops or jumps; a clock is chosen or let go), every
+    note waiting goes to the new line's next grid point.
+  - **Merging takes the longer length** as well as the louder velocity.
+- **Measured** (the menu check `em3`): 9 hits in two seconds' spray at *Rate* 4, 7 note ons by the
+  check (the rest still waiting), the worst 1.47 ms off a sixteenth at 120 BPM.
 
 ## Cell look
 
@@ -1014,6 +1070,12 @@ and IN-2's keys.
   more than 20; under the session menu nothing launched, spraying going on once it closes; Space
   turns it off; `Clear`. Then the spray's cost logged on 5 × 5 × 5 and 40 × 40 × 40 (a reading,
   not a check). 244 checks, 21 screenshots.
+  As of EM-3, `CheckEmitter` puts a `RecordingOutput` in for its two seconds' spray, at 120 BPM,
+  sixteenths, strength 1 (`CheckEmitterNotes`): note ons arrived, each within 5 ms of a sixteenth
+  on the scheduler's line, each pitch a struck cell's, each velocity in *Min* to *Max Velocity*,
+  each on the emitter's channel; *Panic!* leaves nothing sounding or waiting; the output closed
+  and the values put back. At its end, Panic and nothing waiting or open before `CheckMidi`. 251
+  checks, 21 screenshots.
   `menucheck.sh` takes `WIDTH` and `HEIGHT` (1920 × 1080 unless given).
 - **Runs (2026-11-15):** `m0-setup` and `m0-setup2` on `main` (exit 0; the second left the tree
   clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean). M1: EditMode tests 69 of 69;
@@ -1021,4 +1083,4 @@ and IN-2's keys.
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
   `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128, then 131 of 131 after the CanvasRenderer fix; `m3` at
   1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean). MIDI-1: EditMode tests 166 of 166 (the loopMIDI test
-  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3). IN-3: EditMode tests 268 of 268; `in3-final` at 1920 × 1080 and `in3-final-720` at 1280 × 720 on `in-3-page` (exit 0 each, 185 checks held, 17 screenshots; following at 150 BPM, note ons 0.5 to 0.6 ms after their ticks; sent ticks 16.66 ms apart, worst 2.07 ms off). TH-1: EditMode tests 291 of 291; `th1` at 1920 × 1080 on `th-1-tables` (exit 0, 186 checks held, 17 screenshots). TH-2 (start on 1, "Byzantine"): EditMode tests 291 of 291 on `th-2-tuning`; the menu check not run. The phrygian dominant: EditMode tests 297 of 297; `th2pd` at 1920 × 1080 on `th-2-phrygian-dominant` (exit 0, 186 checks held, 17 screenshots); its order-4 melody (seed 2112) `1 b7 b2 4 b6 5 4 3 b2 1 b2 1 b7 b6 1 b7 b6 5 b7 b6 5 4 3 b2`. The menu check's order-4 melodies (seed 2112): Lydian `#4 5 6 7 1 7 1 2 1 2 3 1 2 3 2 1 3 5 7 2 #4 6 1 6`; Phrygian `b3 4 b3 b2 b3 4 b3 4 5 b3 4 5 b6 b7 1 b2 b3 4 5 b6 b7 5 4 b3`; double harmonic `3 4 5 b6 7 5 b6 7 1 b2 1 b2 3 4 b2 3 4 5 b6 7 5 b6 7 1`; Hindu pentatonic `5 b7 1 5 b7 1 3 4 3 1 3 1 b7 5 1 b7 5 b7 5 4 5 b7 1 5`. EM-1 (2026-11-16): EditMode tests 310 of 310; `em1` at 1920 × 1080 on `em-1-board` (exit 0, 224 checks held, 20 screenshots). EM-2: EditMode tests 319 of 319; `em2` at 1920 × 1080 on `em-2-emitter` (exit 0, 244 checks held, 21 screenshots).
+  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3). IN-3: EditMode tests 268 of 268; `in3-final` at 1920 × 1080 and `in3-final-720` at 1280 × 720 on `in-3-page` (exit 0 each, 185 checks held, 17 screenshots; following at 150 BPM, note ons 0.5 to 0.6 ms after their ticks; sent ticks 16.66 ms apart, worst 2.07 ms off). TH-1: EditMode tests 291 of 291; `th1` at 1920 × 1080 on `th-1-tables` (exit 0, 186 checks held, 17 screenshots). TH-2 (start on 1, "Byzantine"): EditMode tests 291 of 291 on `th-2-tuning`; the menu check not run. The phrygian dominant: EditMode tests 297 of 297; `th2pd` at 1920 × 1080 on `th-2-phrygian-dominant` (exit 0, 186 checks held, 17 screenshots); its order-4 melody (seed 2112) `1 b7 b2 4 b6 5 4 3 b2 1 b2 1 b7 b6 1 b7 b6 5 b7 b6 5 4 3 b2`. The menu check's order-4 melodies (seed 2112): Lydian `#4 5 6 7 1 7 1 2 1 2 3 1 2 3 2 1 3 5 7 2 #4 6 1 6`; Phrygian `b3 4 b3 b2 b3 4 b3 4 5 b3 4 5 b6 b7 1 b2 b3 4 5 b6 b7 5 4 b3`; double harmonic `3 4 5 b6 7 5 b6 7 1 b2 1 b2 3 4 b2 3 4 5 b6 7 5 b6 7 1`; Hindu pentatonic `5 b7 1 5 b7 1 3 4 3 1 3 1 b7 5 1 b7 5 b7 5 4 5 b7 1 5`. EM-1 (2026-11-16): EditMode tests 310 of 310; `em1` at 1920 × 1080 on `em-1-board` (exit 0, 224 checks held, 20 screenshots). EM-2: EditMode tests 319 of 319; `em2` at 1920 × 1080 on `em-2-emitter` (exit 0, 244 checks held, 21 screenshots). EM-3: EditMode tests 363 of 363; `em3` at 1920 × 1080 on `em-3-notes` (exit 0, 251 checks held, 21 screenshots).

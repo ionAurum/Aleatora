@@ -8,7 +8,8 @@ namespace Aurumworks.Aleatora
     /// board's notes (EM-1): the set and tonic they come from, how the degrees are laid out
     /// (CellNotes), the octaves, and how a cell shows its note (its colour, ruling 71, and its
     /// label). The emitter (EM-2): its spray, its spheres, what counts as a hit, how it moves, and
-    /// how the spheres, the aim point and a hit look. BoardNotes and Emitter read it every frame, so
+    /// how the spheres, the aim point and a hit look. Its notes (EM-3): the channel, the quantizing,
+    /// velocity from impact speed, length from sphere size, the voices. BoardNotes and Emitter read it every frame, so
     /// all of it can be tuned in play. The defaults are the plan's.
     /// </summary>
     [Serializable]
@@ -83,6 +84,30 @@ namespace Aurumworks.Aleatora
         [SerializeField, Range(0f, 30f)] private float _minSpeed = 1f;
         [Tooltip("Writes every hit to the Console: the cell, its note, the impact speed, the sphere's size.")]
         [SerializeField] private bool _logHits;
+
+        [Header("Emitter: notes")]
+        [Tooltip("The MIDI channel the hits' notes go out on, 1–16.")]
+        [SerializeField, Range(1, 16)] private int _channel = 1;
+        [Tooltip("The note value a hit's note is quantized to, on the clock's beat line (Reaper's while following it). Off: it goes on as the hit lands.")]
+        [SerializeField] private QuantizeGrid _grid = QuantizeGrid.Sixteenth;
+        [Tooltip("How far toward the grid: 0 not at all, 1 on the next grid point. A note only ever moves later, never earlier.")]
+        [SerializeField, Range(0f, 1f)] private float _strength = 1f;
+        [Tooltip("The note's length quantized too: toward the nearest whole number of grid steps, at least one.")]
+        [SerializeField] private bool _quantizeLength = true;
+        [Tooltip("The impact speed that plays at Max Velocity, in units a second. Min Speed plays at Min Velocity.")]
+        [SerializeField, Range(0.1f, 60f)] private float _maxSpeed = 15f;
+        [Tooltip("The velocity of the softest hit (at Min Speed).")]
+        [SerializeField, Range(1, 127)] private int _minVelocity = 30;
+        [Tooltip("The velocity of a hit at Max Speed or harder.")]
+        [SerializeField, Range(1, 127)] private int _maxVelocity = 127;
+        [Tooltip("Shapes speed to velocity: 1 straight; above 1 soft hits stay softer; below 1 they come up louder.")]
+        [SerializeField, Range(0.1f, 5f)] private float _velocityCurve = 1f;
+        [Tooltip("The length of a note from the smallest sphere (Min Size), in beats.")]
+        [SerializeField, Range(0.05f, 8f)] private float _shortest = 0.25f;
+        [Tooltip("The length of a note from the largest sphere (Max Size), in beats.")]
+        [SerializeField, Range(0.05f, 8f)] private float _longest = 2f;
+        [Tooltip("The most of the emitter's notes sounding at once; a note past it is dropped.")]
+        [SerializeField, Range(1, HitScheduler.MostVoices)] private int _maxVoices = HitScheduler.DefaultMaxVoices;
 
         [Header("Emitter: moving")]
         [Tooltip("How fast W A S D and the left stick move the emitter over the board, in units a second.")]
@@ -285,6 +310,83 @@ namespace Aurumworks.Aleatora
         {
             get => _logHits;
             set => _logHits = value;
+        }
+
+        /// <summary>The hits' notes' MIDI channel, 1–16.</summary>
+        public int Channel
+        {
+            get => Mathf.Clamp(_channel, 1, 16);
+            set => _channel = value;
+        }
+
+        /// <summary>The note value the hits are quantized to.</summary>
+        public QuantizeGrid Grid
+        {
+            get => _grid;
+            set => _grid = value;
+        }
+
+        /// <summary>How far toward the grid, 0 to 1.</summary>
+        public float Strength
+        {
+            get => Mathf.Clamp01(_strength);
+            set => _strength = value;
+        }
+
+        /// <summary>Whether a note's length is quantized as well as its start.</summary>
+        public bool QuantizeLength
+        {
+            get => _quantizeLength;
+            set => _quantizeLength = value;
+        }
+
+        /// <summary>The impact speed that plays at Max Velocity (never below Min Speed).</summary>
+        public float MaxSpeed
+        {
+            get => Mathf.Max(MinSpeed, _maxSpeed);
+            set => _maxSpeed = value;
+        }
+
+        /// <summary>The softest hit's velocity, 1–127.</summary>
+        public int MinVelocity
+        {
+            get => Mathf.Clamp(_minVelocity, 1, 127);
+            set => _minVelocity = value;
+        }
+
+        /// <summary>The hardest hit's velocity, 1–127.</summary>
+        public int MaxVelocity
+        {
+            get => Mathf.Clamp(_maxVelocity, 1, 127);
+            set => _maxVelocity = value;
+        }
+
+        /// <summary>The exponent shaping speed to velocity, 0.1 to 5.</summary>
+        public float VelocityCurve
+        {
+            get => Mathf.Clamp(_velocityCurve, 0.1f, 5f);
+            set => _velocityCurve = value;
+        }
+
+        /// <summary>The smallest sphere's note's length, in beats.</summary>
+        public float Shortest
+        {
+            get => Mathf.Clamp(_shortest, 0.05f, 8f);
+            set => _shortest = value;
+        }
+
+        /// <summary>The largest sphere's note's length, in beats.</summary>
+        public float Longest
+        {
+            get => Mathf.Clamp(_longest, 0.05f, 8f);
+            set => _longest = value;
+        }
+
+        /// <summary>The most of the emitter's notes sounding at once.</summary>
+        public int MaxVoices
+        {
+            get => Mathf.Clamp(_maxVoices, 1, HitScheduler.MostVoices);
+            set => _maxVoices = value;
         }
 
         /// <summary>How fast the emitter moves over the board, units a second.</summary>

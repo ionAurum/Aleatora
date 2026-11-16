@@ -80,6 +80,17 @@ MonoBehaviour:
     _maxSpheres: 300
     _minSpeed: 1
     _logHits: 0
+    _channel: 1
+    _grid: 3
+    _strength: 1
+    _quantizeLength: 1
+    _maxSpeed: 15
+    _minVelocity: 30
+    _maxVelocity: 127
+    _velocityCurve: 1
+    _shortest: 0.25
+    _longest: 2
+    _maxVoices: 32
     _moveSpeed: 6
     _raiseSpeed: 4
     _aimSpeed: 8

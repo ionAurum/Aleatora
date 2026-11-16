@@ -124,6 +124,7 @@ namespace Aurumworks.Aleatora
             yield return CheckBoard();
 
             // The emitter (EM-2): the cone sprays spheres, hits glow, the cap holds, a menu stops it.
+            // Its notes (EM-3): the hits as quantized MIDI notes on the clock thread.
             yield return CheckEmitter();
 
             // The melody tables came with the player and read.
@@ -282,7 +283,8 @@ namespace Aurumworks.Aleatora
         // The emitter (the emitter plan, EM-2): the bootstrap gave the scene's cone its Emitter; aimed
         // at the centre cell, Space sprays for two seconds and spheres hit cells, which glow; at a
         // high rate Max Spheres holds; under the session menu nothing is launched, and spraying goes
-        // on when it closes; Space stops it. No MIDI yet: the hits are logged.
+        // on when it closes; Space stops it. EM-3: the two seconds' hits go out as notes into a
+        // RecordingOutput (CheckEmitterNotes), which is closed again for the MIDI checks.
         private static IEnumerator CheckEmitter()
         {
             Aleatora game = Aleatora.Instance;
@@ -325,6 +327,18 @@ namespace Aurumworks.Aleatora
             }
 
             SelfTest.Check(!emitter.Spraying && emitter.Spheres.Count == 0, "the emitter isn't spraying at the start");
+
+            // EM-3: the hits' notes into a RecordingOutput, at 120 BPM on Aleatora's own line, sixteenths at strength 1.
+            MidiPlayback midi = game.Midi;
+            var recording = new RecordingOutput("Menu check emitter", () => midi.Now);
+            midi.Use(recording);
+            int bpmBefore = midi.Bpm;
+            QuantizeGrid gridBefore = tuning.Grid;
+            float strengthBefore = tuning.Strength;
+            midi.Bpm = 120;
+            tuning.Grid = QuantizeGrid.Sixteenth;
+            tuning.Strength = 1f;
+
             emitter.Hit += OnHit;
             yield return QueuedInput.Press(Key.Space);
             SelfTest.Check(emitter.Spraying, "Space turns spraying on");
@@ -346,6 +360,11 @@ namespace Aurumworks.Aleatora
             SelfTest.Check(noted == hits.Count, $"every hit carries its cell's note: {noted} of {hits.Count}");
             SelfTest.Check(hard == hits.Count, $"every hit was at Min Speed or faster: {hard} of {hits.Count}");
             SelfTest.Check(near * 2 > hits.Count, $"most hits are within two cells of the centre cell aimed at: {near} of {hits.Count}");
+            CheckEmitterNotes(midi, recording, tuning, hits);
+            midi.Close();
+            midi.Bpm = bpmBefore;
+            tuning.Grid = gridBefore;
+            tuning.Strength = strengthBefore;
 
             // Max Spheres holds at a high rate.
             float rateBefore = tuning.Rate;
@@ -394,6 +413,55 @@ namespace Aurumworks.Aleatora
             yield return MeasureSpray(game, "40 × 40 × 40");
             yield return ShowBoard(grid, game.Tuning.Grid, 5, 5, 5, HexOrientation.Flat, 61, null);
             emitter.AimAt(grid.TopOf(game.Board.Notes.Centre));
+            midi.Panic(); // the emitter's notes still waiting or sounding, forgotten before the MIDI checks
+            SelfTest.Check(!midi.Scheduler.HasWork && !midi.IsOpen, "after the emitter's checks no note waits or sounds, and no output is open");
+        }
+
+        // EM-3: the hits of two seconds' spray went out as notes, on the clock thread, into the
+        // RecordingOutput: note ons arrived, each within 5 ms of a sixteenth on the scheduler's beat
+        // line at 120 BPM; each pitch a struck cell's; each velocity in Min to Max Velocity. Panic
+        // leaves nothing sounding and forgets what waits.
+        private static void CheckEmitterNotes(MidiPlayback midi, RecordingOutput recording, EmitterTuning tuning, List<EmitterHit> hits)
+        {
+            RecordingOutput.Sent[] sent = recording.Messages;
+            var pitches = new HashSet<int>();
+            foreach (EmitterHit hit in hits)
+            {
+                pitches.Add(hit.Note);
+            }
+
+            int ons = 0, offGrid = 0, wrongPitch = 0, wrongVelocity = 0, wrongChannel = 0;
+            double worst = 0d;
+            foreach (RecordingOutput.Sent one in sent)
+            {
+                if (!MidiMessage.IsNoteOn(one.Message))
+                {
+                    continue;
+                }
+
+                ons++;
+                double beat = midi.Scheduler.BeatAt(one.Time);
+                double error = Math.Abs(beat - Math.Round(beat * 4d) / 4d) * 60d / 120d;
+                worst = Math.Max(worst, error);
+                offGrid += error > 0.005d ? 1 : 0;
+                wrongPitch += pitches.Contains(MidiMessage.Data1(one.Message)) ? 0 : 1;
+                int velocity = MidiMessage.Data2(one.Message);
+                wrongVelocity += velocity >= tuning.MinVelocity && velocity <= tuning.MaxVelocity ? 0 : 1;
+                wrongChannel += MidiMessage.Channel(one.Message) == tuning.Channel ? 0 : 1;
+            }
+
+            HitScheduler scheduler = midi.Scheduler;
+            Debug.Log($"Menu check: emitter notes: {hits.Count} hits, {ons} note ons, {scheduler.Merged} merged, {scheduler.Dropped} dropped, "
+                + $"the worst {worst * 1000d:0.00} ms off a sixteenth; the first: "
+                + string.Join("; ", Array.ConvertAll(sent, one => one.ToString()), 0, Math.Min(12, sent.Length)));
+            SelfTest.Check(ons > 0, $"the hits went out as note ons: {ons} for {hits.Count} hits");
+            SelfTest.Check(offGrid == 0, $"each note on within 5 ms of a sixteenth at 120 BPM: {offGrid} off, the worst {worst * 1000d:0.00} ms");
+            SelfTest.Check(wrongPitch == 0, $"each note on is a struck cell's note: {wrongPitch} not");
+            SelfTest.Check(wrongVelocity == 0, $"each velocity in {tuning.MinVelocity} to {tuning.MaxVelocity}: {wrongVelocity} not");
+            SelfTest.Check(wrongChannel == 0, $"each on the emitter's channel {tuning.Channel}: {wrongChannel} not");
+
+            midi.Panic();
+            SelfTest.Check(recording.SoundingCount == 0 && !scheduler.HasWork, "Panic leaves nothing of the emitter's sounding or waiting");
         }
 
         // Times the frames for a second with no spheres, then sprays at 50 a second until Max Spheres

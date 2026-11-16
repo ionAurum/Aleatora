@@ -227,6 +227,9 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 73. **The cells' labels are near-black; go-ahead for EM-2** (2026-11-16; changes decision 10's
     label colour). Jon looked at EM-1: the white labels are too washed out on the pale cells, so
     *Label Color From Theme* is off and the labels take *Label Color* (near-black, 0.1 grey).
+74. **EM-2 works well enough for now; go-ahead for EM-3** (2026-11-16). Jon: "It works well
+    enough for now. I need to think on the user interaction." EM-2's open readings (moving carries
+    the aim point, no raise on the gamepad, *Spray* as two actions) wait for EM-5.
 
 ## Open, each its own plan later (the plan's decision 7)
 
