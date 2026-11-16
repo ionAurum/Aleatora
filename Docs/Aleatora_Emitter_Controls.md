@@ -48,6 +48,7 @@ on it, Reaper only recording.
 | Escape | The menu, as now | Releases it and opens the menu |
 | Space | Spray on and off (A8) | The same |
 | R / T | Reset the tilt (straight down) / the position (where it began, its height too); ruling 80 | The same |
+| Z / X | The board's octave down / up (ruling 83) | The same |
 | H, Tab | Hide Panel, Focus, as now | The same |
 
 ### Decisions
@@ -171,6 +172,7 @@ held, the gamepad's tilt, triggers and D-pad do only while held.
 | Left trigger (emitter held) | Widens *Spread* by how far it is pulled (*Spread Speed*, 90° a second at a full pull) |
 | A + left trigger (emitter held) | Narrows *Spread* |
 | D-pad up / down (emitter held) | Rate up / down a step |
+| D-pad left / right | The board's octave down / up, as Z and X (held or not; ruling 83) |
 | Y | Resets the position, where it began, as T |
 | LB / RB | Lower / raise the emitter (B2; held or not) |
 | Start | The menu (the menu shell's) |

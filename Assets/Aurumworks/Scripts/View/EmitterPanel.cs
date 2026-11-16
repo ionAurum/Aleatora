@@ -14,8 +14,8 @@ namespace Aurumworks.Aleatora
     /// with the framework's UI kit in the theme's look, operated by the mouse. It sets the
     /// parameters of decisions 1, 5, 6, 10 and 11 live, on the tuning the board and the emitter read
     /// every frame (EmitterTuning), and follows them when they change elsewhere (the Inspector):
-    /// Spray (the emitter's Spraying, as Space); the board's Set, Tonic, Layout, Seed and Show
-    /// degrees; the spray's Rate, Spread, Speed and Speed jitter; the spheres' sizes, Bounciness,
+    /// Spray (the emitter's Spraying, as Space); the board's Set, Tonic, Octave (its lowest, by
+    /// Octave down and up, as Z and X; ruling 83), Layout, Seed and Show degrees; the spray's Rate, Spread, Speed and Speed jitter; the spheres' sizes, Bounciness,
     /// Lifetime and Max spheres; the notes' Channel, Grid, Strength, Quantize length, the speeds and
     /// velocities, the curve, the lengths and Max voices. Each control is named by the kit ("Slider:
     /// Rate", "Dropdown: Grid", "Toggle: Spray", "InputField: Seed").
@@ -44,9 +44,13 @@ namespace Aurumworks.Aleatora
         private RectTransform _box;
         private InputAction _hideAction;
         private IReadOnlyList<string> _sets;
+        private TextMeshProUGUI _octaveShown;
 
         /// <summary>The panel's box on its canvas; null until it is built.</summary>
         public RectTransform Box => _box;
+
+        /// <summary>What the Octave row shows: the board's lowest tonic ("C3"); empty until it is built.</summary>
+        public string OctaveShown => _octaveShown != null ? _octaveShown.text : "";
 
         /// <summary>Whether Hide Panel has hidden it.</summary>
         public bool Hidden { get; set; }
@@ -207,6 +211,7 @@ namespace Aurumworks.Aleatora
             }
 
             Choice(column, "Tonic", tonics, () => _tuning.Tonic, index => _tuning.Tonic = index);
+            OctaveRow(column);
             var layouts = new List<string>();
             foreach (CellLayout layout in Enum.GetValues(typeof(CellLayout)))
             {
@@ -387,6 +392,29 @@ namespace Aurumworks.Aleatora
                 }
             });
         }
+
+        // The board's lowest octave, shown as its lowest tonic ("C3"); - and + step it as Z and X do.
+        private void OctaveRow(Transform column)
+        {
+            TextMeshProUGUI shown = MelodiesPage.OctaveRow(column, () => _tuning.StepOctave(-1), () => _tuning.StepOctave(1), LabelWidth);
+            _octaveShown = shown;
+            int octave = int.MinValue, tonic = -1;
+            void Refresh()
+            {
+                if (_tuning.LowestOctave != octave || _tuning.Tonic != tonic)
+                {
+                    octave = _tuning.LowestOctave;
+                    tonic = _tuning.Tonic;
+                    shown.text = ViewText.NoteName(LowestTonic(_tuning));
+                }
+            }
+
+            Refresh();
+            _refreshers.Add(Refresh);
+        }
+
+        /// <summary>The board's lowest tonic as a MIDI note: its tonic in its lowest octave (C3 is 48).</summary>
+        public static int LowestTonic(EmitterTuning tuning) => ((tuning.LowestOctave + 1) * Degree.Count) + tuning.Tonic;
 
         // The kit's name column is 130 px; the panel's longest names ("Velocity curve") need more.
         private static void NameWidth(Transform row)

@@ -25,7 +25,8 @@ namespace Aurumworks.Aleatora
     /// A held, and the D-pad steps Rate as the wheel (ruling 80). Held or not: Spray latches
     /// spraying on and off, Move Emitter moves it relative to the camera, along the grid's lines
     /// while Grid Lock is held, Raise Emitter lowers and raises it, Reset Tilt points it straight
-    /// down and Reset Position puts it back where it began.
+    /// down and Reset Position puts it back where it began. Octave Down and Octave Up (Z and X,
+    /// the D-pad's left and right) step the board's lowest octave (ruling 83).
     /// The cone follows the tilt set after Swing. A marker shows where the axis's sphere lands and
     /// an outline where the spray's edge does (SprayLanding). While a menu is open it reads no input
     /// and launches nothing; spheres in the air land. While a text field has the keyboard it reads
@@ -50,6 +51,8 @@ namespace Aurumworks.Aleatora
         private const string NarrowActionPath = "Player/Narrow Spread";
         private const string ResetTiltActionPath = "Player/Reset Tilt";
         private const string ResetPositionActionPath = "Player/Reset Position";
+        private const string OctaveDownActionPath = "Player/Octave Down";
+        private const string OctaveUpActionPath = "Player/Octave Up";
 
         private const ulong SprayStream = 0x5350524159UL; // "SPRAY": the spray's draws apart from the layout's, from one seed
         private const float BelowBoard = 2f;               // a sphere this far below the cells' bottoms is gone
@@ -74,6 +77,7 @@ namespace Aurumworks.Aleatora
         private InputAction _sprayAction, _pressureAction, _moveAction, _raiseAction, _gridLockAction, _stickTiltAction;
         private InputAction _grabAction, _tiltAction, _wheelAction, _wheelStepAction, _wheelModifierAction, _clickAction;
         private InputAction _spreadPressureAction, _narrowAction, _resetTiltAction, _resetPositionAction;
+        private InputAction _octaveDownAction, _octaveUpAction;
         private WheelBinding[] _wheelBindings;
         private Transform _sphereRoot;
         private PhysicsMaterial _physicsMaterial;
@@ -186,6 +190,8 @@ namespace Aurumworks.Aleatora
             _narrowAction = FindAction(NarrowActionPath);
             _resetTiltAction = FindAction(ResetTiltActionPath);
             _resetPositionAction = FindAction(ResetPositionActionPath);
+            _octaveDownAction = FindAction(OctaveDownActionPath);
+            _octaveUpAction = FindAction(OctaveUpActionPath);
 
             // What the wheel steps (A6): the first modifier held picks; none, Rate. A later
             // modifier is one more line here.
@@ -482,6 +488,17 @@ namespace Aurumworks.Aleatora
             if (_resetPositionAction != null && _resetPositionAction.WasPressedThisFrame())
             {
                 ResetPosition();
+            }
+
+            // The board's octave, held or not (ruling 83).
+            if (_octaveDownAction != null && _octaveDownAction.WasPressedThisFrame())
+            {
+                _tuning.StepOctave(-1);
+            }
+
+            if (_octaveUpAction != null && _octaveUpAction.WasPressedThisFrame())
+            {
+                _tuning.StepOctave(1);
             }
 
             CameraAxes(out Vector3 right, out Vector3 forward);

@@ -87,6 +87,27 @@ namespace Aurumworks.Aleatora
             set => _seed = unchecked((long)value);
         }
 
+        /// <summary>
+        /// Moves the tonic, Low and High by octaves together (−1 down, 1 up; the octave buttons and
+        /// keys), so a melody is placed the same an octave away. It stops at MIDI's edges: if any of
+        /// the three would leave 0 to 127, nothing moves. True if it moved.
+        /// </summary>
+        public bool ShiftOctave(int octaves)
+        {
+            int by = octaves * Degree.Count;
+            if (octaves == 0 || !InNotes(_tonic + by) || !InNotes(_low + by) || !InNotes(_high + by))
+            {
+                return false;
+            }
+
+            _tonic += by;
+            _low += by;
+            _high += by;
+            return true;
+        }
+
+        private static bool InNotes(int note) => note >= 0 && note <= Voicing.HighestNote;
+
         /// <summary>A copy to change freely: the Melodies page works on one, never on the asset.</summary>
         public MelodyTuning Copy() => (MelodyTuning)MemberwiseClone();
 

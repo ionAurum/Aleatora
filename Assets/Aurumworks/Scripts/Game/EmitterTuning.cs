@@ -24,6 +24,12 @@ namespace Aurumworks.Aleatora
         /// <summary>The lowest Rate the wheel steps to, spheres a second (the panel still sets 0).</summary>
         public const float LeastWheelRate = 0.5f;
 
+        /// <summary>The lowest the board's lowest octave goes (MIDI's −1, C−1 is note 0).</summary>
+        public const int LeastLowestOctave = -1;
+
+        /// <summary>The highest the board's lowest octave goes (MIDI's 8, C8 is note 108).</summary>
+        public const int MostLowestOctave = 8;
+
         [Header("Board: notes")]
         [Tooltip("The melody table the board's notes come from, by its name in Resources/Markov/Index.txt: european_ionian, irish_dorian, …. Only its unigram is used: how often each degree is played.")]
         [SerializeField] private string _set = "european_ionian";
@@ -42,7 +48,7 @@ namespace Aurumworks.Aleatora
 
         [Header("Board: octaves")]
         [Tooltip("The lowest octave's number, as MIDI names notes: 3 starts at C3 (48), 4 at middle C (60).")]
-        [SerializeField, Range(-1, 8)] private int _lowestOctave = 3;
+        [SerializeField, Range(LeastLowestOctave, MostLowestOctave)] private int _lowestOctave = 3;
         [Tooltip("How many octaves the board's rings are shared among, from the centre cell outward.")]
         [SerializeField, Range(1, CellNotes.MostOctaves)] private int _octaves = 3;
         [Tooltip("Off: the centre cell lowest, rising outward. On: the centre highest, falling outward.")]
@@ -214,8 +220,26 @@ namespace Aurumworks.Aleatora
         /// <summary>The lowest octave's number, MIDI's (C4 is 60).</summary>
         public int LowestOctave
         {
-            get => Mathf.Clamp(_lowestOctave, -1, 8);
+            get => Mathf.Clamp(_lowestOctave, LeastLowestOctave, MostLowestOctave);
             set => _lowestOctave = value;
+        }
+
+        /// <summary>
+        /// Moves the board's lowest octave by octaves (−1 down, 1 up; the octave buttons and keys).
+        /// It stops at LeastLowestOctave and MostLowestOctave: a step past either changes nothing.
+        /// True if it moved.
+        /// </summary>
+        public bool StepOctave(int octaves)
+        {
+            int from = LowestOctave;
+            int to = from + octaves;
+            if (octaves == 0 || to < LeastLowestOctave || to > MostLowestOctave)
+            {
+                return false;
+            }
+
+            _lowestOctave = to;
+            return true;
         }
 
         /// <summary>How many octaves the rings are shared among, 1 to CellNotes.MostOctaves.</summary>

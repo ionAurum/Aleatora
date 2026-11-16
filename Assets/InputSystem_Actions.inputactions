@@ -205,6 +205,26 @@
                     "interactions": "",
                     "initialStateCheck": false,
                     "priority": 0
+                },
+                {
+                    "name": "Octave Down",
+                    "type": "Button",
+                    "id": "157d1b56-fae5-4e7e-98b2-391aebfc06a1",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
+                },
+                {
+                    "name": "Octave Up",
+                    "type": "Button",
+                    "id": "f6a6d2c2-2215-40eb-a815-142cba120bbe",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
                 }
             ],
             "bindings": [
@@ -636,6 +656,50 @@
                     "action": "Reset Position",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "522fb5b0-8d0a-4789-84ed-72e8690d4ca2",
+                    "path": "<Keyboard>/z",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Octave Down",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "956adaea-f8c6-4677-92a5-2cdab7d44bd3",
+                    "path": "<Gamepad>/dpad/left",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Octave Down",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "049321f6-f297-4946-b365-a0f9a9e4ec3e",
+                    "path": "<Keyboard>/x",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Octave Up",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b9828d3c-bb7a-42dc-92b1-d2b5d4003de2",
+                    "path": "<Gamepad>/dpad/right",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Octave Up",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },
@@ -737,6 +801,24 @@
                     "name": "Menu",
                     "type": "Button",
                     "id": "f1ecbef8-85af-4d39-83b1-1da6f282c20c",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Octave Down",
+                    "type": "Button",
+                    "id": "8ede7933-a0be-41b7-9a58-7b83c95433b4",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Octave Up",
+                    "type": "Button",
+                    "id": "30924073-d993-4264-98f3-9d1bd8b71673",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -1181,6 +1263,50 @@
                     "processors": "",
                     "groups": ";Gamepad",
                     "action": "Menu",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "701f3819-ba0e-41ec-a796-a319be6fa24f",
+                    "path": "<Keyboard>/z",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Octave Down",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "91c4f186-ae86-4af7-9e14-ec0853b55eb3",
+                    "path": "<Gamepad>/leftShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Octave Down",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e28f1637-501a-4045-bf14-36a630d7b74c",
+                    "path": "<Keyboard>/x",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Octave Up",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "0aa32001-335c-4af9-91d5-f8cc4c1a9f14",
+                    "path": "<Gamepad>/rightShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Octave Up",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

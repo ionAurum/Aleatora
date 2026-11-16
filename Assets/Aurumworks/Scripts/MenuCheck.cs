@@ -517,6 +517,20 @@ namespace Aurumworks.Aleatora
             yield return QueuedInput.Press(Key.Escape);
             SelfTest.Check(Menus.Count == 0 && panel.IsShowing, "with the menu closed it shows again");
 
+            // The board's octave (ruling 83): X and Z step it, as the panel's + and - do; the panel shows it.
+            int octave = tuning.LowestOctave;
+            yield return QueuedInput.Press(Key.X);
+            bool up = tuning.LowestOctave == octave + 1 && panel.OctaveShown == ViewText.NoteName(EmitterPanel.LowestTonic(tuning));
+            yield return QueuedInput.Press(Key.Z);
+            SelfTest.Check(up && tuning.LowestOctave == octave, $"X steps the board's octave up and Z down ({octave}): {tuning.LowestOctave}, shown {panel.OctaveShown}");
+            Press(box, "Button: Octave up");
+            yield return null;
+            up = tuning.LowestOctave == octave + 1 && panel.OctaveShown == ViewText.NoteName(EmitterPanel.LowestTonic(tuning));
+            Press(box, "Button: Octave down");
+            yield return null;
+            SelfTest.Check(up && tuning.LowestOctave == octave && panel.OctaveShown == ViewText.NoteName(EmitterPanel.LowestTonic(tuning)),
+                $"the panel's + and - step it the same: {tuning.LowestOctave}, shown {panel.OctaveShown}");
+
             // Clicks, through the input system as the mouse's own.
             GridSelection selection = game.Selection;
             HexGrid grid = game.Grid;
@@ -1051,6 +1065,14 @@ namespace Aurumworks.Aleatora
             yield return QueuedInput.Press(GamepadButton.North);
             SelfTest.Check((away - home).magnitude > 1f && (emitter.transform.position - home).magnitude < 1e-3f,
                 $"moved and raised to {away}, Y puts it back where T does, {home}: {emitter.transform.position}");
+
+            // The board's octave (ruling 83): the D-pad's right and left, held or not.
+            int octave = tuning.LowestOctave;
+            yield return QueuedInput.Press(GamepadButton.DpadRight);
+            bool octaveUp = tuning.LowestOctave == octave + 1;
+            yield return QueuedInput.Press(GamepadButton.DpadLeft);
+            SelfTest.Check(octaveUp && tuning.LowestOctave == octave,
+                $"the D-pad's right steps the board's octave up and its left down ({octave}): {tuning.LowestOctave}");
             SelfTest.Progress();
 
             // Grid Lock (A9): Shift and D, then D let go: it ends on a cell's middle, to the right on the screen.
@@ -1526,6 +1548,7 @@ namespace Aurumworks.Aleatora
                 }
 
                 SelfTest.Check(moved, $"with the tonic on D every note is its degree above D: tonic {page.Work.Tonic}");
+                yield return CheckMelodyOctave(page, top, true);
 
                 // Another set: irish_dorian.
                 TMP_Dropdown set = Control<TMP_Dropdown>(top, "Dropdown: Set");
@@ -1569,6 +1592,7 @@ namespace Aurumworks.Aleatora
             }
             else
             {
+                yield return CheckMelodyOctave(page, top, false);
                 yield return QueuedInput.Press(GamepadButton.East);
             }
 
@@ -1576,6 +1600,65 @@ namespace Aurumworks.Aleatora
                 "Cancel closes the Melodies page, and only it");
             SelfTest.Check(UiProbe.HasInteractable(under), "the menu under it can be used again");
             SelfTest.Check(SelectedName() == mainAction, $"{mainAction} has the selection again: " + SelectedName());
+        }
+
+        // The Melodies page's octave (ruling 83): the tonic, Low, High and every note move twelve
+        // semitones up and back, and the Octave row shows the tonic. Full: by + and -, then X and Z.
+        // Otherwise (from the session menu, the run's own pad current): by RB and LB, then X and Z,
+        // which leave the board's octave as it was while the page is open.
+        private static IEnumerator CheckMelodyOctave(MelodiesPage page, RectTransform top, bool full)
+        {
+            MelodyTuning work = page.Work;
+            EmitterTuning board = Aleatora.Instance != null ? Aleatora.Instance.Tuning.Emitter : null;
+            int boardOctave = board != null ? board.LowestOctave : 0;
+            int tonic = work.Tonic, low = work.Low, high = work.High;
+            var notes = new List<int>(page.Notes);
+
+            bool Moved(int by)
+            {
+                bool same = work.Tonic == tonic + by && work.Low == low + by && work.High == high + by && page.Notes.Count == notes.Count
+                    && page.OctaveShown == ViewText.NoteName(tonic + by);
+                for (int i = 0; same && i < notes.Count; i++)
+                {
+                    same &= page.Notes[i] == notes[i] + by;
+                }
+
+                return same;
+            }
+
+            string how = full ? "+ and -" : "RB and LB";
+            if (full)
+            {
+                Press(top, "Button: Octave up");
+                yield return null;
+            }
+            else
+            {
+                yield return QueuedInput.Press(GamepadButton.RightShoulder);
+            }
+
+            bool up = Moved(12);
+            if (full)
+            {
+                Press(top, "Button: Octave down");
+                yield return null;
+            }
+            else
+            {
+                yield return QueuedInput.Press(GamepadButton.LeftShoulder);
+            }
+
+            SelfTest.Check(up && Moved(0), $"on the Melodies page {how} move the tonic ({tonic}), Low, High and every note an octave up and back: "
+                + $"{work.Tonic}, {work.Low}, {work.High}, shown {page.OctaveShown}");
+
+            yield return QueuedInput.Press(Key.X);
+            up = Moved(12);
+            yield return QueuedInput.Press(Key.Z);
+            SelfTest.Check(up && Moved(0), $"X and Z do the same: {work.Tonic}, shown {page.OctaveShown}");
+            if (board != null)
+            {
+                SelfTest.Check(board.LowestOctave == boardOctave, $"the board's octave stays while the page is open: {board.LowestOctave}");
+            }
         }
 
         // The MIDI page (MIDI-3), opened by a button on the menu under it: None first, then the ports,

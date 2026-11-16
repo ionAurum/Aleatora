@@ -271,6 +271,13 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     approve. Commit anything outstanding and merge both branches into `main`. We can table M until
     I ask for it sometime in the future." The readings of EM-3 and EM-6 stand as built. The MIDI
     controls (scheme M, ruling 79) wait until Jon asks for them.
+83. **Octave buttons and keys on the grid and the Melodies page** (2026-11-16). Jon: "both the
+    grid and melody screens need octave increment & decrement buttons. Include keyboard and
+    gamepad controls for them, too." Picked from C2's options the same day: on the Melodies page
+    the tonic, *Low* and *High* move together, so the whole melody moves an octave, stopping at
+    MIDI's edges; on the grid the board's lowest octave steps. **Z** and **X** step down and up
+    on both. On the gamepad, the **D-pad's left and right** on the grid (held or not) and **LB and
+    RB** on the Melodies page, where the D-pad navigates the menu.
 
 ## Open, each its own plan later (the plan's decision 7)
 

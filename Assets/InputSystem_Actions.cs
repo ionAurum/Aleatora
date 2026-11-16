@@ -291,6 +291,26 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""initialStateCheck"": false,
                     ""priority"": 0
+                },
+                {
+                    ""name"": ""Octave Down"",
+                    ""type"": ""Button"",
+                    ""id"": ""157d1b56-fae5-4e7e-98b2-391aebfc06a1"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Octave Up"",
+                    ""type"": ""Button"",
+                    ""id"": ""f6a6d2c2-2215-40eb-a815-142cba120bbe"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 }
             ],
             ""bindings"": [
@@ -722,6 +742,50 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""action"": ""Reset Position"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""522fb5b0-8d0a-4789-84ed-72e8690d4ca2"",
+                    ""path"": ""<Keyboard>/z"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Octave Down"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""956adaea-f8c6-4677-92a5-2cdab7d44bd3"",
+                    ""path"": ""<Gamepad>/dpad/left"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Octave Down"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""049321f6-f297-4946-b365-a0f9a9e4ec3e"",
+                    ""path"": ""<Keyboard>/x"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Octave Up"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b9828d3c-bb7a-42dc-92b1-d2b5d4003de2"",
+                    ""path"": ""<Gamepad>/dpad/right"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Octave Up"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -833,6 +897,26 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""name"": ""Menu"",
                     ""type"": ""Button"",
                     ""id"": ""f1ecbef8-85af-4d39-83b1-1da6f282c20c"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Octave Down"",
+                    ""type"": ""Button"",
+                    ""id"": ""8ede7933-a0be-41b7-9a58-7b83c95433b4"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Octave Up"",
+                    ""type"": ""Button"",
+                    ""id"": ""30924073-d993-4264-98f3-9d1bd8b71673"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -1280,6 +1364,50 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""action"": ""Menu"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""701f3819-ba0e-41ec-a796-a319be6fa24f"",
+                    ""path"": ""<Keyboard>/z"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Octave Down"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""91c4f186-ae86-4af7-9e14-ec0853b55eb3"",
+                    ""path"": ""<Gamepad>/leftShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Octave Down"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e28f1637-501a-4045-bf14-36a630d7b74c"",
+                    ""path"": ""<Keyboard>/x"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Octave Up"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0aa32001-335c-4af9-91d5-f8cc4c1a9f14"",
+                    ""path"": ""<Gamepad>/rightShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Octave Up"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -1369,6 +1497,8 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Player_NarrowSpread = m_Player.FindAction("Narrow Spread", throwIfNotFound: true);
         m_Player_ResetTilt = m_Player.FindAction("Reset Tilt", throwIfNotFound: true);
         m_Player_ResetPosition = m_Player.FindAction("Reset Position", throwIfNotFound: true);
+        m_Player_OctaveDown = m_Player.FindAction("Octave Down", throwIfNotFound: true);
+        m_Player_OctaveUp = m_Player.FindAction("Octave Up", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1382,6 +1512,8 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_UI_TrackedDevicePosition = m_UI.FindAction("TrackedDevicePosition", throwIfNotFound: true);
         m_UI_TrackedDeviceOrientation = m_UI.FindAction("TrackedDeviceOrientation", throwIfNotFound: true);
         m_UI_Menu = m_UI.FindAction("Menu", throwIfNotFound: true);
+        m_UI_OctaveDown = m_UI.FindAction("Octave Down", throwIfNotFound: true);
+        m_UI_OctaveUp = m_UI.FindAction("Octave Up", throwIfNotFound: true);
     }
 
     ~@InputSystem_Actions()
@@ -1483,6 +1615,8 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_NarrowSpread;
     private readonly InputAction m_Player_ResetTilt;
     private readonly InputAction m_Player_ResetPosition;
+    private readonly InputAction m_Player_OctaveDown;
+    private readonly InputAction m_Player_OctaveUp;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1575,6 +1709,14 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @ResetPosition => m_Wrapper.m_Player_ResetPosition;
         /// <summary>
+        /// Provides access to the underlying input action "Player/OctaveDown".
+        /// </summary>
+        public InputAction @OctaveDown => m_Wrapper.m_Player_OctaveDown;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/OctaveUp".
+        /// </summary>
+        public InputAction @OctaveUp => m_Wrapper.m_Player_OctaveUp;
+        /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
         public InputActionMap Get() { return m_Wrapper.m_Player; }
@@ -1660,6 +1802,12 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @ResetPosition.started += instance.OnResetPosition;
             @ResetPosition.performed += instance.OnResetPosition;
             @ResetPosition.canceled += instance.OnResetPosition;
+            @OctaveDown.started += instance.OnOctaveDown;
+            @OctaveDown.performed += instance.OnOctaveDown;
+            @OctaveDown.canceled += instance.OnOctaveDown;
+            @OctaveUp.started += instance.OnOctaveUp;
+            @OctaveUp.performed += instance.OnOctaveUp;
+            @OctaveUp.canceled += instance.OnOctaveUp;
         }
 
         /// <summary>
@@ -1731,6 +1879,12 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @ResetPosition.started -= instance.OnResetPosition;
             @ResetPosition.performed -= instance.OnResetPosition;
             @ResetPosition.canceled -= instance.OnResetPosition;
+            @OctaveDown.started -= instance.OnOctaveDown;
+            @OctaveDown.performed -= instance.OnOctaveDown;
+            @OctaveDown.canceled -= instance.OnOctaveDown;
+            @OctaveUp.started -= instance.OnOctaveUp;
+            @OctaveUp.performed -= instance.OnOctaveUp;
+            @OctaveUp.canceled -= instance.OnOctaveUp;
         }
 
         /// <summary>
@@ -1779,6 +1933,8 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_UI_TrackedDevicePosition;
     private readonly InputAction m_UI_TrackedDeviceOrientation;
     private readonly InputAction m_UI_Menu;
+    private readonly InputAction m_UI_OctaveDown;
+    private readonly InputAction m_UI_OctaveUp;
     /// <summary>
     /// Provides access to input actions defined in input action map "UI".
     /// </summary>
@@ -1834,6 +1990,14 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "UI/Menu".
         /// </summary>
         public InputAction @Menu => m_Wrapper.m_UI_Menu;
+        /// <summary>
+        /// Provides access to the underlying input action "UI/OctaveDown".
+        /// </summary>
+        public InputAction @OctaveDown => m_Wrapper.m_UI_OctaveDown;
+        /// <summary>
+        /// Provides access to the underlying input action "UI/OctaveUp".
+        /// </summary>
+        public InputAction @OctaveUp => m_Wrapper.m_UI_OctaveUp;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1893,6 +2057,12 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Menu.started += instance.OnMenu;
             @Menu.performed += instance.OnMenu;
             @Menu.canceled += instance.OnMenu;
+            @OctaveDown.started += instance.OnOctaveDown;
+            @OctaveDown.performed += instance.OnOctaveDown;
+            @OctaveDown.canceled += instance.OnOctaveDown;
+            @OctaveUp.started += instance.OnOctaveUp;
+            @OctaveUp.performed += instance.OnOctaveUp;
+            @OctaveUp.canceled += instance.OnOctaveUp;
         }
 
         /// <summary>
@@ -1937,6 +2107,12 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @Menu.started -= instance.OnMenu;
             @Menu.performed -= instance.OnMenu;
             @Menu.canceled -= instance.OnMenu;
+            @OctaveDown.started -= instance.OnOctaveDown;
+            @OctaveDown.performed -= instance.OnOctaveDown;
+            @OctaveDown.canceled -= instance.OnOctaveDown;
+            @OctaveUp.started -= instance.OnOctaveUp;
+            @OctaveUp.performed -= instance.OnOctaveUp;
+            @OctaveUp.canceled -= instance.OnOctaveUp;
         }
 
         /// <summary>
@@ -2182,6 +2358,20 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnResetPosition(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Octave Down" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnOctaveDown(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Octave Up" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnOctaveUp(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.
@@ -2267,5 +2457,19 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnMenu(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Octave Down" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnOctaveDown(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Octave Up" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnOctaveUp(InputAction.CallbackContext context);
     }
 }

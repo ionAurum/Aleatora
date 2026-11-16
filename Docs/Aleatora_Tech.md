@@ -17,6 +17,7 @@ One section per system, each with what was built under "As built". The plans are
 - *Emitter* (the emitter plan's EM-2, EM-3 and EM-4, as built)
 - *Cell look* (the gel pad shader, as built)
 - *MIDI* (as built)
+- *Octave steps* (ruling 83, as built)
 - *Checks*
 
 ## Code layout
@@ -1005,6 +1006,33 @@ and IN-2's keys.
   - **The greyed output's port** is greyed by its label only; the kit's toggle box looks the same
     switched off (`ButtonLook`). A box look for switched-off toggles would be a framework change.
 
+## Octave steps
+
+### As built (2026-11-16, branch `octave-steps`; ruling 83)
+
+- **The grid**: `EmitterTuning.StepOctave(±1)` moves *Lowest Octave* and stops at
+  `LeastLowestOctave` (−1) and `MostLowestOctave` (8), the Inspector's range. `Game/Emitter`
+  reads *Octave Down* and *Octave Up* (`Player`: Z and X, the D-pad's left and right) held or
+  not, under its usual guards (no menu open, no field typing). The panel's *Board* has an
+  **Octave** row under *Tonic*: "-", the board's lowest tonic as a note ("C3",
+  `EmitterPanel.LowestTonic`), "+". Like the panel's other controls, it writes the tuning, so in the
+  Editor the octave stays on `AleatoraTuning` after play.
+- **The Melodies page**: `MelodyTuning.ShiftOctave(±1)` moves the tonic, *Low* and *High* twelve
+  semitones together, or nothing if any would leave 0 to 127 (from the defaults 60/55/79: four up,
+  four down). `MelodiesPage.StepOctave` then places the melody so far again, as *Tonic* does
+  (`PlaceAgain`, shared with it), so the strip's rows and what plays move with it. An **Octave**
+  row under *Tonic*: "-", the tonic's name ("C4"), "+". *Octave Down* and *Octave Up* in the `UI`
+  map (Z and X, LB and RB) are read by the page only while it is the menu on top and no field has
+  the keyboard; the board's octave doesn't move while it is open (the emitter reads nothing under
+  a menu).
+- The row is `MelodiesPage.OctaveRow`, shared by both; its buttons are named
+  "Button: Octave down" and "Button: Octave up" and lettered "-" and "+" (ASCII: the default font's
+  minus sign isn't sure).
+- `Assets/InputSystem_Actions.inputactions`: *Octave Down* and *Octave Up* (Buttons) in `Player`
+  and in `UI`; Unity regenerated `InputSystem_Actions.cs` on the headless test run.
+- EditMode: `OctaveStepTests` (the board's steps and limits; the melody's three moving together,
+  its edges, every degree placed an octave away).
+
 ## Checks
 
 - **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2, 131 as of M3,
@@ -1241,4 +1269,4 @@ and IN-2's keys.
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
   `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128, then 131 of 131 after the CanvasRenderer fix; `m3` at
   1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean). MIDI-1: EditMode tests 166 of 166 (the loopMIDI test
-  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3). IN-3: EditMode tests 268 of 268; `in3-final` at 1920 × 1080 and `in3-final-720` at 1280 × 720 on `in-3-page` (exit 0 each, 185 checks held, 17 screenshots; following at 150 BPM, note ons 0.5 to 0.6 ms after their ticks; sent ticks 16.66 ms apart, worst 2.07 ms off). TH-1: EditMode tests 291 of 291; `th1` at 1920 × 1080 on `th-1-tables` (exit 0, 186 checks held, 17 screenshots). TH-2 (start on 1, "Byzantine"): EditMode tests 291 of 291 on `th-2-tuning`; the menu check not run. The phrygian dominant: EditMode tests 297 of 297; `th2pd` at 1920 × 1080 on `th-2-phrygian-dominant` (exit 0, 186 checks held, 17 screenshots); its order-4 melody (seed 2112) `1 b7 b2 4 b6 5 4 3 b2 1 b2 1 b7 b6 1 b7 b6 5 b7 b6 5 4 3 b2`. The menu check's order-4 melodies (seed 2112): Lydian `#4 5 6 7 1 7 1 2 1 2 3 1 2 3 2 1 3 5 7 2 #4 6 1 6`; Phrygian `b3 4 b3 b2 b3 4 b3 4 5 b3 4 5 b6 b7 1 b2 b3 4 5 b6 b7 5 4 b3`; double harmonic `3 4 5 b6 7 5 b6 7 1 b2 1 b2 3 4 b2 3 4 5 b6 7 5 b6 7 1`; Hindu pentatonic `5 b7 1 5 b7 1 3 4 3 1 3 1 b7 5 1 b7 5 b7 5 4 5 b7 1 5`. EM-1 (2026-11-16): EditMode tests 310 of 310; `em1` at 1920 × 1080 on `em-1-board` (exit 0, 224 checks held, 20 screenshots). EM-2: EditMode tests 319 of 319; `em2` at 1920 × 1080 on `em-2-emitter` (exit 0, 244 checks held, 21 screenshots). EM-3: EditMode tests 363 of 363; `em3` at 1920 × 1080 on `em-3-notes` (exit 0, 251 checks held, 21 screenshots). EM-4: EditMode tests 363 of 363 (none new: the panel is checked by the menu check, as the plan says); `em4` at 1920 × 1080 on `em-4-panel` (exit 0, 293 checks held, 24 screenshots; eighths at 120 BPM, worst 1.43 ms off). EM-6: EditMode tests 383 of 383; `em6` at 1920 × 1080 on `em-6-controls` (exit 0, 329 checks held, 26 screenshots; the first run failed every gamepad check, a real XInput pad being `Gamepad.current`, so the check now makes its own). Ruling 80's changes: EditMode tests 393 of 393; `em6b` at 1920 × 1080 (exit 0, 338 checks held, 26 screenshots).
+  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3). IN-3: EditMode tests 268 of 268; `in3-final` at 1920 × 1080 and `in3-final-720` at 1280 × 720 on `in-3-page` (exit 0 each, 185 checks held, 17 screenshots; following at 150 BPM, note ons 0.5 to 0.6 ms after their ticks; sent ticks 16.66 ms apart, worst 2.07 ms off). TH-1: EditMode tests 291 of 291; `th1` at 1920 × 1080 on `th-1-tables` (exit 0, 186 checks held, 17 screenshots). TH-2 (start on 1, "Byzantine"): EditMode tests 291 of 291 on `th-2-tuning`; the menu check not run. The phrygian dominant: EditMode tests 297 of 297; `th2pd` at 1920 × 1080 on `th-2-phrygian-dominant` (exit 0, 186 checks held, 17 screenshots); its order-4 melody (seed 2112) `1 b7 b2 4 b6 5 4 3 b2 1 b2 1 b7 b6 1 b7 b6 5 b7 b6 5 4 3 b2`. The menu check's order-4 melodies (seed 2112): Lydian `#4 5 6 7 1 7 1 2 1 2 3 1 2 3 2 1 3 5 7 2 #4 6 1 6`; Phrygian `b3 4 b3 b2 b3 4 b3 4 5 b3 4 5 b6 b7 1 b2 b3 4 5 b6 b7 5 4 b3`; double harmonic `3 4 5 b6 7 5 b6 7 1 b2 1 b2 3 4 b2 3 4 5 b6 7 5 b6 7 1`; Hindu pentatonic `5 b7 1 5 b7 1 3 4 3 1 3 1 b7 5 1 b7 5 b7 5 4 5 b7 1 5`. EM-1 (2026-11-16): EditMode tests 310 of 310; `em1` at 1920 × 1080 on `em-1-board` (exit 0, 224 checks held, 20 screenshots). EM-2: EditMode tests 319 of 319; `em2` at 1920 × 1080 on `em-2-emitter` (exit 0, 244 checks held, 21 screenshots). EM-3: EditMode tests 363 of 363; `em3` at 1920 × 1080 on `em-3-notes` (exit 0, 251 checks held, 21 screenshots). EM-4: EditMode tests 363 of 363 (none new: the panel is checked by the menu check, as the plan says); `em4` at 1920 × 1080 on `em-4-panel` (exit 0, 293 checks held, 24 screenshots; eighths at 120 BPM, worst 1.43 ms off). EM-6: EditMode tests 383 of 383; `em6` at 1920 × 1080 on `em-6-controls` (exit 0, 329 checks held, 26 screenshots; the first run failed every gamepad check, a real XInput pad being `Gamepad.current`, so the check now makes its own). Ruling 80's changes: EditMode tests 393 of 393; `em6b` at 1920 × 1080 (exit 0, 338 checks held, 26 screenshots). The octave steps (ruling 83): EditMode tests 398 of 398; `octave` at 1920 × 1080 on `octave-steps` (exit 0, 347 checks held, 26 screenshots).

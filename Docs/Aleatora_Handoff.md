@@ -6,6 +6,11 @@ land on the board and play its notes as MIDI on Reaper's clock, with the live pa
 controls of schemes A (mouse and keyboard) and B (gamepad). EditMode tests 393 of 393; the menu
 check `em6b` exit 0, 338 checks held. **Nothing is in progress; the next plan is Jon's to pick.**
 
+Since then, on **`octave-steps`** (from `main`, not merged): octave buttons and keys on the grid
+and the Melodies page (ruling 83; Tech, *Octave steps*). EditMode tests 398 of 398; the menu check
+`octave` exit 0, 347 checks held. Committed. **Waiting for Jon to try it in the Editor**, then
+merge into `main`.
+
 Finished on `main`: the Markov plan, MIDI out, MIDI in with clock and sync, the theory plan, the
 emitter plan.
 Jon's loopMIDI ports: "Aleatora to Reaper", "Reaper to Aleatora", "Aleatora Test" (ruling 45).
@@ -15,6 +20,13 @@ Jon has an XInput gamepad plugged in: the menu check's gamepad checks run on a p
 
 A local change to `Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF -
 Fallback.asset` (the Editor's dynamic font atlas) is left uncommitted; it isn't ours.
+
+## Open, for Jon
+
+- **Try the octave steps** (Editor): Z and X, the panel's Octave row and the D-pad's left and
+  right step the board's lowest octave; on the Melodies page Z and X, its Octave row and LB and RB
+  move the melody an octave. In the Editor the board's octave stays on `AleatoraTuning` after play,
+  as the panel's other controls do. Merge `octave-steps` once it's approved.
 
 ## Next: Jon picks the next plan
 

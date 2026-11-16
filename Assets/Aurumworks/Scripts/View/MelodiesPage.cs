@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace Aurumworks.Aleatora
@@ -10,7 +11,8 @@ namespace Aurumworks.Aleatora
     /// <summary>
     /// The Melodies page (M3; the plan's decision 4), opened through the menu stack from the main
     /// menu and the session menu, so Back, Cancel, the selection and MenuFocus work as for every
-    /// menu. At the left its controls: the set, the order, the temperature, the tonic, the seed,
+    /// menu. At the left its controls: the set, the order, the temperature, the tonic, its octave
+    /// (Octave down and up, Z and X, LB and RB: the tonic, Low and High together; ruling 83), the seed,
     /// Generate (32 notes from the seed), Step (one more) and Back. At the right what they make: the
     /// set's unigram and the distribution the last note was drawn from (DegreeBars), the order-1
     /// table as a grid and as a graph (TransitionGrid, TransitionGraph), and the melody (MelodyStrip).
@@ -34,6 +36,8 @@ namespace Aurumworks.Aleatora
         private const float ControlsWidth = 560f;
         private const float Margin = 40f;
         private const float TransportHeight = 56f;
+        private const string OctaveDownActionPath = "UI/Octave Down";
+        private const string OctaveUpActionPath = "UI/Octave Up";
 
         private readonly List<int> _degrees = new List<int>();
         private readonly List<int> _notes = new List<int>();
@@ -60,6 +64,9 @@ namespace Aurumworks.Aleatora
         private TransitionGraph _graph;
         private MelodyStrip _strip;
         private TMP_InputField _seedField;
+        private TextMeshProUGUI _octaveText;
+        private InputAction _octaveDownAction;
+        private InputAction _octaveUpAction;
         private TextMeshProUGUI _playLabel;
         private Toggle _loop;
         private Toggle _endless;
@@ -100,6 +107,9 @@ namespace Aurumworks.Aleatora
 
         /// <summary>The melody's last notes.</summary>
         public MelodyStrip Strip => _strip;
+
+        /// <summary>What the Octave row shows: the tonic's name ("C4").</summary>
+        public string OctaveShown => _octaveText != null ? _octaveText.text : "";
 
         /// <summary>The melody so far, as MIDI notes, oldest first: what the player holds.</summary>
         public IReadOnlyList<int> Notes => _notes;
@@ -236,6 +246,27 @@ namespace Aurumworks.Aleatora
         {
             int tonic = _work.Tonic;
             _work.Tonic = tonic - ((tonic % Degree.Count) + Degree.Count) % Degree.Count + pitchClass;
+            PlaceAgain();
+        }
+
+        /// <summary>
+        /// Moves the melody an octave down (-1) or up (1): the tonic, Low and High together, the
+        /// melody so far placed again. At MIDI's edges nothing moves. True if it moved.
+        /// </summary>
+        public bool StepOctave(int octaves)
+        {
+            if (!_work.ShiftOctave(octaves))
+            {
+                return false;
+            }
+
+            PlaceAgain();
+            return true;
+        }
+
+        // The melody so far placed again from the tonic and range as they are now.
+        private void PlaceAgain()
+        {
             lock (EditLock)
             {
                 Take();
@@ -310,6 +341,11 @@ namespace Aurumworks.Aleatora
 
         private void Refresh()
         {
+            if (_octaveText != null)
+            {
+                _octaveText.text = ViewText.NoteName(_work.Tonic);
+            }
+
             _strip.Show(_notes, _inMode, _voicing.Low, _voicing.High, _voicing.Tonic);
             ShowPlaying();
             int newest = _degrees.Count > 0 ? _degrees[_degrees.Count - 1] : -1;
@@ -351,6 +387,7 @@ namespace Aurumworks.Aleatora
         // Endless made join the melody, and the transport and the playhead follow the player.
         private void Update()
         {
+            ReadOctaveKeys();
             if (_table != null && !_view.SameAs(_viewSeen))
             {
                 _viewSeen = _view.Copy();
@@ -364,6 +401,25 @@ namespace Aurumworks.Aleatora
             else
             {
                 ShowPlaying();
+            }
+        }
+
+        // Z and X, LB and RB: only while this page is the menu on top and no field has the keyboard.
+        private void ReadOctaveKeys()
+        {
+            if (_menus == null || _menus.Top != transform || UiInput.IsTyping)
+            {
+                return;
+            }
+
+            if (_octaveDownAction != null && _octaveDownAction.WasPressedThisFrame())
+            {
+                StepOctave(-1);
+            }
+
+            if (_octaveUpAction != null && _octaveUpAction.WasPressedThisFrame())
+            {
+                StepOctave(1);
             }
         }
 
@@ -604,6 +660,10 @@ namespace Aurumworks.Aleatora
             }
 
             UiKit.Dropdown(column, "Tonic", tonics, ((_work.Tonic % Degree.Count) + Degree.Count) % Degree.Count, OnTonic);
+            _octaveText = OctaveRow(column, () => StepOctave(-1), () => StepOctave(1), 130f);
+            _octaveText.text = ViewText.NoteName(_work.Tonic);
+            _octaveDownAction = FindAction(OctaveDownActionPath);
+            _octaveUpAction = FindAction(OctaveUpActionPath);
             _seedField = NumberRow(column, "Seed", _work.Seed.ToString(CultureInfo.InvariantCulture), OnSeed, 130f, 20); // ulong.MaxValue has 20 digits
             _seedField.GetComponent<LayoutElement>().flexibleWidth = 1f;
 
@@ -739,6 +799,57 @@ namespace Aurumworks.Aleatora
             field.gameObject.name = "InputField: " + label;
             field.characterLimit = characterLimit;
             return field;
+        }
+
+        /// <summary>
+        /// An Octave row, labelled as the kit labels its controls: "-" (named "Button: Octave down"),
+        /// what the octave is, "+" ("Button: Octave up"). Returns the text that shows the octave.
+        /// The Melodies page's and the emitter's panel's.
+        /// </summary>
+        internal static TextMeshProUGUI OctaveRow(Transform parent, Action down, Action up, float labelWidth)
+        {
+            UiTheme theme = UiKit.Theme;
+            RectTransform row = UiKit.Rect("Octave", parent);
+            var layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 18f;
+            layout.childAlignment = TextAnchor.MiddleLeft;
+            layout.childControlWidth = layout.childControlHeight = true;
+            layout.childForceExpandWidth = layout.childForceExpandHeight = false;
+            var size = row.gameObject.AddComponent<LayoutElement>();
+            size.preferredHeight = size.minHeight = 56f;
+
+            TextMeshProUGUI name = UiKit.Text(row, "Octave", 24f, theme.Text, FontStyles.Normal, TextAlignmentOptions.MidlineLeft,
+                theme.BodyBold);
+            name.textWrappingMode = TextWrappingModes.NoWrap;
+            name.gameObject.AddComponent<LayoutElement>().preferredWidth = labelWidth;
+
+            OctaveButton(row, "-", "Button: Octave down", down);
+            TextMeshProUGUI shown = UiKit.Text(row, "", 24f, theme.Text, FontStyles.Normal, TextAlignmentOptions.Center, theme.BodyBold);
+            shown.textWrappingMode = TextWrappingModes.NoWrap;
+            var shownSize = shown.gameObject.AddComponent<LayoutElement>();
+            shownSize.preferredWidth = shownSize.minWidth = 90f;
+            OctaveButton(row, "+", "Button: Octave up", up);
+            return shown;
+        }
+
+        private static void OctaveButton(Transform row, string label, string name, Action pressed)
+        {
+            Button button = UiKit.Button(row, label, pressed, 56f, null, 30f);
+            button.gameObject.name = name;
+            var size = button.GetComponent<LayoutElement>();
+            size.preferredWidth = size.minWidth = 64f;
+            size.flexibleWidth = 0f;
+        }
+
+        private static InputAction FindAction(string path)
+        {
+            InputAction action = InputSystem.actions != null ? InputSystem.actions.FindAction(path) : null;
+            if (action == null)
+            {
+                Debug.LogError($"MelodiesPage: the project-wide input actions have no {path}.");
+            }
+
+            return action;
         }
 
         // A framed panel with its name at the top left; returns the area inside it to draw in.
