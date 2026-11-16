@@ -162,6 +162,9 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     the colour note's pull followed 70%) in `Tools/Markov/Theory/virtuoso.json`; chromatic passing
     notes in about 3% of notes, inside runs only; 20,000 phrases a mode; Python's seeded
     `random.Random` in the offline script.
+52. **TH-1 merges to `main` before TH-2's listening** (2026-11-15). Jon: "run the tests, commit,
+    then merge." The tests (291) and the menu check (186) passed first. TH-2's tuning of
+    `virtuoso.json` happens after the merge.
 
 ## Open, each its own plan later (the plan's decision 7)
 

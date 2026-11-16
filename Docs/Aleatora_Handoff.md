@@ -1,41 +1,32 @@
 # Aleatora: hand-off
 
-Status (2026-11-15): **TH-1 is built on `th-1-tables` but not yet run in Unity.** Jon's Editor
-had the project open, so the EditMode tests and the menu check haven't run. Jon took the theory
-plan's defaults (Design, ruling 51). On `main`: the Markov plan, MIDI out, MIDI in with clock and
-sync (all finished, rulings to 47). Expected: 291 EditMode tests (268 before), the menu check at
-186 checks (185 before).
-
-TH-1 (Tech, *Melody tables*, *As built (TH-1)*): `Tools/Markov/Theory/virtuoso.py` and
-`virtuoso.json` write 20,000 phrases a mode by rule. `markov.py` takes several source folders.
-The four `virtuoso_*` tables are in `Resources/Markov` (21 sets), and the 17 folk tables are
-unchanged byte for byte. `ModeScale` and `ViewText.SetName` have the four modes, and
-`TheoryTableTests` is new. The script's own checks all hold.
+Status (2026-11-15): **TH-1 is finished and merged to `main`** (Design, rulings 51 and 52). The
+four theory tables (`virtuoso_lydian`, `_phrygian`, `_double_harmonic`, `_hindu_pentatonic`) ship
+with the 17 folk sets, 21 in all. 291 EditMode tests and the menu check's 186 checks all pass
+(Tech, *Checks*, *Runs*). On `main` too: the Markov plan, MIDI out, MIDI in with clock and sync
+(all finished).
 
 Jon's loopMIDI ports: "Aleatora to Reaper", "Reaper to Aleatora", "Aleatora Test" (ruling 45).
 
 A local change to `Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF -
 Fallback.asset` (the Editor's dynamic font atlas) is left uncommitted; it isn't ours.
 
-## Next: finish TH-1, then TH-2
+## Next: TH-2, Jon plays them
 
-1. With no Editor open (`Temp/UnityLockfile`): run the EditMode tests (291 expected), then
-   `bash Tools/menucheck.sh th1` on `th-1-tables`. Commit the `.meta` files Unity makes for the
-   four `virtuoso_*.txt` and `TheoryTableTests.cs` (an open Editor may already have made them).
-   Put the runs in Tech, *Checks*, *Runs*, and the menu check's logged order-4 melodies in the
-   report to Jon.
-2. TH-2 (`Docs/Aleatora_Theory_Plan.md`, *TH-2*): Jon plays each `Virtuoso · …` set into Reaper
-   and says what to change in `Tools/Markov/Theory/virtuoso.json`. Re-run
-   `python -I Tools/Markov/Theory/virtuoso.py`, then
-   `python -I Tools/markov.py Tools/Markov/Source Tools/Markov/Theory/Output Assets/Aurumworks/Resources/Markov`.
-   Merge once he approves.
+Jon picks each `Virtuoso · …` set on the *Melodies* page and plays it into Reaper at different
+orders and temperatures, then says what to change in `Tools/Markov/Theory/virtuoso.json`. For
+each change, on a branch (`th-2-tuning`) from `main`: re-run
+`python -I Tools/Markov/Theory/virtuoso.py`, then
+`python -I Tools/markov.py Tools/Markov/Source Tools/Markov/Theory/Output Assets/Aurumworks/Resources/Markov`,
+then the EditMode tests (`TheoryTableTests` checks the pulls and counts). Record his rulings in
+Design.
 
-Read for it: Tech, *As built (TH-1)* and *Checks* (TH-1 lines); the Theory plan, *TH-2* and
-*Risks*.
+Read for it: Tech, *Melody tables*, *As built (TH-1)*; the Theory plan, *TH-2* and *Risks*;
+the docstring of `Tools/Markov/Theory/virtuoso.py`.
 
-Open for Jon: the Lydian pull is the weakest (after ♯4: 5 39%, 3 33%). If he wants it stronger,
-raise `pull` or have pulls apply inside figures too. That second option changes the rules, so it
-is his call.
+Open for Jon: the Lydian pull is the weakest (after ♯4: 5 39%, 3 33%). To make it stronger,
+raise `pull`, or have pulls apply inside figures too. The second changes the rules, so it is his
+call.
 
 ## Not in any repository
 

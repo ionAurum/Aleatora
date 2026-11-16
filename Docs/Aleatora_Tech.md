@@ -676,7 +676,7 @@ and IN-2's keys.
 
 - **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2, 131 as of M3,
   166 as of MIDI-1, 193 as of MIDI-2, 200 as of MIDI-3, 241 as of IN-1, 265 as of IN-2, 268 as of IN-3,
-  291 as of TH-1:
+  291 as of TH-1 (all pass):
   - `HexCoordTests`: Q + R + S = 0; the directions as named; a neighbour is one step away and its
     opposite comes back; six distinct neighbours; distance symmetric with the triangle
     inequality; equality and hashing; rounding a centre gives the cell; points round a corner
@@ -780,7 +780,7 @@ and IN-2's keys.
     the phrases for 1: every phrase ends on 1); under 5% of notes outside the mode; each colour
     note's likeliest next note is its pull (seven cases); an order-4 melody at ChromaticWeight 0
     stays in the mode and finds its order-4 context on more than 90% of 4,000 steps (a Python
-    re-run of the generator found 99.9%). `DegreeTests` gains the four modes' masks (an unknown
+    re-run of the generator found 99.9%; the test passes). `DegreeTests` gains the four modes' masks (an unknown
     mode is now `locrian`, as `phrygian` was); `MelodiesPageTests` their names; the set count is
     21.
   - Only the M2 tests draw random numbers, from `Rng` with fixed seeds.
@@ -849,4 +849,4 @@ and IN-2's keys.
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
   `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128, then 131 of 131 after the CanvasRenderer fix; `m3` at
   1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean). MIDI-1: EditMode tests 166 of 166 (the loopMIDI test
-  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3). IN-3: EditMode tests 268 of 268; `in3-final` at 1920 × 1080 and `in3-final-720` at 1280 × 720 on `in-3-page` (exit 0 each, 185 checks held, 17 screenshots; following at 150 BPM, note ons 0.5 to 0.6 ms after their ticks; sent ticks 16.66 ms apart, worst 2.07 ms off).
+  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3). IN-3: EditMode tests 268 of 268; `in3-final` at 1920 × 1080 and `in3-final-720` at 1280 × 720 on `in-3-page` (exit 0 each, 185 checks held, 17 screenshots; following at 150 BPM, note ons 0.5 to 0.6 ms after their ticks; sent ticks 16.66 ms apart, worst 2.07 ms off). TH-1: EditMode tests 291 of 291; `th1` at 1920 × 1080 on `th-1-tables` (exit 0, 186 checks held, 17 screenshots). The menu check's order-4 melodies (seed 2112): Lydian `#4 5 6 7 1 7 1 2 1 2 3 1 2 3 2 1 3 5 7 2 #4 6 1 6`; Phrygian `b3 4 b3 b2 b3 4 b3 4 5 b3 4 5 b6 b7 1 b2 b3 4 5 b6 b7 5 4 b3`; double harmonic `3 4 5 b6 7 5 b6 7 1 b2 1 b2 3 4 b2 3 4 5 b6 7 5 b6 7 1`; Hindu pentatonic `5 b7 1 5 b7 1 3 4 3 1 3 1 b7 5 1 b7 5 b7 5 4 5 b7 1 5`.
