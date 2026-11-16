@@ -244,6 +244,15 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     keys, rhythm patterns and the like. He will play with mouse and keyboard, gamepad, a MIDI
     control surface and a MIDI keyboard or pads, with his attention on Aleatora alone. Worked out
     in `Docs/Aleatora_Emitter_Controls.md`, its open points with defaults.
+78. **The controls: schemes A and B in EM-6, as written; M later** (2026-11-16). Jon: "Your
+    planning decision for building A plus B now then M later down the road is accepted. I also
+    accept your A 1-9 defaults", and A10, A11 and B1 to B3 "all as written". So EM-6 builds the
+    mouse and keyboard (A) and the gamepad (B) as `Docs/Aleatora_Emitter_Controls.md` has them;
+    the MIDI controls (M) are a later milestone.
+79. **The MIDI controls are for CC streams from Reaper** (2026-11-16; the controls doc's M5). Jon:
+    "I don't have many hardware MIDI controllers with knobs, really. I wanted to allow Reaper stuff
+    (track automation streams, plugins' LFOs, and such) that produce CC messages to be mappable to
+    Aleatora Emitter parameters." Scheme M is written for that (the controls doc, *Scheme M*).
 
 ## Open, each its own plan later (the plan's decision 7)
 

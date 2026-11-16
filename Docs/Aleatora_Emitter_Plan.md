@@ -240,11 +240,44 @@ control. With EM-4 in hand to try things on:
 
 As written (2026-11-16): Jon gave the mouse scheme himself (ruling 77);
 `Docs/Aleatora_Emitter_Controls.md` works it out (scheme A) and proposes the gamepad (B) and MIDI
-controllers (M), with decisions and costs, no prototypes before EM-6. Waiting for Jon's rulings.
+controllers (M), with decisions and costs, no prototypes before EM-6. Ruled (78, 79): A and B
+as written in EM-6; M later, for CC streams from Reaper.
 
 ## EM-6 — The controls (branch `em-6-controls`, from `em-4-panel`)
 
-As EM-5 rules. Its tasks and checks are written then.
+Schemes A (mouse and keyboard) and B (gamepad) of `Docs/Aleatora_Emitter_Controls.md`, as
+written (rulings 77 and 78). They replace decision 8's controls.
+
+1. **Input** (`Player`): *Grab Emitter* (G), *Tilt* (the mouse's movement), *Stick Tilt* (the
+   right stick, in place of *Aim Point*), *Wheel* (the mouse's wheel), *Wheel Step* (the D-pad's
+   up and down), *Wheel Modifier* (the right button, the left trigger), *Grid Lock* (Shift, the
+   left stick pressed, in place of *Aim*); *Raise Emitter* gains LB and RB. The left button is
+   *Left Click*, as the cells' pick reads it.
+2. **`Game/ConeTilt`** (plain C#): the tilt as two angles, each −90° to 90° (0–180° from the
+   horizon, A3), the direction from them, a movement on the board's plane turned into them.
+   **`Game/SprayLanding`** (plain C#): where a sphere from the nozzle lands on the board's plane
+   under gravity; the axis's landing and a ring of 32 on the spread's edge (A4).
+3. **`Game/Emitter`**: taken and released (a click on the cone, G; a menu or the window losing
+   focus releases it), the pointer locked while held; the tilt from the mouse while held and
+   from the right stick, *Swing*; spraying by the left button while held, Space's latch, the
+   trigger; the wheel's steps of *Rate* and, with the modifier, *Spread* (a table of modifier
+   and parameter, A6), the D-pad the same; moving along the grid with *Grid Lock* (A9); the
+   target: the axis's landing and the outline; the cone tinted *Held Color* while held.
+   `AimAt` turns the cone's axis toward a point.
+4. **`Grid/GridSelection`**: no pick and no camera orbit or zoom while the emitter is held, and no
+   pick from the click that takes it (A1, A7).
+5. **`EmitterTuning`**: *Spread* the whole angle, 0–180° (the asset's 10 becomes 20, A5);
+   *Tilt Sensitivity* 0.15° a count, *Swing* 0, *Stick Tilt Speed* 120° a second, *Wheel Step*
+   1.25, *Spread Step* 5°, *Aim Line Width*, *Held Color*; *Aim Speed* goes. The panel's *Spread*
+   0–180°.
+6. **Checks.** EditMode: `ConeTilt` (the limits, straight down, the camera's axes),
+   `SprayLanding` (straight down, tilted, past the horizon, against small steps under gravity).
+   Menu check `em6`: take by a click on the cone and by G, release by G and by Escape (the menu
+   opens); no pick and a still camera while held; the pointer locked and freed; tilt by queued
+   mouse movement to both limits; the wheel's steps and limits of *Rate*, with the right button
+   of *Spread*; the left button sprays while down; the target's centre where spheres land; Grid
+   Lock's moves ending on a cell's middle in both orientations; the gamepad's stick, trigger,
+   D-pad and shoulders.
 
 ## EM-7 — Jon plays it
 

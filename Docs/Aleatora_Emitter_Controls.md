@@ -7,7 +7,8 @@ built, names what it leaves open, and proposes gamepad (B) and MIDI (M) schemes 
 decision has the default EM-6 builds if Jon doesn't say otherwise. Jon picks which schemes go into
 EM-6; the choice is then written into the plan.
 
-Written 2026-11-16 on `em-4-panel`, after EM-4 (ruling 76).
+Written 2026-11-16 on `em-4-panel`, after EM-4 (ruling 76). **Ruled the same day** (rulings 78
+and 79): A and B as written go into EM-6; M is a later milestone, for CC streams from Reaper.
 
 ---
 
@@ -186,37 +187,39 @@ the D-pad's steps. Menu check: the same moves through queued gamepad input.
 
 ---
 
-## Scheme M: MIDI controllers
+## Scheme M: MIDI control changes (later; ruling 79)
 
-The MIDI inputs Aleatora already opens (rulings 37 and 38; the *MIDI* page) carry the knobs, the
-faders and the pads. Today their notes go to `HeldNotes` and nothing reads their control changes.
+Not in EM-6. What drives the emitter here is Reaper, not knobs (Jon, M5): track automation, a
+plugin's LFO, anything that sends control changes, into Aleatora over loopMIDI, onto the
+emitter's parameters. The MIDI inputs Aleatora already opens carry them (rulings 37 and 38; the
+*MIDI* page): the "Reaper to Aleatora" port already brings the clock. Today their notes go to
+`HeldNotes` and nothing reads their control changes. Its decisions, revised for ruling 79, are
+settled when M is planned:
 
-**M1. MIDI learn.** **Default:** a *Learn* switch at the top of the panel. With it on, click a
-control on the panel, then move a knob or fader: the control follows that CC from then on (its
-whole range across 0–127). A switch or toggle on the panel learns a button the same way (a CC
-that goes to 127 and back, or a note), each press flipping it. Learn off, click a learned
-control's name to see its CC; *Forget* unlearns it. The learned CCs show beside the controls'
-names.
-**M2. Where the map is kept.** **Default:** on the tuning asset (*MIDI Map*: input port's name,
-channel, CC, parameter), so it is in the Inspector and in git, and in the build as Jon left it.
-The alternative is the framework's settings file per machine, if the controllers will differ
-between machines.
-**M3. Knobs that jump.** An absolute knob where the value isn't makes the value jump when touched.
-**Default:** pick-up: a learned control ignores its knob until the knob passes the value, then
-follows it. Relative (endless) encoders are later, unless Jon's surface has only those.
-**M4. The pads and keys.** **Default:** a learned note works like the left button: held, it
-sprays; its velocity scales the rate, as the trigger's pressure does. Keys that change the set,
-the tonic or the rhythm are Jon's "later", with the keyboard's own plan (ruling 37).
-**M5. Which controllers.** Jon to name them (the model, and whether its knobs are absolute or
-endless): learn is written for any, but the menu check and the pick-up are tried against what
-Jon has.
+**M1. Learning a CC.** A *Learn* switch at the top of the panel: with it on, click a control on
+the panel, then play the automation (or move the plugin's parameter) in Reaper, and the control
+follows that CC from then on, its whole range across 0–127. An LFO already running would be
+learned first, so learn takes the first CC that wasn't arriving when the control was clicked; a
+list of the CCs arriving, to pick from, is the alternative. *Forget* unlearns; the learned CCs
+show beside the controls' names. A switch on the panel (*Show degrees*, *Spray*) follows a CC
+above or below 64.
+**M2. Where the map is kept.** On the tuning asset (*MIDI Map*: the input port's name, channel,
+CC, parameter), so it is in the Inspector, in git and in the build; or the framework's settings
+file, per machine.
+**M3. Following.** A stream is the truth: the control takes each value as it comes, with no
+pick-up (pick-up is for knobs, which Jon hasn't). While a CC drives a control, the panel shows it
+moving and the mouse or wheel can still set it, until the next value arrives.
+**M4. Dense streams.** An LFO sends a CC many times a second; the values are kept per CC and
+applied once a frame, the latest winning. 7-bit values: *Spread* moves in steps of 1.4°, *Rate*
+of 0.4 a second; 14-bit pairs (CC n with n + 32) if the steps show.
+**M5. Ruled** (79): Reaper's CC streams, not hardware knobs.
 
 ### What M costs
 
 The size of EM-4. A control-change queue from the input thread to the main thread (as
-`HeldNotes` does for notes), the map, learn and pick-up in plain C# with EditMode tests through
+`HeldNotes` does for notes), the map and learn in plain C# with EditMode tests through
 `FeedInput`, the panel's *Learn*, *Forget* and the CC labels, the map on the tuning. Menu check:
-learn a fed CC, move it, see the control follow; pick-up; a fed note sprays.
+learn a fed CC while another streams, follow it, a switch above and below 64.
 
 ---
 
@@ -224,7 +227,7 @@ learn a fed CC, move it, see the control follow; pick-up; a fed note sprays.
 
 - **The nozzle in the hand:** A's tilt is the nozzle in the hand without dragging the cone;
   *Swing* (A11) is its inertia.
-- **Squeeze:** the right trigger's pressure (B) and a pad's velocity (M4) already are it; on the
+- **Squeeze:** the right trigger's pressure (B) already is it; on the
   mouse, the wheel's rate stands in.
 - **The pattern dial:** a later modifier of the wheel (A6's table), each notch a preset of spread,
   speed, size and rate. Not in EM-6.
@@ -241,9 +244,8 @@ None proposed before EM-6. Jon's scheme says what each hand does; what is left t
 Jon tries in EM-6 itself. If Jon would rather see A4's two targets side by side before choosing,
 that is a small prototype on its own branch.
 
-## For Jon to rule
+## Ruled (2026-11-16)
 
-1. The defaults above, or which to change (A1 to A11, B1 to B3, M1 to M5).
-2. Which schemes EM-6 builds. **C2's suggestion:** A first (EM-6), then B with it if Jon wants
-   the gamepad from the start (it is small once A is in), and M as its own milestone after
-   (EM-6b), once Jon names his controllers.
+Rulings 78 and 79: A1 to A11 and B1 to B3 as written; EM-6 builds A and B; M is a later
+milestone, for Reaper's CC streams (above). The pattern dial, gestures and the trajectory arc:
+later.
