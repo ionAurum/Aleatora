@@ -62,7 +62,7 @@ Each has the default this plan builds if Jon doesn't say otherwise.
 
 **Ruled (2026-11-15):** Jon accepted 2, 3, 4, 5, 8 and 9 as written (Design, rulings 38 to 42)
 and gave the go-ahead for IN-1 (ruling 43). 1, 6, 7 and 10 are built as their defaults until
-IN-4.
+IN-4. At IN-4 he accepted 1, 6, 7 and 10 as built (ruling 46).
 
 1. **The library.** **Default:** our `winmm` wrapper grows the input calls (`midiInGetNumDevs`,
    `midiInGetDevCapsW`, `midiInOpen` with a callback, `midiInStart`, `midiInStop`,
@@ -242,6 +242,11 @@ EditMode tests pass. What was built, and the readings where this plan was silent
 **Done when** the menu check passes with its new checks. **Hard stop.**
 
 ## IN-4 — Jon plays with Reaper and a keyboard
+
+**Done (2026-11-15; Design, rulings 45 to 47):** Jon ran 1, 2 and 3.1–3.2, all as expected;
+3.3 (the shared keyboard port) wasn't run. He accepted decisions 1, 6, 7 and 10 and the
+readings, and the branches merged. The ports were renamed before the run: below, Greedo is now
+"Aleatora to Reaper" and Han "Reaper to Aleatora" (the steps are kept as written).
 
 Two loopMIDI ports: **Greedo** (Aleatora to Reaper, as now) and **Han** (Reaper to Aleatora),
 and a third, **Aleatora Test**, for the tests only.

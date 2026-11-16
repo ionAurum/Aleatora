@@ -1,37 +1,34 @@
 # Aleatora: hand-off
 
-Status (2026-11-15): **IN-3 (the screens) is done on branch `in-3-page`**, from `in-2-clock`.
-**Hard stop: IN-4 is Jon's** (Reaper and a keyboard). The *MIDI* page has *Inputs*, *Clock*,
-*Send clock* and *Monitor*; the *Monitor* dialog shows the clock, the held notes and the last 16
-messages; the *BPM* box shows the followed tempo, read-only. 268 EditMode tests pass; the menu
-check passes at 1920 × 1080 and 1280 × 720 (185 checks, 17 screenshots, `6-MidiIn`, `6-Monitor`,
-`6-Following` new). IN-1 is on `in-1-input`, IN-2 on `in-2-clock`; on `main`: the Markov plan
-and MIDI out (rulings to 36). The branches merge together after IN-4, once Jon approves.
+Status (2026-11-15): **the MIDI in plan is finished and merged to `main`** (IN-1 to IN-4;
+Design, rulings 37 to 47). Jon ran IN-4: following Reaper, leading it with *Send clock*, and a
+keyboard into the *Monitor* all worked as expected; he accepted decisions 1, 6, 7 and 10 and the
+IN-2 and IN-3 readings as built. On `main`: the Markov plan, MIDI out, MIDI in with clock and
+sync. 268 EditMode tests; the menu check at 185 checks at both sizes.
 
-Open for Jon:
-- **IN-4** (`Docs/Aleatora_MidiIn_Plan.md`, *IN-4*): follow Reaper through Han, lead it with
-  Send clock through Greedo, play the keyboard into the *Monitor*.
-- **Renaming the loopMIDI ports** (he asked). Greedo and Han weren't listed at the last runs
-  (only SE49, MIDIIN2 (SE49) and Aleatora Test), so a saved output "Greedo" reads "(not found)".
-  Recommended: "Aleatora to Reaper" (now Greedo), "Reaper to Aleatora" (now Han), "Aleatora
-  Test". loopMIDI can't rename: delete and add. Then pick them on the *MIDI* page and enable them
-  in Reaper's *Preferences > MIDI Devices*. Once chosen, the plan's IN-4 steps are updated to
-  match.
-- **Readings to accept or change at IN-4**, with decisions 1, 6, 7 and 10: IN-2's (Tech, *As
-  built (IN-2)*, *Readings*; the one most likely to matter: while following, *Generate* keeps
-  note *n* on beat *n*, so a new melody is heard from the note for the next beat, not its first)
-  and IN-3's (Tech, *As built (IN-3)*, *Readings*: the monitor's beat counts from 1; its clock
-  line's additions; the output's own port greyed by its label only).
+Jon's loopMIDI ports are now "Aleatora to Reaper" (was Greedo), "Reaper to Aleatora" (was Han)
+and "Aleatora Test" (ruling 45). "Greedo" and "Han" in the docs, comments and tests are examples
+only.
 
-## Next: IN-4 with Jon, then merge
+Still open from IN-4:
+- **The shared keyboard port** (MIDI in plan, *Risks*, and IN-4 step 3.3): not run. The keyboard
+  open in Reaper and Aleatora at once. Worth a try when convenient; if Windows refuses the
+  second program, Reaper can pass the keyboard on through a loopMIDI port.
 
-After Jon's IN-4 run: record his rulings on decisions 1, 6, 7, 10 and the readings in
-`Docs/Aleatora_Design.md` (*Decided by Jon*), fix what he finds, then merge `in-1-input`,
-`in-2-clock` and `in-3-page` into `main` once he approves.
+A local change to `Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF -
+Fallback.asset` (the Editor's dynamic font atlas) is left uncommitted; it isn't ours.
+
+## Next: Jon picks the next plan
+
+Nothing is planned. The candidates (Design, *Open, each its own plan later*): OSC (Jon means to
+teach Aleatora Reaper's OSC, ruling 39), what the keyboard's notes do, what the grid means
+musically, how the generator drives the grid. When Jon picks one, write its plan as
+`Docs/Aleatora_<Name>_Plan.md`, in the shape of `Docs/Aleatora_MidiIn_Plan.md` (*Read first*,
+*Decisions for Jon* with defaults, milestones, *Risks*), and stop for his rulings.
 
 Read for it:
-- `Docs/Aleatora_MidiIn_Plan.md`: *Decisions for Jon*, *IN-4*, *Risks*.
-- `Docs/Aleatora_Tech.md`: *As built (IN-2)* and *As built (IN-3)*, their *Readings*.
+- `Docs/Aleatora_Design.md`: *Open, each its own plan later*, and rulings 37 to 47.
+- `Docs/Aleatora_MidiIn_Plan.md`: *Later*, as a model of a plan.
 
 ## Not in any repository
 

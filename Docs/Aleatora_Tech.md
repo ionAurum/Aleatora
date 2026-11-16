@@ -379,7 +379,9 @@ Our own wrapper over `winmm.dll` (Design, ruling 27), plain C# in `Midi/`.
   play mode, a script reload and Quit to Menu's scene load all come through) and
   `OnApplicationQuit` close.
 - **Run In Background is on** (ruling 31; `ProjectSettings.asset`, `runInBackground: 1`).
-- **Jon's machine** (2026-11-15): loopMIDI ports "Greedo" and "Han". Windows describes them as it
+- **Jon's machine** (2026-11-15): loopMIDI ports "Greedo" and "Han", renamed at IN-4 to
+  "Aleatora to Reaper" and "Reaper to Aleatora" (ruling 45), with "Aleatora Test". The names
+  "Greedo" and "Han" in this doc, the code's comments and the tests are examples only. Windows describes them as it
   does any port (manufacturer 1, product 102, MIDI port), so nothing in winmm says "virtual";
   loopMIDI keeps its ports' names under `HKCU\Software\Tobias Erichsen\loopMIDI\Ports`, which
   is how the EditMode test finds one to open. Windows MIDI Services is installed (`wdmaud2.drv`,

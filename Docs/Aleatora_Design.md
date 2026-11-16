@@ -133,12 +133,26 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     holding them, and All Sound Off (CC 120) clears everything; choosing an output that is open as
     an input closes that input; note names use ♯ (`C♯4`); a message reads "Note on E4 96", with
     the channel in front in logs.
+45. **MIDI in and clock are proved** (2026-11-15, IN-4). Jon followed Reaper's clock, led Reaper
+    with *Send clock*, and played a keyboard into the *Monitor*: "it all seems to work as
+    expected." Not run: the keyboard's port held by Reaper and Aleatora at once (MIDI in plan,
+    *Risks*; still open). The loopMIDI ports are renamed (he asked): "Aleatora to Reaper" (was
+    Greedo), "Reaper to Aleatora" (was Han) and "Aleatora Test".
+46. **The MIDI in work as built is accepted** (2026-11-15, IN-4). MIDI in decisions 1 (our winmm
+    wrapper), 6 (the tempo over one beat), 7 (the keyboard's base layer) and 10 (nothing new on
+    the *Melodies* page) stand as their defaults. The readings flagged in IN-2 and IN-3 (Tech,
+    *As built (IN-2)* and *As built (IN-3)*, *Readings*) stand, among them: while following,
+    *Generate* and *Step* keep note *n* on beat *n*, so a new melody is heard from the next
+    beat's note; *Pause* while following is *Stop* that keeps the playhead; the monitor's beat
+    counts from 1; the output's own port is greyed by its label only.
+47. **The MIDI in branches merge to `main`** (2026-11-15): `in-1-input`, `in-2-clock` and
+    `in-3-page`, through `in-3-page`, ending the MIDI in plan.
 
 ## Open, each its own plan later (the plan's decision 7)
 
 - What the grid means musically (the three axes are ready to carry, say, an interval each).
 - How the generator drives the grid.
-- How notes leave Aleatora as OSC. MIDI out is built (rulings 26 to 36); MIDI in and clock
-  and sync are planned (ruling 37).
+- How notes leave Aleatora as OSC. MIDI out is built (rulings 26 to 36), and MIDI in with clock
+  and sync (rulings 37 to 47). Jon means to teach Aleatora Reaper's OSC (ruling 39).
 - What the keyboard's notes do (ruling 37: chords and the like, later).
 
