@@ -279,7 +279,7 @@ The emitter plan's EM-1 (`Docs/Aleatora_Emitter_Plan.md`; rulings 60 to 67, 71, 
   (`Set` european_ionian, `Tonic` 0–11, `Layout`, `Seed` 2112, `ChromaticWeight` 0, `KInterval`
   and `NInterval` 2, −7 to 7), *Board: octaves* (`LowestOctave` 3, `Octaves` 3, `OutwardLower`
   off), *Board: look* (`RootColor` red, `UnlikelyColor` white, `LikelyColor` blue, `ShowDegrees`
-  on, `LabelColorFromTheme` on, `LabelColor` near-black, `LabelSize` 5, `LabelHeight` 0.01).
+  on, `LabelColorFromTheme` off (ruling 73; on at first), `LabelColor` near-black, `LabelSize` 5, `LabelHeight` 0.01).
   `CellColor(degree, blue)`.
 - **`Game/BoardNotes`**, on the grid's object, made by `Aleatora` (`Aleatora.Board`): lays the
   notes out on `Begin`, on the grid's `Rebuilt`, and when a notes value changes in the tuning (each

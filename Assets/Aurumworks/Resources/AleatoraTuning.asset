@@ -65,7 +65,7 @@ MonoBehaviour:
     _unlikelyColor: {r: 1, g: 1, b: 1, a: 1}
     _likelyColor: {r: 0, g: 0, b: 1, a: 1}
     _showDegrees: 1
-    _labelColorFromTheme: 1
+    _labelColorFromTheme: 0
     _labelColor: {r: 0.1, g: 0.1, b: 0.1, a: 1}
     _labelSize: 5
     _labelHeight: 0.01

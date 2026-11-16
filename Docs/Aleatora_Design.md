@@ -224,6 +224,9 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     white. Jon: "lock that in."
 72. **The emitter plan's other decisions stand as their defaults; go-ahead for EM-1**
     (2026-11-16). Jon: "Defaults are fine." So decisions 1, 3, 4, 5, 8, 9, 10 and 11 as written.
+73. **The cells' labels are near-black; go-ahead for EM-2** (2026-11-16; changes decision 10's
+    label colour). Jon looked at EM-1: the white labels are too washed out on the pale cells, so
+    *Label Color From Theme* is off and the labels take *Label Color* (near-black, 0.1 grey).
 
 ## Open, each its own plan later (the plan's decision 7)
 

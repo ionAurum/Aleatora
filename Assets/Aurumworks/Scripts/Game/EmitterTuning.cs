@@ -46,7 +46,7 @@ namespace Aurumworks.Aleatora
         [Tooltip("Each cell's degree written on its top: ♭3.")]
         [SerializeField] private bool _showDegrees = true;
         [Tooltip("On: the labels in the UI theme's text colour. Off: in Label Color.")]
-        [SerializeField] private bool _labelColorFromTheme = true;
+        [SerializeField] private bool _labelColorFromTheme;
         [Tooltip("The labels' colour when Label Color From Theme is off.")]
         [SerializeField] private Color _labelColor = new(0.1f, 0.1f, 0.1f, 1f);
         [Tooltip("The labels' size, as TextMeshPro's font size.")]
