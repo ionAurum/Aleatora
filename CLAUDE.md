@@ -36,6 +36,8 @@ the sections the hand-off names, not all of them.
   is `Assets/Aurumworks/ScriptableObjects/UI Theme.asset`. No new colours beyond the theme's roles
   unless Jon asks.
 - `Tools/markov.py` turns the analysis's JSON into the text tables the game reads.
+  `Tools/Markov/Theory/virtuoso.py` writes the theory sets' JSON from rules and the weights in
+  `virtuoso.json` beside it (TH-1).
 
 ## Never edit
 - `.meta` files. Unity owns them; a changed or lost GUID breaks every reference to the asset.

@@ -1,12 +1,16 @@
 """Turns the melody statistics in Tools/Markov/Source/ into the text tables Aleatora reads.
 
-    python -I Tools/markov.py <source folder> <output folder>
+    python -I Tools/markov.py <source folder>... <output folder>
 
-<source folder> holds one JSON file per set (european_ionian.json, ...), as the analysis in
-Tools/Markov/Source/scripts/ wrote them, and summary.json, which is skipped. <output folder> is
-Assets/Aurumworks/Resources/Markov/. For each set it writes <set>.txt, and it writes Index.txt
-listing the sets. It then reads every file it wrote back and checks it (the checks below); it
-exits 1 if any fails, and writes nothing over a file that is already identical.
+    python -I Tools/markov.py Tools/Markov/Source Tools/Markov/Theory/Output Assets/Aurumworks/Resources/Markov
+
+Each <source folder> holds one JSON file per set (european_ionian.json, ...), as the analysis in
+Tools/Markov/Source/scripts/ wrote them or Tools/Markov/Theory/virtuoso.py writes them, and
+perhaps summary.json, which is skipped. <output folder> is Assets/Aurumworks/Resources/Markov/.
+For each set it writes <set>.txt, and it writes Index.txt listing every set from every folder, by
+name. It then reads every file it wrote back and checks it (the checks below); it exits 1 if any
+fails or two folders have a set of the same name, and writes nothing over a file that is already
+identical.
 
 The text format (Docs/Aleatora_Markov_Plan.md, The tables on disk), one record per line:
 
@@ -136,17 +140,21 @@ def write_if_changed(path, text):
     return True
 
 
-def main(source, output):
+def main(sources, output):
     os.makedirs(output, exist_ok=True)
     names = []
     failed = False
-    for file in sorted(os.listdir(source)):
-        if not file.endswith(".json") or file == "summary.json":
-            continue
-        with open(os.path.join(source, file), encoding="utf-8") as f:
+    files = [os.path.join(source, file) for source in sources for file in os.listdir(source)
+             if file.endswith(".json") and file != "summary.json"]
+    for path in sorted(files, key=os.path.basename):
+        with open(path, encoding="utf-8") as f:
             data = json.load(f)
         text = write_set(data)
         name = f"{data['corpus']}_{data['mode']}"
+        if name in names:
+            print(f"{name}: a second set of this name, in {path}")
+            failed = True
+            continue
         errors = check(text)
         for error in errors:
             print(f"{name}: {error}")
@@ -161,7 +169,7 @@ def main(source, output):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
+    if len(sys.argv) < 3:
         print(__doc__)
         sys.exit(2)
-    sys.exit(main(sys.argv[1], sys.argv[2]))
+    sys.exit(main(sys.argv[1:-1], sys.argv[-1]))

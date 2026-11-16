@@ -32,6 +32,10 @@ namespace Aurumworks.Aleatora.Tests
         [TestCase("chinese_han_gong", "Chinese han · gong")]
         [TestCase("chinese_han_yu", "Chinese han · yu")]
         [TestCase("chinese_han_zhi", "Chinese han · zhi")]
+        [TestCase("virtuoso_lydian", "Virtuoso · lydian")]
+        [TestCase("virtuoso_phrygian", "Virtuoso · phrygian")]
+        [TestCase("virtuoso_double_harmonic", "Virtuoso · double harmonic")]
+        [TestCase("virtuoso_hindu_pentatonic", "Virtuoso · hindu pentatonic")]
         [TestCase("no_mode_here", "no_mode_here")]
         [TestCase("ionian", "ionian")]
         public void SetNameSplitsTheCorpusFromTheMode(string name, string shown)

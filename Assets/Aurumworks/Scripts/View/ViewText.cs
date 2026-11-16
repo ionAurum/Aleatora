@@ -10,7 +10,11 @@ namespace Aurumworks.Aleatora
     {
         private static readonly string[] _tonics = { "C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B" };
         private static readonly string[] _plainTonics = { "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B" };
-        private static readonly string[] _modes = { "harmonic_minor", "ionian", "dorian", "aeolian", "mixolydian", "gong", "zhi", "yu" };
+        private static readonly string[] _modes =
+        {
+            "harmonic_minor", "double_harmonic", "hindu_pentatonic", "ionian", "dorian", "aeolian", "mixolydian", "lydian", "phrygian",
+            "gong", "zhi", "yu",
+        };
         private static bool? _hasSigns;
 
         // Statics survive play mode when domain reload is disabled; reset them.
