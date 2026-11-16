@@ -42,11 +42,12 @@ mode multiplied by *Chromatic weight* (decision 3). Three layouts (ruling 61):
    largest remainder: on 61 cells `european_ionian` gives 1 ×13, 2 ×9, 3 ×11, 4 ×6, 5 ×12, 6 ×5,
    7 ×5. Then the cells are shuffled with the seed. The board holds the set's proportions exactly
    as near as whole cells allow, rather than drawing 61 times and hoping.
-2. **Clustered.** The same counts, each degree one connected region: one starting cell per
-   degree, placed with the seed, then the regions grow a cell at a time, the degree with most
-   cells still to place growing first, into a free neighbouring cell picked with the seed. A
-   region boxed in before it is full continues from the nearest free cell (so the counts hold;
-   a region may then come in two pieces, rarely).
+2. **Clustered.** The same counts, each degree one connected region, carved one region at a
+   time in an order drawn from the seed (as built in EM-1; growing all the regions at once, as
+   first written here, left a region in pieces on nearly every board). A region starts on the
+   edge of the free cells and grows into the free neighbour with most of its own; a cell is
+   taken only if the cells still free stay connected, so the last region is whole too. On 600
+   test boards, 599 had every region whole; the counts always hold.
 3. **Along the axes.** An isomorphic layout, like a harmonic table: the centre cell is 1, a step
    along +K moves the degree up *K interval* scale steps, a step along +N up *N interval*, and +M
    is their sum. The default, K a third and N a third, makes M a fifth, so every triad of the mode
@@ -237,15 +238,59 @@ control. With EM-4 in hand to try things on:
    shown to Jon.
 3. Jon picks and rules; the chosen scheme is written into this plan as EM-6.
 
+As written (2026-11-16): Jon gave the mouse scheme himself (ruling 77);
+`Docs/Aleatora_Emitter_Controls.md` works it out (scheme A) and proposes the gamepad (B) and MIDI
+controllers (M), with decisions and costs, no prototypes before EM-6. Ruled (78, 79): A and B
+as written in EM-6; M later, for CC streams from Reaper.
+
 ## EM-6 — The controls (branch `em-6-controls`, from `em-4-panel`)
 
-As EM-5 rules. Its tasks and checks are written then.
+Schemes A (mouse and keyboard) and B (gamepad) of `Docs/Aleatora_Emitter_Controls.md`, as
+written (rulings 77 and 78). They replace decision 8's controls. Revised after Jon's try (ruling
+80): View takes the emitter on the gamepad, whose tilt, triggers and D-pad then work only while
+held; the right trigger's pull sweeps the rate; the left trigger (with A) sets *Spread*; R/R3 and
+T/Y reset the tilt and the position (Tech, *As built (EM-6)*). Jon tried the revision: it works
+well (ruling 81).
+
+1. **Input** (`Player`): *Grab Emitter* (G), *Tilt* (the mouse's movement), *Stick Tilt* (the
+   right stick, in place of *Aim Point*), *Wheel* (the mouse's wheel), *Wheel Step* (the D-pad's
+   up and down), *Wheel Modifier* (the right button, the left trigger), *Grid Lock* (Shift, the
+   left stick pressed, in place of *Aim*); *Raise Emitter* gains LB and RB. The left button is
+   *Left Click*, as the cells' pick reads it.
+2. **`Game/ConeTilt`** (plain C#): the tilt as two angles, each −90° to 90° (0–180° from the
+   horizon, A3), the direction from them, a movement on the board's plane turned into them.
+   **`Game/SprayLanding`** (plain C#): where a sphere from the nozzle lands on the board's plane
+   under gravity; the axis's landing and a ring of 32 on the spread's edge (A4).
+3. **`Game/Emitter`**: taken and released (a click on the cone, G; a menu or the window losing
+   focus releases it), the pointer locked while held; the tilt from the mouse while held and
+   from the right stick, *Swing*; spraying by the left button while held, Space's latch, the
+   trigger; the wheel's steps of *Rate* and, with the modifier, *Spread* (a table of modifier
+   and parameter, A6), the D-pad the same; moving along the grid with *Grid Lock* (A9); the
+   target: the axis's landing and the outline; the cone tinted *Held Color* while held.
+   `AimAt` turns the cone's axis toward a point.
+4. **`Grid/GridSelection`**: no pick and no camera orbit or zoom while the emitter is held, and no
+   pick from the click that takes it (A1, A7).
+5. **`EmitterTuning`**: *Spread* the whole angle, 0–180° (the asset's 10 becomes 20, A5);
+   *Tilt Sensitivity* 0.15° a count, *Swing* 0, *Stick Tilt Speed* 120° a second, *Wheel Step*
+   1.25, *Spread Step* 5°, *Aim Line Width*, *Held Color*; *Aim Speed* goes. The panel's *Spread*
+   0–180°.
+6. **Checks.** EditMode: `ConeTilt` (the limits, straight down, the camera's axes),
+   `SprayLanding` (straight down, tilted, past the horizon, against small steps under gravity).
+   Menu check `em6`: take by a click on the cone and by G, release by G and by Escape (the menu
+   opens); no pick and a still camera while held; the pointer locked and freed; tilt by queued
+   mouse movement to both limits; the wheel's steps and limits of *Rate*, with the right button
+   of *Spread*; the left button sprays while down; the target's centre where spheres land; Grid
+   Lock's moves ending on a cell's middle in both orientations; the gamepad's stick, trigger,
+   D-pad and shoulders.
 
 ## EM-7 — Jon plays it
 
 Jon sprays into Reaper, following its clock: the layouts, the grids and strengths, the
 parameters, the controls. He rules on the decisions and the readings, and says what to change.
 Merge once he approves.
+
+**Approved and merged into `main`** (ruling 82, 2026-11-16): the readings stand as built; the
+plan is finished. Scheme M is tabled until Jon asks.
 
 ## Milestone summary
 

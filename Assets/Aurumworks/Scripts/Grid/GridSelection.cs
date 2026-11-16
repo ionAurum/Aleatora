@@ -1,3 +1,4 @@
+using System;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -10,7 +11,12 @@ namespace Aurumworks.Aleatora
     /// cells need no colliders; a click off the board selects nothing. Focus (Player/Focus) has the
     /// scene's Cinemachine camera follow the selected cell, or the board's middle with none
     /// selected. The actions are the project-wide ones, found by name. While a menu is open
-    /// (MenuFocus.IsAnyOpen) it does nothing, and the camera's own input (orbit, zoom) is off.
+    /// (MenuFocus.IsAnyOpen) it does nothing, and the camera's own input (orbit, zoom) is off. A
+    /// click on the UI (the emitter's panel) selects nothing; the camera's input is off while the
+    /// pointer is over it, judged when no mouse button is held, so a drag begun on the board orbits
+    /// on over the panel (EM-4). While a text field has the keyboard, Focus does nothing. While
+    /// MouseTaken says the mouse is taken (the emitter held, EM-6) a click picks nothing and the
+    /// camera neither orbits nor zooms; a click ClaimsClick claims (on the cone) picks nothing.
     /// Made by the bootstrap (Aleatora), beside HexGrid.
     /// </summary>
     public class GridSelection : MonoBehaviour
@@ -27,6 +33,13 @@ namespace Aurumworks.Aleatora
         private InputAction _focusAction;
         private bool _hasSelection;
         private bool _followsSelection;
+        private bool _pointerOverUi;
+
+        /// <summary>Whether something else has the mouse (the emitter, held): no pick, no orbit, no zoom. Null: never.</summary>
+        public Func<bool> MouseTaken { get; set; }
+
+        /// <summary>Whether something else takes a click at a point of the screen (the emitter's cone). Null: nothing does.</summary>
+        public Func<Vector2, bool> ClaimsClick { get; set; }
 
         /// <summary>The selected cell, if HasSelection.</summary>
         public HexCoord Selected { get; private set; }
@@ -136,9 +149,18 @@ namespace Aurumworks.Aleatora
         private void Update()
         {
             bool menuOpen = MenuFocus.IsAnyOpen;
-            if (_cameraInput != null && _cameraInput.enabled == menuOpen)
+            Mouse mouse = Mouse.current;
+            bool held = mouse != null && (mouse.leftButton.isPressed || mouse.rightButton.isPressed || mouse.middleButton.isPressed);
+            if (!held || menuOpen)
             {
-                _cameraInput.enabled = !menuOpen;
+                _pointerOverUi = !menuOpen && UiInput.PointerOverUi;
+            }
+
+            bool taken = MouseTaken != null && MouseTaken();
+            bool cameraFree = !menuOpen && !_pointerOverUi && !taken;
+            if (_cameraInput != null && _cameraInput.enabled != cameraFree)
+            {
+                _cameraInput.enabled = cameraFree;
             }
 
             if (menuOpen)
@@ -146,12 +168,16 @@ namespace Aurumworks.Aleatora
                 return;
             }
 
-            if (_selectAction != null && _selectAction.WasPressedThisFrame() && Pointer.current != null)
+            if (_selectAction != null && _selectAction.WasPressedThisFrame() && Pointer.current != null && !UiInput.PointerOverUi && !taken)
             {
-                PickAt(Pointer.current.position.ReadValue());
+                Vector2 point = Pointer.current.position.ReadValue();
+                if (ClaimsClick == null || !ClaimsClick(point))
+                {
+                    PickAt(point);
+                }
             }
 
-            if (_focusAction != null && _focusAction.WasPressedThisFrame())
+            if (_focusAction != null && _focusAction.WasPressedThisFrame() && !UiInput.IsTyping)
             {
                 Focus();
             }

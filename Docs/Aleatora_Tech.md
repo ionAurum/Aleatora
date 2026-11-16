@@ -13,6 +13,8 @@ One section per system, each with what was built under "As built". The plans are
 - *Melody tables* (as built)
 - *Melody generator* (as built)
 - *Melodies page* (as built)
+- *Board notes* (the emitter plan's EM-1, as built)
+- *Emitter* (the emitter plan's EM-2, EM-3 and EM-4, as built)
 - *Cell look* (the gel pad shader, as built)
 - *MIDI* (as built)
 - *Checks*
@@ -25,10 +27,10 @@ All in Assembly-CSharp (no asmdefs), namespace `Aurumworks.Aleatora`, under
 | Folder | Holds | Unity in it? |
 |---|---|---|
 | `Grid/` | `HexCoord`, `HexDirection` (with `HexDirections`), `HexShape`, `HexLayout` (with `HexOrientation`, `HexPoint`): plain C#. `HexGrid`, `HexCellView`, `GridSelection` | The last three only |
-| `Music/` (M1; M2 from `Rng` on) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing` | No |
-| `Midi/` (MIDI-1) | `MidiMessage`, `IMidiOutput`, `MidiPorts`, `RecordingOutput`; internal `WinMm`, `WinMmOutput`; `NotePlayer`, `INoteSource`, `MelodySource` (MIDI-2, 3); `IMidiInput`, `TimedMessage`, `FeedInput`, `HeldNotes`, internal `WinMmInput` (IN-1); `IBeatSource`, `InternalBeatSource`, `ClockFollower`, `ClockSender` (IN-2) | No |
-| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2), `MelodyViewTuning` (M3), `MidiTuning`, `MidiPlayback` (MIDI-1) | Yes |
-| `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip`; the static `ViewText` and `ViewMesh`; the static `MidiPage` (MIDI-3), `MidiMonitorPage` (IN-3) | Yes |
+| `Music/` (M1; M2 from `Rng` on) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing`; `CellNotes` (with `CellLayout`, EM-1); `Quantize` (with `QuantizeGrid`), `HitNote` (EM-3) | No |
+| `Midi/` (MIDI-1) | `MidiMessage`, `IMidiOutput`, `MidiPorts`, `RecordingOutput`; internal `WinMm`, `WinMmOutput`; `NotePlayer`, `INoteSource`, `MelodySource` (MIDI-2, 3); `IMidiInput`, `TimedMessage`, `FeedInput`, `HeldNotes`, internal `WinMmInput` (IN-1); `IBeatSource`, `InternalBeatSource`, `ClockFollower`, `ClockSender` (IN-2); `HitScheduler` (EM-3) | No |
+| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2), `MelodyViewTuning` (M3), `MidiTuning`, `MidiPlayback` (MIDI-1); `EmitterTuning`, `BoardNotes` (EM-1); `Emitter`, `EmitterSphere`, and the plain C# `SprayDraws` (with `SprayDraw`) and `EmitterHit` (EM-2); the plain C# `ConeTilt`, `SprayLanding` and `TriggerRate` (EM-6) | Yes, but for the plain C# |
+| `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip`; the static `ViewText` and `ViewMesh`; the static `MidiPage` (MIDI-3), `MidiMonitorPage` (IN-3); `EmitterPanel` and the static `UiInput` (EM-4) | Yes |
 | (root) | `MainMenu`, `SessionMenu`, `SettingsMenu`, `MenuCheck` | Yes |
 | `Editor/`, `Editor/Tests/` | `PlayerBuild`, `TuningMaker` (*Aleatora > Make Tuning*), EditMode tests | Editor |
 
@@ -245,6 +247,319 @@ Four sets written from theory (`Docs/Aleatora_Theory_Plan.md`; Design, rulings 5
   and the menu check's counts. The other four tables came out unchanged (each mode has its own
   seed). As run: 564,055 notes, 1.8% passing notes; after ♭2, 1 52% (3 27%); after ♭6, 5 43%
   (♭7 31%).
+
+## Board notes
+
+### As built (EM-1, 2026-11-16, branch `em-1-board`)
+
+The emitter plan's EM-1 (`Docs/Aleatora_Emitter_Plan.md`; rulings 60 to 67, 71, 72).
+
+- **`Music/CellNotes`** (plain C#, with the enum `CellLayout`: Scattered, Clustered, Axes): built
+  from a `HexShape`, twelve probabilities, the mode's mask, a layout, a seed, the K and N
+  intervals, the octaves and which way they run. `DegreeAt(index)`, `OctaveAt(index)`,
+  `CellsOf(degree)`, `Probability(degree)`, `Blue(degree)` (p / p<sub>max</sub> over the degrees
+  but the root; 0 for the root), `Note(index, tonic, lowestOctave)`, `Centre`, `Rings`. Static:
+  `Probabilities(counts, mask, chromaticWeight)` (all zero: the mode's degrees as likely),
+  `ShareOut(probabilities, cells)` (largest remainder; ties to the larger probability, then the
+  lower degree), `CentreCell(shape)` (the mean rounded; the nearest cell if that is off the
+  board), `OctaveOfRing` (⌊ring · octaves / rings⌋, or turned round), `NoteOf` (kept in 0–127 by
+  octaves).
+  - *Scattered*: the shared-out degrees shuffled (Fisher–Yates on `Rng`).
+  - *Clustered* is **carved, not grown** (the plan's first wording grew every region at once; a
+    Python trial left a region in pieces on nearly every board, 6 or 7 stray pieces each):
+    regions one at a time, in an order shuffled from the seed; each starts on a free cell with the
+    fewest free neighbours and grows into the free neighbour with most of its own (ties shuffled
+    from the seed), taking a cell only if the free cells left stay connected. The check is local
+    first (the free neighbours in one unbroken arc around the cell, or none, or all six), a search
+    of the free cells only otherwise. A region with no such cell takes the first candidate anyway
+    (it may then be in two pieces); boxed in, its candidates are the nearest free cells. Tested:
+    599 of 600 boards whole (5 × 5 × 5, 3 × 5 × 7, 9 × 9 × 9); 40 × 40 × 40 in 266 ms.
+  - *Axes*: scale steps = ΔQ · K − ΔR · N from the centre cell (so +K moves K, +N moves N, +M
+    both), over the mode's degrees in order. Defaults K = N = 2: +K and +N a third, +M a fifth.
+- **`Game/EmitterTuning`**, on `AleatoraTuning` as `Emitter` (added to the asset): *Board: notes*
+  (`Set` european_ionian, `Tonic` 0–11, `Layout`, `Seed` 2112, `ChromaticWeight` 0, `KInterval`
+  and `NInterval` 2, −7 to 7), *Board: octaves* (`LowestOctave` 3, `Octaves` 3, `OutwardLower`
+  off), *Board: look* (`RootColor` red, `UnlikelyColor` white, `LikelyColor` blue, `ShowDegrees`
+  on, `LabelColorFromTheme` off (ruling 73; on at first), `LabelColor` near-black, `LabelSize` 5, `LabelHeight` 0.01).
+  `CellColor(degree, blue)`.
+- **`Game/BoardNotes`**, on the grid's object, made by `Aleatora` (`Aleatora.Board`): lays the
+  notes out on `Begin`, on the grid's `Rebuilt`, and when a notes value changes in the tuning (each
+  frame compared); a look value or the cells' top height redraws only. Each cell's colour at rest
+  through `HexCellView.SetRestColor`; one TextMeshPro label a cell (under `Labels` on the grid,
+  not on the cell, so the cell's renderers and `TopHeight` are untouched), flat on the top, the
+  theme's body face, `ViewText.DegreeName`. `Notes`, `Table`, `Labels`, `NoteAt(coord)`,
+  `DegreeAt(coord)`, `ColorOf(degree)`, `Changed`. A set the index doesn't list: one warning, no
+  notes, the cells back to the tuning's rest colour. Tonic and lowest octave change only the
+  notes asked for, nothing drawn.
+- **`Grid/HexCellView`**: `OwnRestColor` and `SetRestColor(color, tuning)`; a cell's own colour
+  stands in for the grid tuning's *Rest Color* (base tint and, on the gel, the glow at rest).
+  The grid's *Rest Color* now shows only on a board without notes.
+- **Readings for Jon at EM-7** (none changes a ruling):
+  - **The labels in the theme's text colour (decision 10) are near-white, and can't be read on
+    the pale cells** (6 and 7 in `european_ionian`; the screenshots `3-Board-*`). Turning off
+    *Label Color From Theme* uses *Label Color* (near-black by default). The labels are also small
+    against the glow; *Label Size* is on the tuning.
+  - The Axes layout ignores the probabilities, so its cells' counts aren't the set's (9 or 8 a
+    degree on 5 × 5 × 5); its colours still are.
+
+## Emitter
+
+### As built (EM-2, 2026-11-16, branch `em-2-emitter`)
+
+The emitter plan's EM-2 (`Docs/Aleatora_Emitter_Plan.md`; rulings 59, 63, 69, 72, 73).
+
+- **`Game/SprayDraws`** (plain C#, with the struct `SprayDraw`): one sphere's draws from an
+  `Rng`, always four `NextDouble`s in the same order whatever the parameters: a size between
+  *Min Size* and *Max Size*, a speed within ±*Speed Jitter* of *Speed*, and a direction even over
+  the cap of the cone whose half-angle is *Spread* (the angle from the axis to the cone's edge, as
+  the ParticleSystem's cone measures it; the plan's "a cone of *Spread* degrees" read that way).
+  The direction is in the emitter's frame, its axis −Y. `Angle` is the direction's angle from it.
+- **`Game/Emitter`**, added by the bootstrap (`Aleatora.Emitter`) to the scene's active object
+  named `Emitter` (a warning and no emitter without one). Its own `Rng`, seeded from the tuning's
+  *Seed* XOR `0x5350524159` ("SPRAY", so its stream isn't the layout's), started again when the
+  seed changes. **The nozzle** is the lowest point of the cone's renderers' local bounds, in the
+  emitter's space, found once (the cone's tip points down: (0, 8.22, 0) with the emitter at
+  height 10). Spheres start there, a radius and 0.01 further along the axis.
+  - **Spraying** in `FixedUpdate` (the 5 ms step): spheres owed at the rate are launched each
+    step; idle, one is owed, so spraying launches at once. The rate this frame (`CurrentRate`) is
+    *Rate* while `Spraying`, else *Rate* × the right trigger's pressure, and 0 while a menu is
+    open. At *Max Spheres* none is launched; *Max Spheres* lowered in play retires the oldest.
+  - **The pool**: each sphere is `GameObject.CreatePrimitive(Sphere)` (its renderer and a
+    sphere collider of diameter 1), scaled to its size, with a `Rigidbody` (mass by volume, a
+    sphere of 1 weighs 1; continuous dynamic collision detection, the plan's *Fast spheres*;
+    interpolated) and an `EmitterSphere`, under `Spheres` on the Aleatora object. A sphere past
+    *Lifetime*, or more than the cell height and 2 units below the cells' tops, goes back to the
+    pool (deactivated). One `PhysicsMaterial` made at run time for all of them, *Bounciness* with
+    `Maximum` combine, so the cells' (none) don't halve it. `Clear()` puts every sphere away.
+  - **Colliders**: the cells' and the spheres' are the only ones (the cone has none; the aim
+    marker's is removed), so spheres collide with cells, spheres and nothing else, with no layer.
+  - **A hit**: `EmitterSphere.OnCollisionEnter` → `Emitter.OnSphereHit`. A collider under a
+    `HexCellView`, impact speed |relative velocity · the first contact's normal| at least *Min
+    Speed* (decision 11's 1): the cell glows (`HexCellView.SetHit`, 1, fading linearly over *Hit
+    Fade*), `Hits` counts it, `Hit` is raised with an `EmitterHit` (cell, its note from
+    `BoardNotes.NoteAt`, speed, the sphere's size, `Time.timeAsDouble`, which is the physics
+    step's time); *Log Hits* writes it to the Console.
+  - **The first controls** (decision 8), in `Update`, none while a menu is open. New `Player`
+    actions: *Spray* (Space, toggles), *Spray Pressure* (the right trigger; one action can't be
+    both Space's toggle and the trigger's pressure, so the plan's *Spray* is two), *Move Emitter*
+    (W A S D, the left stick), *Raise Emitter* (Q and E), *Aim* (Left Shift held: the aim point
+    follows the pointer on the plane of the cells' tops), *Aim Point* (the right stick). *Hide
+    Panel* waits for EM-4. Moving is relative to the camera's forward, flattened. **Moving
+    carries the aim point with it** (C2's reading of decision 8, which doesn't say), so W A S D
+    sweep the spray over the board; Shift and the right stick place it. The gamepad has no raise
+    and lower (decision 8 gives none). The emitter is held between *Min Height* and *Max Height*
+    above the cells' tops and turned so its −Y points at the aim point.
+  - **The aim marker**: a flat cylinder (`Aim`, under the Aleatora object), *Aim Size* across, on
+    the aim point just above the labels, in *Aim Material* tinted *Aim Color* through its own
+    `MaterialPropertyBlock`; no marker while *Aim Material* is empty.
+- **`Game/EmitterSphere`**: the pooled sphere's `Body`, `Size`, `Born`, and its collision callback.
+- **`Game/EmitterHit`** (readonly struct): `Cell`, `Note`, `Speed`, `Size`, `Time`.
+- **`Grid/HexCellView`**: `HitAmount` and `SetHit(amount, glow, colour, tuning)`. A hit's glow
+  goes over the cell's state by its amount: the glow colour from the state's toward *Hit Color*,
+  the glow level from the state's toward *Hit Glow*; on a material without a glow, the base colour
+  toward *Hit Color*. The emitter fades it (cells don't update themselves).
+- **`EmitterTuning`** gained *Emitter: spray* (`Rate` 4, `Spread` 10, `Speed` 8, `SpeedJitter`
+  10 %), *Emitter: spheres* (`MinSize` 0.2, `MaxSize` 0.5, `Bounciness` 0.6, `Lifetime` 8,
+  `MaxSpheres` 300), *Emitter: hits* (`MinSpeed` 1, `LogHits` off), *Emitter: moving* (`MoveSpeed`
+  6, `RaiseSpeed` 4, `AimSpeed` 8, `MinHeight` 2, `MaxHeight` 30), *Emitter: look*
+  (`SphereMaterial` and `AimMaterial` `Plastic.mat`, the cone's own; `AimColor` yellow (1, 0.85,
+  0); `AimSize` 0.4; `HitColor` white; `HitGlow` 1; `HitFade` 0.25), all read live, all added to
+  `AleatoraTuning.asset`. The plan's values where it gives them; the moving speeds and heights,
+  the materials and the aim and hit colours are C2's starting points (the look is Jon's).
+- **Measured** (the plan's *Physics cost*; the menu check, a 1920 × 1080 window on Jon's PC):
+  5 × 5 × 5, 1.2 ms a frame with no spheres, 1.6 ms with 186 spheres at 50 a second (the rest
+  roll off the small board), 164 hits a second; 40 × 40 × 40 (4,681 cells), 12.7 ms with none,
+  13.2 ms with 300 (the longest frame 23.6 ms), 465 hits a second. The spheres cost about half a
+  millisecond a frame; the big board's cost is drawing it.
+- **Readings for Jon at EM-7** (none changes a ruling):
+  - **A sphere landing on the seam between two cells hits both at once**: two hits, two notes
+    (the log shows pairs at the same instant). EM-3's merge joins only the same pitch.
+  - **Hits come thick**: 164 a second on the default board at 50 spheres a second, mostly
+    bounces. The plan's *Too many notes* levers (*Min Speed*, *Max Voices*, the merge,
+    *Bounciness*) will matter.
+
+### As built (EM-3, 2026-11-16, branch `em-3-notes`)
+
+The emitter plan's EM-3: hits as quantized MIDI notes on the clock (rulings 62, 64, 66, 70).
+
+- **`Music/Quantize`** (plain C#, with the enum `QuantizeGrid`: *Off*, quarter, eighth,
+  sixteenth, thirty-second, eighth triplet, sixteenth triplet). `Beats(grid)`; `NextPoint`;
+  `Start(b, g, s)` = b + s·(the next grid point − b), a point within 10⁻⁹ of a step counting as
+  on it, so never before b and on a grid point it stays; `Length(L, g, s)` = L + s·(Lq − L), Lq
+  the nearest whole steps, at least one. No grid: both unchanged.
+- **`Music/HitNote`** (plain C#): `Velocity(speed, …)`, *Min Speed* to *Max Speed* onto *Min
+  Velocity* to *Max Velocity*, the fraction raised to *Velocity Curve*, 1–127; `Length(size, …)`,
+  *Min Size* to *Max Size* onto *Shortest* to *Longest* beats (the two sizes equal: *Shortest*).
+- **`Midi/HitScheduler`** (plain C#): the notes waiting (a fixed array of 512) and sounding (128);
+  `Grid`, `Strength`, `QuantizeLength`, `MaxVoices`, `SetBpm`, `Follow`; `Add(now, channel, note,
+  velocity, length)` from the main thread; `Advance(now, output)` from the clock thread (offs
+  first, then the ons due, earliest first); `Release` (ends what sounds, keeps what waits: a change
+  of port), `Clear` (ends and forgets: shutting down), `Forget` (*Panic!*: the player's Panic sends
+  the offs); `BeatAt`, `Tempo`, `OnFollowedLine`, the counts `Added`, `Merged`, `Played`,
+  `Dropped`. Its own lock, after the player's. `Add` and `Advance` allocate nothing (tested).
+  - **The beat line** (decision 7, ruling 70): the followed clock's (`ClockFollower.BeatAt`) while
+    it runs; else its own `InternalBeatSource`, from beat 0 at time 0 on the playback's Stopwatch
+    at *BPM* (the MIDI page's), or, once a followed clock stops, from the beat it reached at the
+    last tempo it measured. `Advance` reads the line every time, so a start, stop or jump of the
+    followed clock is seen as it comes.
+  - **A note** goes on when the line reaches its beat; its off is its length later, in seconds at
+    the line's tempo then (as `NotePlayer`), so a stopped clock can't hold a note. The same pitch
+    and channel at the same beat (within 10⁻⁶) is one note, the louder velocity and the longer
+    length; a hit landing on the beat a note of its pitch has just gone on at counts as merged. A
+    pitch going on while it sounds: its off, then its on. Past *Max Voices* a note is dropped,
+    though a pitch already sounding still goes on again.
+- **`Game/MidiPlayback`**: `Scheduler`; `PlayHit(hit, tuning)` (velocity and length from the hit;
+  the tuning's grid, strength, *Quantize Length* and *Max Voices* onto the scheduler; `Add` at
+  `Now`; the clock thread started). The thread runs while the scheduler has work too, and advances
+  it after the player. `Bpm` sets both; a change of clock calls `Follow` before the follower's
+  reset; `Panic` forgets the scheduler's notes, then sends the player's Panic, under the playback's
+  lock; `Close` releases them on the old port; `Shutdown` and a clock-thread error clear them.
+- **`Game/Aleatora`**: `Emitter.Hit` → `Midi.PlayHit(hit, Tuning.Emitter)`.
+- **`EmitterTuning`** gained *Emitter: notes*: `Channel` 1, `Grid` sixteenth, `Strength` 1,
+  `QuantizeLength` on, `MaxSpeed` 15, `MinVelocity` 30, `MaxVelocity` 127, `VelocityCurve` 1,
+  `Shortest` ¼ and `Longest` 2 beats, `MaxVoices` 32 (decision 11's; the grid and strength, which
+  the plan doesn't give, are C2's starting point), all added to `AleatoraTuning.asset`. Read at
+  each hit, so they can be tuned in play.
+- **The plan's test "a stopped followed clock silent"** became, after ruling 70, "a stopped
+  followed clock plays on Aleatora's own line at its last tempo".
+- **Readings for Jon at EM-7:**
+  - **A hit is placed on the beat line when Unity reports it**, at the playback's clock then, not
+    at its physics step's time. Unity runs a frame's physics steps together at the frame's start,
+    so the hits of one frame arrive together: at strength 1 nothing changes; at strength 0 the
+    rhythm is as coarse as the frame (about 16 ms at 60 frames a second). Placing each at its own
+    step's time would cost a constant delay of a frame.
+  - **When the line changes** (Reaper starts, stops or jumps; a clock is chosen or let go), every
+    note waiting goes to the new line's next grid point.
+  - **Merging takes the longer length** as well as the louder velocity.
+- **Measured** (the menu check `em3`): 9 hits in two seconds' spray at *Rate* 4, 7 note ons by the
+  check (the rest still waiting), the worst 1.47 ms off a sixteenth at 120 BPM.
+
+### As built (EM-4, 2026-11-16, branch `em-4-panel`)
+
+The emitter plan's EM-4: the panel (decisions 1, 5, 6, 9, 10, 11).
+
+- **`View/EmitterPanel`**, made by the bootstrap (`Aleatora.Panel`, `EmitterPanel.Make`) on a
+  child of the Aleatora object; it builds in its `Start`, once the menus' EventSystem is there, on
+  its own canvas (`UiKit.CreateCanvas`, sorting order −1, under the menus). A box 560 px wide at
+  the right of the screen, the full height less 24 px margins, `UiKit.PanelBox` with a
+  `ScrollColumn` in it (it holds more than the height). From the top: *Emitter* (title), *Spray*
+  (the emitter's `Spraying`, as Space); **Board**: *Set* (`ViewText.SetName`), *Tonic*, *Layout*,
+  *Seed* (`MelodiesPage.NumberRow`, now internal; anything not a whole number puts it back), *Show
+  degrees*; **Spray**: *Rate*, *Spread*, *Speed*, *Speed jitter*; **Spheres**: *Min size*, *Max
+  size*, *Bounciness*, *Lifetime*, *Max spheres*; **Notes**: *Channel*, *Grid* (Off, 1/4, 1/8,
+  1/16, 1/32, 1/8 triplet, 1/16 triplet), *Strength*, *Quantize length*, *Min speed*, *Max speed*,
+  *Min velocity*, *Max velocity*, *Velocity curve*, *Shortest*, *Longest*, *Max voices*. The
+  slider ranges are the tuning's. The kit's name column widened to 170 px.
+  - **It writes the tuning** the board and the emitter read every frame (`Tuning.Emitter`), and
+    each frame follows it, so a value set in the Inspector shows on the panel. **In the Editor,
+    what the panel changes stays on `AleatoraTuning` after play**, as an Inspector change to an
+    asset in play does (the Melodies page works on a copy; the panel doesn't, so the panel and the
+    Inspector agree). *Min size* past *Max size* pushes it up, and the other way; *Min speed* and
+    *Max speed* the same.
+  - **Beyond the plan's list**: *Speed jitter* and *Max spheres* (decision 5), *Quantize length*
+    (decision 6), the speeds, velocities, curve, lengths and *Max voices* (decision 11), as the
+    decisions name them. Not on it: chromatic weight, the K and N intervals, the octaves, the look,
+    the moving speeds (the tuning only).
+  - **Not a menu** (decision 9): it doesn't count for `MenuFocus`. **Hidden while any menu is
+    open** (C2's reading; the plan doesn't say): so the stack's navigation can't reach it and it
+    isn't drawn beside the main menu. **Hide Panel** (H, a new `Player` action) hides and shows it,
+    not while a menu is open or a text field has the keyboard.
+  - **It keeps no selection**: once the mouse buttons are up and no dropdown's list is open, a
+    selected control on it is deselected (`LateUpdate`), since a selected control takes Space
+    (Submit) and W A S D (Navigate) from the emitter. The Seed field keeps it while it is being
+    typed in.
+- **`View/UiInput`** (static): `PointerOverUi` (`EventSystem.IsPointerOverGameObject`) and
+  `IsTyping` (the selected object is a focused `TMP_InputField`).
+- **`Grid/GridSelection`**: a click over the UI picks nothing; the camera's input (orbit, zoom) is
+  off while the pointer is over the UI, judged only while no mouse button is held, so a drag begun
+  on the board orbits on over the panel and the wheel over the panel scrolls it; *Focus* does
+  nothing while typing.
+- **`Game/Emitter`**: reads no controls while typing; *Aim* ignores the pointer over the UI.
+- **`Assets/InputSystem_Actions.inputactions`**: *Hide Panel* (Button, `<Keyboard>/h`) in `Player`;
+  Unity regenerated `InputSystem_Actions.cs` on the headless test run.
+- **Readings for Jon at EM-7:**
+  - The panel covers the right 30 % of the screen; the board stays centred behind it (at
+    5 × 5 × 5 they don't overlap). The camera isn't moved to make room.
+  - With the pointer over the panel the camera neither orbits nor zooms.
+  - No gamepad navigation of the panel (decision 9: later).
+
+### As built (EM-6, 2026-11-16, branch `em-6-controls`)
+
+The emitter plan's EM-6: schemes A (mouse and keyboard) and B (gamepad) of
+`Docs/Aleatora_Emitter_Controls.md`, as written (rulings 77 and 78). Decision 8's controls are gone.
+
+- **`Game/ConeTilt`** (plain C#): the tilt as two world angles, each ±90° (`Limit`), toward +X and
+  toward +Z; `Direction` = (sin x cos z, −cos x cos z, sin z), never above the horizon; `Toward`
+  its inverse (a direction above the horizon held at it); `Turn` adds and clamps each.
+- **`Game/SprayLanding`** (plain C#): `Land`, where a body crosses the board's plane going down
+  under gravity, closed form (no gravity: only moving down); `Edge`, the index-th of count
+  directions on a cone's edge round an axis.
+- **`Game/Emitter`**, the controls rewritten:
+  - **Held** (A1, A2): `Take` (G, *Grab Emitter*; or a left click on the cone, tested against its
+    renderers' bounds, `IsOnCone`) and `Release` (G again; a menu open, so Escape; the window
+    losing the focus, unless input ignores the focus, as in the menu check; disabling). Held, the
+    pointer is locked and hidden and the cone takes *Held Color* through a property block.
+  - **The tilt** (A3, A11, B1): the mouse's delta (*Tilt*) while held, × *Tilt Sensitivity*, and
+    the right stick (*Stick Tilt*, held or not) × *Stick Tilt Speed* × the frame, turned onto the
+    camera's right and forward flattened, added to the tilt set (`ConeTilt.Turn`). The cone follows
+    it at once, or 95 % of the way in *Swing* seconds (exponential). `TiltX`, `TiltZ`, `SetTilt`,
+    `Axis`. `AimAt(point)` sets the tilt toward a point. The aim point is gone as an input:
+    `AimPoint` is now where the axis's sphere lands.
+  - **The target** (A4): each frame, a sphere of the middle size at *Speed* from where spheres
+    start, under `Physics.gravity`: the axis's landing (`AimPoint`, the disc as before) and 32 on
+    the spread's edge (`Outline`), drawn as one closed `LineRenderer` (*Aim Outline*, under the
+    Aleatora object; *Aim Line Width*, 0 none) in *Aim Material* tinted *Aim Color* through the
+    marker's property block, facing the camera.
+  - **Spraying** (A8): the rate this frame is *Rate* × the larger of on (the *Spray* latch, or the
+    left button down while held) and the trigger's pressure. The click that takes the emitter
+    doesn't spray until it is let go.
+  - **The wheel** (A6, B): notches while held (120 a notch on Windows, 1 elsewhere, judged by size)
+    and the D-pad's presses (*Wheel Step*, held or not) step *Rate* × or ÷ *Wheel Step* between
+    0.5 (`LeastWheelRate`; the panel still sets 0) and 50; with *Wheel Modifier* (the right
+    button, the left trigger) *Spread* ± *Spread Step* between 0 and 180. A table of modifier and
+    parameter, first held wins; a later modifier is one line. **The wheel writes the tuning**, as
+    the panel does (EM-4), so in the Editor what it sets stays on the asset after play.
+  - **Grid Lock** (A9; Shift either side, the left stick pressed): the move's direction turned to
+    the nearest of the six neighbours' directions from the cell under the emitter; the emitter
+    glides to that cell's middle (first to the nearest cell's middle if it is off the lines), then
+    on cell by cell while the keys are held; let go, on to the nearest cell's middle and stop
+    (`Gliding`). Off the board too (the lines go on).
+  - Raise: Q and E, and now LB and RB (B2). Moving keeps the tilt (the aim point no longer moves).
+- **`Grid/GridSelection`**: `MouseTaken` (the bootstrap: the emitter held) turns the camera's input
+  off and stops picks; `ClaimsClick` (the cone, while not held) stops the pick of the click that
+  takes it.
+- **`EmitterTuning`**: *Spread* the whole angle, 0–180 (`MostSpread`; the asset's 10 now 20);
+  `MostRate`, `LeastWheelRate`; *Emitter: controls* (*Tilt Sensitivity* 0.15, *Swing* 0, *Stick
+  Tilt Speed* 120, *Wheel Step* 1.25, *Spread Step* 5); *Aim Line Width* 0.05, *Held Color* the aim's
+  yellow; *Aim Speed* gone. All on `AleatoraTuning.asset`. The panel's *Spread* 0–180.
+- **`Assets/InputSystem_Actions.inputactions`** (`Player`): *Aim* renamed *Grid Lock* (+ right
+  Shift, the left stick pressed), *Aim Point* renamed *Stick Tilt*; new *Grab Emitter* (G),
+  *Tilt* (the mouse's delta), *Wheel* (the mouse's scroll), *Wheel Step* (the D-pad's down and
+  up), *Wheel Modifier* (the right button, the left trigger); *Raise Emitter* gains LB and RB.
+  Unity regenerated `InputSystem_Actions.cs` on the headless test run.
+- **After Jon's try (ruling 80, same branch):**
+  - *Grab Emitter* gains View; new *Spread Pressure* (the left trigger, taken off *Wheel
+    Modifier*), *Narrow Spread* (A), *Reset Tilt* (R, the right stick pressed), *Reset Position*
+    (T, Y). Unity regenerated `InputSystem_Actions.cs`.
+  - The gamepad's tilt, both triggers and the D-pad read only while the emitter is held; the left
+    stick, its press and LB and RB either way, as the keys.
+  - **`Game/TriggerRate`** (plain C#): the right trigger's rate, `Rate(pull, least, rate)`:
+    nothing up to `DeadZone` (0.02), then from *Least Wheel Rate* (0.5) at a light pull to *Rate*
+    at a full pull, geometric (equal travel, equal factor); a *Rate* at or below the least,
+    linear. The rate this frame is the larger of *Rate* × the latch or the left button and the
+    trigger's, so the latch on still sprays at *Rate* whatever the trigger.
+  - The left trigger changes *Spread* by its pull × *Spread Speed* (90° a second, on the tuning
+    and the asset) × the frame, narrowing with A held, between 0 and 180; it writes the tuning, as
+    the wheel does. The D-pad steps only *Rate* now.
+  - `ResetTilt` sets the tilt straight down (with *Swing* the cone swings there); `ResetPosition`
+    puts it where `Begin` found it, its height too, at once, keeping the tilt and ending a glide.
+    Both work held or not.
+- **Readings for Jon at EM-7:**
+  - The target shows a middle-sized sphere at *Speed*; *Speed jitter* and the sizes scatter the
+    real spray round it, and the bounces carry it on.
+  - The wheel only while held (released, it zooms).
+  - The outline faces the camera (a `LineRenderer`'s own way); in the lit aim material it shades
+    with the light.
 
 ## Cell look
 
@@ -694,7 +1009,7 @@ and IN-2's keys.
 
 - **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2, 131 as of M3,
   166 as of MIDI-1, 193 as of MIDI-2, 200 as of MIDI-3, 241 as of IN-1, 265 as of IN-2, 268 as of IN-3,
-  291 as of TH-1 (all pass):
+  291 as of TH-1, 297 as of the phrygian dominant, 310 as of EM-1 (all pass):
   - `HexCoordTests`: Q + R + S = 0; the directions as named; a neighbour is one step away and its
     opposite comes back; six distinct neighbours; distance symmetric with the triangle
     inequality; equality and hashing; rounding a centre gives the cell; points round a corner
@@ -801,7 +1116,14 @@ and IN-2's keys.
     re-run of the generator found 99.9%; the test passes). `DegreeTests` gains the four modes' masks (an unknown
     mode is now `locrian`, as `phrygian` was); `MelodiesPageTests` their names; the set count is
     21.
-  - Only the M2 tests draw random numbers, from `Rng` with fixed seeds.
+  - `CellNotesTests` (EM-1): the probabilities at chromatic weight 0 and 1, and of nothing; the
+    share-out of `european_ionian` on 61 (13 9 11 6 12 5 5) and largest remainder on 500 random
+    cases; the same seed the same board, another another; Scattered and Clustered hold the counts
+    on five shapes and 20 seeds; Clustered whole on at least 95% of 200 boards on three shapes
+    (199 or 200 as run); 40 × 40 × 40 in under 3 s; the Axes steps and every triad a triangle; the
+    centre cell on every shape to 7 × 7 × 7; the octaves by ring both ways, on 5 × 5 × 5, 1 × 1 × 1
+    and 3 × 5 × 7; the blue scaled to the likeliest; the notes.
+  - Only the M2 and EM-1 tests draw random numbers, from `Rng` with fixed seeds.
 - **The menu check** (`MenuCheck.cs`), as of M0 (10 screenshots): the template's walk (main menu,
   Settings, Play, session menu and its Settings, Quit to Menu), with no volumes and no
   AudioSource in place of the mixer check; then `CheckGrid`: the bootstrap made the grid; the
@@ -860,6 +1182,58 @@ and IN-2's keys.
   As of TH-1, `CheckTables` counts 21 sets and makes a 200-note melody from each at order 4 and
   chromatic weight 0, every note in its mode; the four theory sets' first 24 are logged. 186
   checks.
+  As of EM-1, `CheckBoard` after `CheckGrid`: the bootstrap made the board's notes; for each
+  layout, set through the tuning (`3-Board-Scattered`, `3-Board-Clustered`, `3-Board-Axes`), and
+  after rebuilds to 3 × 5 × 7 and back: every cell's degree in the mode, its octave its ring's,
+  its MIDI note, its colour its degree's, its label its degree's name; the root the root colour
+  and the likeliest other degree the likely colour. The degree counts are logged. 224 checks, 20
+  screenshots.
+  As of EM-2, `CheckEmitter` after `CheckBoard`: the bootstrap gave the scene's `Emitter` its
+  emitter; aimed at the centre cell, the cone points at it, its nozzle below its pivot and above
+  the board; the only colliders are the cells' and the spheres'; Space turns spraying on; two
+  seconds at *Rate* 4: spheres launched, at most *Max Spheres*, hits (the first eight logged),
+  every cell hit glowed (`HitAmount` 1), every hit its cell's note and at *Min Speed* or faster,
+  most within two cells of the centre (`3-Emitter`); at *Rate* 50 and *Max Spheres* 20, never
+  more than 20; under the session menu nothing launched, spraying going on once it closes; Space
+  turns it off; `Clear`. Then the spray's cost logged on 5 × 5 × 5 and 40 × 40 × 40 (a reading,
+  not a check). 244 checks, 21 screenshots.
+  As of EM-3, `CheckEmitter` puts a `RecordingOutput` in for its two seconds' spray, at 120 BPM,
+  sixteenths, strength 1 (`CheckEmitterNotes`): note ons arrived, each within 5 ms of a sixteenth
+  on the scheduler's line, each pitch a struck cell's, each velocity in *Min* to *Max Velocity*,
+  each on the emitter's channel; *Panic!* leaves nothing sounding or waiting; the output closed
+  and the values put back. At its end, Panic and nothing waiting or open before `CheckMidi`. 251
+  checks, 21 screenshots.
+  As of EM-4, `CheckPanel` after `CheckEmitter`: the panel made, showing, at the right of the
+  screen, no menu open (`3-Panel`, and scrolled to its end `3-Panel-Notes`); H hides it
+  (`3-Panel-Hidden`) and shows it; the session menu hides it. On a 21 × 21 × 21 board, a mouse
+  click queued through the input system on the panel's left margin, over a cell (`PickAt` there
+  finds one), selects nothing; one on the centre cell selects it. Set gives the board another
+  set's table, Tonic moves the centre's note up two semitones, Layout lays the board out
+  clustered and along the axes (1 on the centre), Seed 7 another board and "seven" puts 7 back,
+  Show degrees hides the labels; each of the 18 sliders sets its value on the tuning and back;
+  *Min size* past *Max size* pushes it; a *Rate* set on the tuning shows on the panel; *Quantize
+  length* sets it; Space's spraying shows on *Spray*. Then *Spray*, *Grid* 1/8 and *Channel* 3
+  from the panel: two seconds' spray into a `RecordingOutput` at 120 BPM, its note ons within 5 ms
+  of an eighth and on channel 3 (`CheckEmitterNotes`, which now takes the grid's step). The panel
+  holds no selection at the end. 293 checks, 24 screenshots.
+  As of EM-6, `CheckControls` after `CheckPanel` (*Swing* 0 for the run): a click queued on the
+  cone takes the emitter (the pointer locked and hidden), picks no cell and sprays nothing; held, a
+  click picks nothing, the camera's input is off, the left button sprays while down and stops when
+  let go; 200 counts of the mouse's movement tilt the cone 30° along the camera's right and the
+  target moves right on the screen; pushed far it stops at the horizon and comes back at once, the
+  target still landing; a jet tilted 15°, 10° first hits the target's cell or beside it; the wheel's
+  notches step *Rate* by *Wheel Step* to 50 and down to 0.5, with the right button *Spread* by
+  *Spread Step* to 180 and 0, the camera not moving; G lets go and takes, Escape lets go and opens
+  the menu. **The gamepad's checks run on a pad made for the run and made current** ("Menu Check
+  Pad"): a real XInput pad plugged in (Jon's, on 2026-11-16) has its own state format, so a queued
+  `GamepadState` on it does nothing, and the framework's `QueuedInput` presses later in the run go
+  to `Gamepad.current`. On it (ruling 80): released, the right stick, both triggers and the D-pad do
+  nothing; View takes it; the right stick tilts; R3 and R point it straight down; the right trigger
+  at 0.5 and 1 sprays at `TriggerRate`'s rate; the D-pad steps *Rate* up and back; the left trigger
+  widens *Spread*, with A narrows it, down to 0; View lets go; RB raises and LB lowers, released;
+  moved and raised, Y puts it back where T does. Grid Lock
+  (Shift and D, then D let go) ends on a cell's middle, to the right on the screen, Flat and
+  Pointy. 338 checks, 26 screenshots (*3-Controls-Horizon*, *3-Controls-Held*).
   `menucheck.sh` takes `WIDTH` and `HEIGHT` (1920 × 1080 unless given).
 - **Runs (2026-11-15):** `m0-setup` and `m0-setup2` on `main` (exit 0; the second left the tree
   clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean). M1: EditMode tests 69 of 69;
@@ -867,4 +1241,4 @@ and IN-2's keys.
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
   `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128, then 131 of 131 after the CanvasRenderer fix; `m3` at
   1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean). MIDI-1: EditMode tests 166 of 166 (the loopMIDI test
-  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3). IN-3: EditMode tests 268 of 268; `in3-final` at 1920 × 1080 and `in3-final-720` at 1280 × 720 on `in-3-page` (exit 0 each, 185 checks held, 17 screenshots; following at 150 BPM, note ons 0.5 to 0.6 ms after their ticks; sent ticks 16.66 ms apart, worst 2.07 ms off). TH-1: EditMode tests 291 of 291; `th1` at 1920 × 1080 on `th-1-tables` (exit 0, 186 checks held, 17 screenshots). TH-2 (start on 1, "Byzantine"): EditMode tests 291 of 291 on `th-2-tuning`; the menu check not run. The phrygian dominant: EditMode tests 297 of 297; `th2pd` at 1920 × 1080 on `th-2-phrygian-dominant` (exit 0, 186 checks held, 17 screenshots); its order-4 melody (seed 2112) `1 b7 b2 4 b6 5 4 3 b2 1 b2 1 b7 b6 1 b7 b6 5 b7 b6 5 4 3 b2`. The menu check's order-4 melodies (seed 2112): Lydian `#4 5 6 7 1 7 1 2 1 2 3 1 2 3 2 1 3 5 7 2 #4 6 1 6`; Phrygian `b3 4 b3 b2 b3 4 b3 4 5 b3 4 5 b6 b7 1 b2 b3 4 5 b6 b7 5 4 b3`; double harmonic `3 4 5 b6 7 5 b6 7 1 b2 1 b2 3 4 b2 3 4 5 b6 7 5 b6 7 1`; Hindu pentatonic `5 b7 1 5 b7 1 3 4 3 1 3 1 b7 5 1 b7 5 b7 5 4 5 b7 1 5`.
+  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3). IN-3: EditMode tests 268 of 268; `in3-final` at 1920 × 1080 and `in3-final-720` at 1280 × 720 on `in-3-page` (exit 0 each, 185 checks held, 17 screenshots; following at 150 BPM, note ons 0.5 to 0.6 ms after their ticks; sent ticks 16.66 ms apart, worst 2.07 ms off). TH-1: EditMode tests 291 of 291; `th1` at 1920 × 1080 on `th-1-tables` (exit 0, 186 checks held, 17 screenshots). TH-2 (start on 1, "Byzantine"): EditMode tests 291 of 291 on `th-2-tuning`; the menu check not run. The phrygian dominant: EditMode tests 297 of 297; `th2pd` at 1920 × 1080 on `th-2-phrygian-dominant` (exit 0, 186 checks held, 17 screenshots); its order-4 melody (seed 2112) `1 b7 b2 4 b6 5 4 3 b2 1 b2 1 b7 b6 1 b7 b6 5 b7 b6 5 4 3 b2`. The menu check's order-4 melodies (seed 2112): Lydian `#4 5 6 7 1 7 1 2 1 2 3 1 2 3 2 1 3 5 7 2 #4 6 1 6`; Phrygian `b3 4 b3 b2 b3 4 b3 4 5 b3 4 5 b6 b7 1 b2 b3 4 5 b6 b7 5 4 b3`; double harmonic `3 4 5 b6 7 5 b6 7 1 b2 1 b2 3 4 b2 3 4 5 b6 7 5 b6 7 1`; Hindu pentatonic `5 b7 1 5 b7 1 3 4 3 1 3 1 b7 5 1 b7 5 b7 5 4 5 b7 1 5`. EM-1 (2026-11-16): EditMode tests 310 of 310; `em1` at 1920 × 1080 on `em-1-board` (exit 0, 224 checks held, 20 screenshots). EM-2: EditMode tests 319 of 319; `em2` at 1920 × 1080 on `em-2-emitter` (exit 0, 244 checks held, 21 screenshots). EM-3: EditMode tests 363 of 363; `em3` at 1920 × 1080 on `em-3-notes` (exit 0, 251 checks held, 21 screenshots). EM-4: EditMode tests 363 of 363 (none new: the panel is checked by the menu check, as the plan says); `em4` at 1920 × 1080 on `em-4-panel` (exit 0, 293 checks held, 24 screenshots; eighths at 120 BPM, worst 1.43 ms off). EM-6: EditMode tests 383 of 383; `em6` at 1920 × 1080 on `em-6-controls` (exit 0, 329 checks held, 26 screenshots; the first run failed every gamepad check, a real XInput pad being `Gamepad.current`, so the check now makes its own). Ruling 80's changes: EditMode tests 393 of 393; `em6b` at 1920 × 1080 (exit 0, 338 checks held, 26 screenshots).

@@ -1,36 +1,28 @@
 # Aleatora: hand-off
 
-Status (2026-11-16): **The emitter plan is written and revised; it waits for Jon's go-ahead**
-(`Docs/Aleatora_Emitter_Plan.md`; Design, rulings 59 to 71). Not committed yet: the plan, rulings
-59 to 71 in Design, this doc, the plan's line in `CLAUDE.md`, and Jon's own changes: the
-`Emitter` re-enabled in `SampleScene`, the fixed timestep 0.005 s (`TimeManager.asset`), and
-`DynamicsManager.asset` re-saved by Unity in its newer format. Finished on `main`: the Markov
-plan, MIDI out, MIDI in with clock and sync, the theory plan (22 sets; EditMode tests 297 of 297;
-the menu check `th2pd`, 186 checks held).
+Status (2026-11-16): **the emitter plan is finished and merged into `main`**
+(`Docs/Aleatora_Emitter_Plan.md`, EM-1 to EM-7; ruling 82). Spheres sprayed from the emitter
+land on the board and play its notes as MIDI on Reaper's clock, with the live panel and the
+controls of schemes A (mouse and keyboard) and B (gamepad). EditMode tests 393 of 393; the menu
+check `em6b` exit 0, 338 checks held. **Nothing is in progress; the next plan is Jon's to pick.**
 
+Finished on `main`: the Markov plan, MIDI out, MIDI in with clock and sync, the theory plan, the
+emitter plan.
 Jon's loopMIDI ports: "Aleatora to Reaper", "Reaper to Aleatora", "Aleatora Test" (ruling 45).
-Jon re-enabled the `Emitter` cone in `SampleScene` (ruling 59).
+Reaper sends MIDI clock only while its transport runs (ruling 70).
+Jon has an XInput gamepad plugged in: the menu check's gamepad checks run on a pad of their own
+(Tech, *Checks*, as of EM-6).
 
 A local change to `Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF -
 Fallback.asset` (the Editor's dynamic font atlas) is left uncommitted; it isn't ours.
 
-## Next: Jon rules on the emitter plan's decisions, then EM-1
+## Next: Jon picks the next plan
 
-Decided: 2, 6, 7, the axes layout, the cells' colours (scaled to the most likely). Still open,
-each with its default: 1, 3, 4, 5, 8, 9, 10 (all but the colours) and 11. Jon says which to
-change and gives the go-ahead. EM-5 (designing the real
-controls) comes after the panel.
-Then EM-1, the board's notes (branch `em-1-board` from `main`): `Music/CellNotes`,
-`Game/EmitterTuning`, `Game/BoardNotes`, the tests, `CheckBoard`.
-
-Read for it: the emitter plan, whole (*How it works*, *Decisions*, *Code layout*, *EM-1*); Tech,
-*Grid* (*As built (M0)*) and *Melody tables* (`Unigram`, `ModeScale`); Design, rulings 59 to 71.
-
-Still open, each its own plan later (Design, *Open*): how the generator drives the grid, OSC out
-(ruling 39), the keyboard's notes (ruling 37), rhythm for the *Melodies* page.
-
-Left open, not pressing: the Lydian pull is the weakest (after ♯4: 5 43%, 3 31%); raise `pull`
-in `Tools/Markov/Theory/virtuoso.json`, or have pulls apply inside figures too (his call).
+Each its own plan (Design, *Open*): what the grid means musically, how the generator drives the
+grid, OSC out (ruling 39), the keyboard's notes (ruling 37), rhythm (every note is still a quarter
+note). **Tabled until Jon asks** (ruling 82): the emitter's MIDI controls, scheme M (the controls
+doc, *Scheme M*; ruling 79: Reaper's CC streams onto the emitter's parameters; it would read the
+MIDI in thread, Tech, *MIDI*, *As built (IN-1)*: `FeedInput`, `HeldNotes`).
 
 ## Not in any repository
 

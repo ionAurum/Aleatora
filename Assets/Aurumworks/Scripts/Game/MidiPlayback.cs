@@ -30,10 +30,14 @@ namespace Aurumworks.Aleatora
     /// ruling 40) sends Aleatora's own clock on the output with its notes, only while it keeps its
     /// own. A self-test reads neither choice.
     ///
-    /// The clock thread runs while playing or while an input is open: with Windows' 1 ms timer it
-    /// reads the inputs and advances the player on a Stopwatch, then waits on the inputs' signals for
-    /// up to a millisecond, so a message is read as it arrives. It touches no Unity API (the MIDI
-    /// plan's engineering rules).
+    /// The emitter's notes (the emitter plan, EM-3): PlayHit turns a hit into a note in the
+    /// HitScheduler, quantized on its beat line (the followed clock's while it runs, else Aleatora's
+    /// own; ruling 70); the clock thread sends them after the player's. Panic forgets them too.
+    ///
+    /// The clock thread runs while playing, while an input is open or while the emitter has notes
+    /// waiting or sounding: with Windows' 1 ms timer it reads the inputs and advances the player and
+    /// the scheduler on a Stopwatch, then waits on the inputs' signals for up to a millisecond, so a
+    /// message is read as it arrives. It touches no Unity API (the MIDI plan's engineering rules).
     /// </summary>
     public class MidiPlayback : MonoBehaviour
     {
@@ -56,6 +60,7 @@ namespace Aurumworks.Aleatora
 
         private readonly object _sync = new object(); // the output, and the clock thread's state
         private readonly NotePlayer _player = new NotePlayer();
+        private readonly HitScheduler _scheduler = new HitScheduler();
         private readonly ClockFollower _follower = new ClockFollower();
         private readonly ClockSender _sender = new ClockSender();
         private string _clockName = string.Empty; // the input to follow, "" none (under _sync)
@@ -130,6 +135,9 @@ namespace Aurumworks.Aleatora
         /// </summary>
         public NotePlayer Player => _player;
 
+        /// <summary>The emitter's notes, waiting and sounding: to read, and to set what sends nothing (Grid, Strength, MaxVoices).</summary>
+        public HitScheduler Scheduler => _scheduler;
+
         /// <summary>Seconds on the clock the player is driven by.</summary>
         public double Now => _clock.Elapsed.TotalSeconds;
 
@@ -156,7 +164,12 @@ namespace Aurumworks.Aleatora
         public int Bpm
         {
             get => _player.Bpm;
-            set => _player.SetBpm(value, Now);
+            set
+            {
+                double now = Now;
+                _player.SetBpm(value, now);
+                _scheduler.SetBpm(value, now);
+            }
         }
 
         /// <summary>The tempo playing: the followed clock's as measured while following (Bpm until it is known), else Bpm.</summary>
@@ -435,13 +448,49 @@ namespace Aurumworks.Aleatora
             _player.Stop(_output);
         }
 
-        /// <summary>A note off for each of the 128 notes on each of the 16 channels, to the open output; playing goes on.</summary>
+        /// <summary>
+        /// A note off for each of the 128 notes on each of the 16 channels, to the open output; playing
+        /// goes on. The emitter's notes waiting and sounding are forgotten.
+        /// </summary>
         public void Panic()
         {
-            _player.Panic(_output);
+            lock (_sync)
+            {
+                _scheduler.Forget();
+                _player.Panic(_output);
+            }
         }
 
-        /// <summary>Ends the player's note and sends All Notes Off on the channel in use, then closes the output. Nothing if none is open.</summary>
+        /// <summary>
+        /// An emitter's hit as a note (the emitter plan, A hit): the cell's note on the tuning's
+        /// channel, its velocity from the impact speed and its length from the sphere's size, quantized
+        /// to the tuning's grid and strength on the scheduler's beat line from now, as the hit is
+        /// reported. The clock thread starts if it isn't running. False if the hit has no note or there
+        /// was no room for it.
+        /// </summary>
+        public bool PlayHit(EmitterHit hit, EmitterTuning tuning)
+        {
+            if (hit.Note < 0 || tuning == null)
+            {
+                return false;
+            }
+
+            int velocity = HitNote.Velocity(hit.Speed, tuning.MinSpeed, tuning.MaxSpeed, tuning.MinVelocity, tuning.MaxVelocity,
+                tuning.VelocityCurve);
+            double length = HitNote.Length(hit.Size, tuning.MinSize, tuning.MaxSize, tuning.Shortest, tuning.Longest);
+            lock (_sync)
+            {
+                _scheduler.Grid = Quantize.Beats(tuning.Grid);
+                _scheduler.Strength = tuning.Strength;
+                _scheduler.QuantizeLength = tuning.QuantizeLength;
+                _scheduler.MaxVoices = tuning.MaxVoices;
+                bool added = _scheduler.Add(Now, tuning.Channel, hit.Note, velocity, length);
+                StartClock();
+                return added;
+            }
+        }
+
+        /// <summary>Ends the player's note and the emitter's notes sounding and sends All Notes Off on the channel in use, then closes the output. Nothing if none is open.</summary>
         public void Close()
         {
             lock (_sync)
@@ -454,6 +503,7 @@ namespace Aurumworks.Aleatora
                 IMidiOutput output = _output;
                 _output = null;
                 _player.Release(output);
+                _scheduler.Release(output);
                 output.Send(MidiMessage.AllNotesOff(_player.Channel));
                 output.Dispose();
             }
@@ -514,6 +564,7 @@ namespace Aurumworks.Aleatora
             if (followed != _followed)
             {
                 _followed = followed;
+                _scheduler.Follow(followed != null ? _follower : null, Now); // from the beat it is at, before the reset
                 _follower.Reset();
                 _player.Follow(followed != null ? _follower : null, Now, _output);
             }
@@ -547,10 +598,11 @@ namespace Aurumworks.Aleatora
             _signals = signals;
         }
 
-        // Under _sync: starts the clock thread if it has work (playing, or an input open) and isn't running.
+        // Under _sync: starts the clock thread if it has work (playing, an input open, or the emitter's
+        // notes waiting or sounding) and isn't running.
         private void StartClock()
         {
-            if (_running || (!_player.IsPlaying && _inputs.Count == 0))
+            if (_running || !HasWork)
             {
                 return;
             }
@@ -637,8 +689,12 @@ namespace Aurumworks.Aleatora
             return true;
         }
 
-        // The clock thread: reads the inputs and advances the player, then waits up to a millisecond
-        // for an input's signal; it ends once nothing plays and no input is open. It touches no Unity
+        // Under _sync: whether the clock thread has work.
+        private bool HasWork => _player.IsPlaying || _inputs.Count > 0 || _scheduler.HasWork;
+
+        // The clock thread: reads the inputs and advances the player and the scheduler, then waits up
+        // to a millisecond for an input's signal; it ends once nothing plays, no input is open and the
+        // emitter has no notes. It touches no Unity
         // API; an exception stops the player and the thread and is logged from Update.
         private void Run()
         {
@@ -650,7 +706,7 @@ namespace Aurumworks.Aleatora
                     WaitHandle[] signals;
                     lock (_sync)
                     {
-                        if (_quitting || (!_player.IsPlaying && _inputs.Count == 0))
+                        if (_quitting || !HasWork)
                         {
                             _running = false;
                             return;
@@ -664,6 +720,7 @@ namespace Aurumworks.Aleatora
                         }
 
                         _player.Advance(now, _output);
+                        _scheduler.Advance(now, _output);
                         signals = _signals;
                     }
 
@@ -686,6 +743,7 @@ namespace Aurumworks.Aleatora
                     try
                     {
                         _player.Stop(_output);
+                        _scheduler.Clear(_output);
                     }
                     catch (Exception)
                     {
@@ -712,6 +770,7 @@ namespace Aurumworks.Aleatora
             lock (_sync)
             {
                 _player.Stop(_output);
+                _scheduler.Clear(_output);
                 _quitting = true;
                 thread = _thread;
                 _thread = null;

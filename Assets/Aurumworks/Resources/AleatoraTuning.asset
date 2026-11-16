@@ -50,3 +50,63 @@ MonoBehaviour:
     _bpm: 120
     _velocity: 100
     _noteLength: 0.9
+  _emitter:
+    _set: european_ionian
+    _tonic: 0
+    _layout: 0
+    _seed: 2112
+    _chromaticWeight: 0
+    _kInterval: 2
+    _nInterval: 2
+    _lowestOctave: 3
+    _octaves: 3
+    _outwardLower: 0
+    _rootColor: {r: 1, g: 0, b: 0, a: 1}
+    _unlikelyColor: {r: 1, g: 1, b: 1, a: 1}
+    _likelyColor: {r: 0, g: 0, b: 1, a: 1}
+    _showDegrees: 1
+    _labelColorFromTheme: 0
+    _labelColor: {r: 0.1, g: 0.1, b: 0.1, a: 1}
+    _labelSize: 5
+    _labelHeight: 0.01
+    _rate: 4
+    _spread: 20
+    _speed: 8
+    _speedJitter: 10
+    _minSize: 0.2
+    _maxSize: 0.5
+    _bounciness: 0.6
+    _lifetime: 8
+    _maxSpheres: 300
+    _minSpeed: 1
+    _logHits: 0
+    _channel: 1
+    _grid: 3
+    _strength: 1
+    _quantizeLength: 1
+    _maxSpeed: 15
+    _minVelocity: 30
+    _maxVelocity: 127
+    _velocityCurve: 1
+    _shortest: 0.25
+    _longest: 2
+    _maxVoices: 32
+    _moveSpeed: 6
+    _raiseSpeed: 4
+    _minHeight: 2
+    _maxHeight: 30
+    _tiltSensitivity: 0.15
+    _swing: 0
+    _stickTiltSpeed: 120
+    _wheelStep: 1.25
+    _spreadStep: 5
+    _spreadSpeed: 90
+    _sphereMaterial: {fileID: 2100000, guid: 31f2b24e3d4248d409519971af8dbd52, type: 2}
+    _aimMaterial: {fileID: 2100000, guid: 31f2b24e3d4248d409519971af8dbd52, type: 2}
+    _aimColor: {r: 1, g: 0.85, b: 0, a: 1}
+    _aimSize: 0.4
+    _aimLineWidth: 0.05
+    _heldColor: {r: 1, g: 0.85, b: 0, a: 1}
+    _hitColor: {r: 1, g: 1, b: 1, a: 1}
+    _hitGlow: 1
+    _hitFade: 0.25

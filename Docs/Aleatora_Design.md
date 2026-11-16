@@ -224,6 +224,53 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     white. Jon: "lock that in."
 72. **The emitter plan's other decisions stand as their defaults; go-ahead for EM-1**
     (2026-11-16). Jon: "Defaults are fine." So decisions 1, 3, 4, 5, 8, 9, 10 and 11 as written.
+73. **The cells' labels are near-black; go-ahead for EM-2** (2026-11-16; changes decision 10's
+    label colour). Jon looked at EM-1: the white labels are too washed out on the pale cells, so
+    *Label Color From Theme* is off and the labels take *Label Color* (near-black, 0.1 grey).
+74. **EM-2 works well enough for now; go-ahead for EM-3** (2026-11-16). Jon: "It works well
+    enough for now. I need to think on the user interaction." EM-2's open readings (moving carries
+    the aim point, no raise on the gamepad, *Spray* as two actions) wait for EM-5.
+75. **EM-3 works; go-ahead for EM-4** (2026-11-16). Jon: "EM-3 work. Go ahead with EM-4." The
+    hits' notes reach Reaper; EM-3's readings stand.
+76. **EM-4 works well; go-ahead for EM-5** (2026-11-16). Jon: "I've tried EM-4 and it works
+    well. Start EM-5." EM-4's readings stand (the panel writes the tuning; hidden under a menu; H;
+    no orbit or zoom over it; the extra controls on it).
+77. **The emitter's controls: direct mouse control** (2026-11-16; EM-5's brief). Jon: "I want to
+    give the user direct mouse control over the Emitter." The player selects and deselects the
+    emitter; the mouse's X and Y tilt the cone 0–180° on each of two axes; left button down sprays,
+    up stops; the wheel sets the rate; right button with the wheel sets the spread, 0–180°, and the
+    yellow target matches it; W A S D still move it, Shift held locks the movement to the grid; Q
+    and E move it up and down. Later, not now: more modifiers for the wheel, and keys for scales,
+    keys, rhythm patterns and the like. He will play with mouse and keyboard, gamepad, a MIDI
+    control surface and a MIDI keyboard or pads, with his attention on Aleatora alone. Worked out
+    in `Docs/Aleatora_Emitter_Controls.md`, its open points with defaults.
+78. **The controls: schemes A and B in EM-6, as written; M later** (2026-11-16). Jon: "Your
+    planning decision for building A plus B now then M later down the road is accepted. I also
+    accept your A 1-9 defaults", and A10, A11 and B1 to B3 "all as written". So EM-6 builds the
+    mouse and keyboard (A) and the gamepad (B) as `Docs/Aleatora_Emitter_Controls.md` has them;
+    the MIDI controls (M) are a later milestone.
+79. **The MIDI controls are for CC streams from Reaper** (2026-11-16; the controls doc's M5). Jon:
+    "I don't have many hardware MIDI controllers with knobs, really. I wanted to allow Reaper stuff
+    (track automation streams, plugins' LFOs, and such) that produce CC messages to be mappable to
+    Aleatora Emitter parameters." Scheme M is written for that (the controls doc, *Scheme M*).
+80. **EM-6 tried: the gamepad takes the emitter, its triggers are analog, both schemes reset**
+    (2026-11-16). Jon, after trying EM-6: the gamepad needs an equivalent of G; a spray-angle
+    control, "left trigger to widen and A + left trigger to narrow"; the right trigger analog, "the
+    more trigger pull distance controls spray rate"; both schemes need "reset rotation" and "reset
+    position". Picked from C2's options the same day: **View** takes and lets go, and the gamepad's
+    tilt, triggers and D-pad work only while the emitter is held (the left stick, LB and RB either
+    way, as W A S D and Q/E); the right trigger sweeps from 0.5 a second at a light pull to *Rate*
+    at a full pull, on the wheel's geometric curve (the D-pad still sets *Rate*, the ceiling);
+    **R** and **R3** point the cone straight down, **T** and **Y** put it back where it began,
+    its height too. Changes B and B3's table in the controls doc (the left trigger no longer the
+    D-pad's modifier).
+81. **EM-6 works well** (2026-11-16). Jon, after trying ruling 80's changes: "I've tried ruling
+    80's EM-6 changes and it works well." EM-6 is done; its readings (Tech, *As built (EM-6)*)
+    carry into EM-7, where Jon plays it.
+82. **EM-7: the emitter plan approved and merged; scheme M tabled** (2026-11-16). Jon: "I
+    approve. Commit anything outstanding and merge both branches into `main`. We can table M until
+    I ask for it sometime in the future." The readings of EM-3 and EM-6 stand as built. The MIDI
+    controls (scheme M, ruling 79) wait until Jon asks for them.
 
 ## Open, each its own plan later (the plan's decision 7)
 
@@ -234,6 +281,8 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
   and sync (rulings 37 to 47). Jon means to teach Aleatora Reaper's OSC (ruling 39).
 - What the keyboard's notes do (ruling 37: chords and the like, later).
 - Rhythm: every note is still a quarter note (the MIDI plan's *Later*).
+- The emitter's MIDI controls (scheme M, `Docs/Aleatora_Emitter_Controls.md`; ruling 79),
+  tabled until Jon asks (ruling 82).
 - More modes for the Markov tables: done, five from theory (rulings 48 to 58,
   `Docs/Aleatora_Theory_Plan.md`, finished).
 
