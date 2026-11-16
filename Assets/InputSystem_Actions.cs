@@ -191,6 +191,16 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""initialStateCheck"": true,
                     ""priority"": 0
+                },
+                {
+                    ""name"": ""Hide Panel"",
+                    ""type"": ""Button"",
+                    ""id"": ""3f6a1c52-8d47-4e2b-9b1e-6c0d2a7e4f91"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 }
             ],
             ""bindings"": [
@@ -400,6 +410,17 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": "";Gamepad"",
                     ""action"": ""Aim Point"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b81e4d07-5a2c-4f63-a9d8-2e7c1f05b6a3"",
+                    ""path"": ""<Keyboard>/h"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Hide Panel"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1039,6 +1060,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Player_RaiseEmitter = m_Player.FindAction("Raise Emitter", throwIfNotFound: true);
         m_Player_Aim = m_Player.FindAction("Aim", throwIfNotFound: true);
         m_Player_AimPoint = m_Player.FindAction("Aim Point", throwIfNotFound: true);
+        m_Player_HidePanel = m_Player.FindAction("Hide Panel", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1143,6 +1165,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_RaiseEmitter;
     private readonly InputAction m_Player_Aim;
     private readonly InputAction m_Player_AimPoint;
+    private readonly InputAction m_Player_HidePanel;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1194,6 +1217,10 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/AimPoint".
         /// </summary>
         public InputAction @AimPoint => m_Wrapper.m_Player_AimPoint;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/HidePanel".
+        /// </summary>
+        public InputAction @HidePanel => m_Wrapper.m_Player_HidePanel;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1250,6 +1277,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @AimPoint.started += instance.OnAimPoint;
             @AimPoint.performed += instance.OnAimPoint;
             @AimPoint.canceled += instance.OnAimPoint;
+            @HidePanel.started += instance.OnHidePanel;
+            @HidePanel.performed += instance.OnHidePanel;
+            @HidePanel.canceled += instance.OnHidePanel;
         }
 
         /// <summary>
@@ -1291,6 +1321,9 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @AimPoint.started -= instance.OnAimPoint;
             @AimPoint.performed -= instance.OnAimPoint;
             @AimPoint.canceled -= instance.OnAimPoint;
+            @HidePanel.started -= instance.OnHidePanel;
+            @HidePanel.performed -= instance.OnHidePanel;
+            @HidePanel.canceled -= instance.OnHidePanel;
         }
 
         /// <summary>
@@ -1672,6 +1705,13 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnAimPoint(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Hide Panel" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnHidePanel(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

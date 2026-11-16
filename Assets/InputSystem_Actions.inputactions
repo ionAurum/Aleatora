@@ -105,6 +105,16 @@
                     "interactions": "",
                     "initialStateCheck": true,
                     "priority": 0
+                },
+                {
+                    "name": "Hide Panel",
+                    "type": "Button",
+                    "id": "3f6a1c52-8d47-4e2b-9b1e-6c0d2a7e4f91",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
                 }
             ],
             "bindings": [
@@ -314,6 +324,17 @@
                     "processors": "",
                     "groups": ";Gamepad",
                     "action": "Aim Point",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b81e4d07-5a2c-4f63-a9d8-2e7c1f05b6a3",
+                    "path": "<Keyboard>/h",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Hide Panel",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

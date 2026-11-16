@@ -18,7 +18,8 @@ namespace Aurumworks.Aleatora
     /// (the aim point goes with it), Raise Emitter lowers and raises it, Aim held has the aim point
     /// follow the pointer, Aim Point moves it. The cone always points at the aim point, which a
     /// marker shows on the board. While a menu is open it reads no input and launches nothing;
-    /// spheres in the air land. Its tuning (EmitterTuning) is read every frame. The bootstrap
+    /// spheres in the air land. While a text field has the keyboard (the panel's Seed) it reads no
+    /// input either, and Aim ignores the pointer over the UI (EM-4). Its tuning (EmitterTuning) is read every frame. The bootstrap
     /// (Aleatora) adds it to the scene's Emitter object.
     /// </summary>
     public class Emitter : MonoBehaviour
@@ -191,7 +192,7 @@ namespace Aurumworks.Aleatora
             }
 
             bool menuOpen = MenuFocus.IsAnyOpen;
-            if (!menuOpen)
+            if (!menuOpen && !UiInput.IsTyping)
             {
                 ReadControls(Time.deltaTime);
             }
@@ -273,7 +274,7 @@ namespace Aurumworks.Aleatora
             float raise = _raiseAction != null ? _raiseAction.ReadValue<float>() : 0f;
             _height += raise * _tuning.RaiseSpeed * deltaTime;
 
-            if (_aimAction != null && _aimAction.IsPressed() && Pointer.current != null
+            if (_aimAction != null && _aimAction.IsPressed() && Pointer.current != null && !UiInput.PointerOverUi
                 && PointOnBoard(Pointer.current.position.ReadValue(), out Vector3 pointed))
             {
                 _aimPoint = pointed;

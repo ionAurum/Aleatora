@@ -716,8 +716,8 @@ namespace Aurumworks.Aleatora
 
         private static TextMeshProUGUI Label(Button button) => button.GetComponentInChildren<TextMeshProUGUI>();
 
-        // A whole number in a field labelled as the kit labels its controls (Seed, BPM), named "InputField: <label>".
-        private static TMP_InputField NumberRow(Transform parent, string label, string text, Action<string> changed, float labelWidth,
+        /// <summary>A whole number in a field labelled as the kit labels its controls (Seed, BPM), named "InputField: &lt;label&gt;"; the emitter's panel's Seed too.</summary>
+        internal static TMP_InputField NumberRow(Transform parent, string label, string text, Action<string> changed, float labelWidth,
             int characterLimit)
         {
             UiTheme theme = UiKit.Theme;

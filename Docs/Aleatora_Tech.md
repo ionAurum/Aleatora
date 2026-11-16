@@ -14,7 +14,7 @@ One section per system, each with what was built under "As built". The plans are
 - *Melody generator* (as built)
 - *Melodies page* (as built)
 - *Board notes* (the emitter plan's EM-1, as built)
-- *Emitter* (the emitter plan's EM-2 and EM-3, as built)
+- *Emitter* (the emitter plan's EM-2, EM-3 and EM-4, as built)
 - *Cell look* (the gel pad shader, as built)
 - *MIDI* (as built)
 - *Checks*
@@ -30,7 +30,7 @@ All in Assembly-CSharp (no asmdefs), namespace `Aurumworks.Aleatora`, under
 | `Music/` (M1; M2 from `Rng` on) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing`; `CellNotes` (with `CellLayout`, EM-1); `Quantize` (with `QuantizeGrid`), `HitNote` (EM-3) | No |
 | `Midi/` (MIDI-1) | `MidiMessage`, `IMidiOutput`, `MidiPorts`, `RecordingOutput`; internal `WinMm`, `WinMmOutput`; `NotePlayer`, `INoteSource`, `MelodySource` (MIDI-2, 3); `IMidiInput`, `TimedMessage`, `FeedInput`, `HeldNotes`, internal `WinMmInput` (IN-1); `IBeatSource`, `InternalBeatSource`, `ClockFollower`, `ClockSender` (IN-2); `HitScheduler` (EM-3) | No |
 | `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2), `MelodyViewTuning` (M3), `MidiTuning`, `MidiPlayback` (MIDI-1); `EmitterTuning`, `BoardNotes` (EM-1); `Emitter`, `EmitterSphere`, and the plain C# `SprayDraws` (with `SprayDraw`) and `EmitterHit` (EM-2) | Yes, but for the plain C# |
-| `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip`; the static `ViewText` and `ViewMesh`; the static `MidiPage` (MIDI-3), `MidiMonitorPage` (IN-3) | Yes |
+| `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip`; the static `ViewText` and `ViewMesh`; the static `MidiPage` (MIDI-3), `MidiMonitorPage` (IN-3); `EmitterPanel` and the static `UiInput` (EM-4) | Yes |
 | (root) | `MainMenu`, `SessionMenu`, `SettingsMenu`, `MenuCheck` | Yes |
 | `Editor/`, `Editor/Tests/` | `PlayerBuild`, `TuningMaker` (*Aleatora > Make Tuning*), EditMode tests | Editor |
 
@@ -433,6 +433,55 @@ The emitter plan's EM-3: hits as quantized MIDI notes on the clock (rulings 62, 
   - **Merging takes the longer length** as well as the louder velocity.
 - **Measured** (the menu check `em3`): 9 hits in two seconds' spray at *Rate* 4, 7 note ons by the
   check (the rest still waiting), the worst 1.47 ms off a sixteenth at 120 BPM.
+
+### As built (EM-4, 2026-11-16, branch `em-4-panel`)
+
+The emitter plan's EM-4: the panel (decisions 1, 5, 6, 9, 10, 11).
+
+- **`View/EmitterPanel`**, made by the bootstrap (`Aleatora.Panel`, `EmitterPanel.Make`) on a
+  child of the Aleatora object; it builds in its `Start`, once the menus' EventSystem is there, on
+  its own canvas (`UiKit.CreateCanvas`, sorting order −1, under the menus). A box 560 px wide at
+  the right of the screen, the full height less 24 px margins, `UiKit.PanelBox` with a
+  `ScrollColumn` in it (it holds more than the height). From the top: *Emitter* (title), *Spray*
+  (the emitter's `Spraying`, as Space); **Board**: *Set* (`ViewText.SetName`), *Tonic*, *Layout*,
+  *Seed* (`MelodiesPage.NumberRow`, now internal; anything not a whole number puts it back), *Show
+  degrees*; **Spray**: *Rate*, *Spread*, *Speed*, *Speed jitter*; **Spheres**: *Min size*, *Max
+  size*, *Bounciness*, *Lifetime*, *Max spheres*; **Notes**: *Channel*, *Grid* (Off, 1/4, 1/8,
+  1/16, 1/32, 1/8 triplet, 1/16 triplet), *Strength*, *Quantize length*, *Min speed*, *Max speed*,
+  *Min velocity*, *Max velocity*, *Velocity curve*, *Shortest*, *Longest*, *Max voices*. The
+  slider ranges are the tuning's. The kit's name column widened to 170 px.
+  - **It writes the tuning** the board and the emitter read every frame (`Tuning.Emitter`), and
+    each frame follows it, so a value set in the Inspector shows on the panel. **In the Editor,
+    what the panel changes stays on `AleatoraTuning` after play**, as an Inspector change to an
+    asset in play does (the Melodies page works on a copy; the panel doesn't, so the panel and the
+    Inspector agree). *Min size* past *Max size* pushes it up, and the other way; *Min speed* and
+    *Max speed* the same.
+  - **Beyond the plan's list**: *Speed jitter* and *Max spheres* (decision 5), *Quantize length*
+    (decision 6), the speeds, velocities, curve, lengths and *Max voices* (decision 11), as the
+    decisions name them. Not on it: chromatic weight, the K and N intervals, the octaves, the look,
+    the moving speeds (the tuning only).
+  - **Not a menu** (decision 9): it doesn't count for `MenuFocus`. **Hidden while any menu is
+    open** (C2's reading; the plan doesn't say): so the stack's navigation can't reach it and it
+    isn't drawn beside the main menu. **Hide Panel** (H, a new `Player` action) hides and shows it,
+    not while a menu is open or a text field has the keyboard.
+  - **It keeps no selection**: once the mouse buttons are up and no dropdown's list is open, a
+    selected control on it is deselected (`LateUpdate`), since a selected control takes Space
+    (Submit) and W A S D (Navigate) from the emitter. The Seed field keeps it while it is being
+    typed in.
+- **`View/UiInput`** (static): `PointerOverUi` (`EventSystem.IsPointerOverGameObject`) and
+  `IsTyping` (the selected object is a focused `TMP_InputField`).
+- **`Grid/GridSelection`**: a click over the UI picks nothing; the camera's input (orbit, zoom) is
+  off while the pointer is over the UI, judged only while no mouse button is held, so a drag begun
+  on the board orbits on over the panel and the wheel over the panel scrolls it; *Focus* does
+  nothing while typing.
+- **`Game/Emitter`**: reads no controls while typing; *Aim* ignores the pointer over the UI.
+- **`Assets/InputSystem_Actions.inputactions`**: *Hide Panel* (Button, `<Keyboard>/h`) in `Player`;
+  Unity regenerated `InputSystem_Actions.cs` on the headless test run.
+- **Readings for Jon at EM-7:**
+  - The panel covers the right 30 % of the screen; the board stays centred behind it (at
+    5 × 5 × 5 they don't overlap). The camera isn't moved to make room.
+  - With the pointer over the panel the camera neither orbits nor zooms.
+  - No gamepad navigation of the panel (decision 9: later).
 
 ## Cell look
 
@@ -1076,6 +1125,19 @@ and IN-2's keys.
   each on the emitter's channel; *Panic!* leaves nothing sounding or waiting; the output closed
   and the values put back. At its end, Panic and nothing waiting or open before `CheckMidi`. 251
   checks, 21 screenshots.
+  As of EM-4, `CheckPanel` after `CheckEmitter`: the panel made, showing, at the right of the
+  screen, no menu open (`3-Panel`, and scrolled to its end `3-Panel-Notes`); H hides it
+  (`3-Panel-Hidden`) and shows it; the session menu hides it. On a 21 × 21 × 21 board, a mouse
+  click queued through the input system on the panel's left margin, over a cell (`PickAt` there
+  finds one), selects nothing; one on the centre cell selects it. Set gives the board another
+  set's table, Tonic moves the centre's note up two semitones, Layout lays the board out
+  clustered and along the axes (1 on the centre), Seed 7 another board and "seven" puts 7 back,
+  Show degrees hides the labels; each of the 18 sliders sets its value on the tuning and back;
+  *Min size* past *Max size* pushes it; a *Rate* set on the tuning shows on the panel; *Quantize
+  length* sets it; Space's spraying shows on *Spray*. Then *Spray*, *Grid* 1/8 and *Channel* 3
+  from the panel: two seconds' spray into a `RecordingOutput` at 120 BPM, its note ons within 5 ms
+  of an eighth and on channel 3 (`CheckEmitterNotes`, which now takes the grid's step). The panel
+  holds no selection at the end. 293 checks, 24 screenshots.
   `menucheck.sh` takes `WIDTH` and `HEIGHT` (1920 × 1080 unless given).
 - **Runs (2026-11-15):** `m0-setup` and `m0-setup2` on `main` (exit 0; the second left the tree
   clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean). M1: EditMode tests 69 of 69;
@@ -1083,4 +1145,4 @@ and IN-2's keys.
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
   `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128, then 131 of 131 after the CanvasRenderer fix; `m3` at
   1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean). MIDI-1: EditMode tests 166 of 166 (the loopMIDI test
-  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3). IN-3: EditMode tests 268 of 268; `in3-final` at 1920 × 1080 and `in3-final-720` at 1280 × 720 on `in-3-page` (exit 0 each, 185 checks held, 17 screenshots; following at 150 BPM, note ons 0.5 to 0.6 ms after their ticks; sent ticks 16.66 ms apart, worst 2.07 ms off). TH-1: EditMode tests 291 of 291; `th1` at 1920 × 1080 on `th-1-tables` (exit 0, 186 checks held, 17 screenshots). TH-2 (start on 1, "Byzantine"): EditMode tests 291 of 291 on `th-2-tuning`; the menu check not run. The phrygian dominant: EditMode tests 297 of 297; `th2pd` at 1920 × 1080 on `th-2-phrygian-dominant` (exit 0, 186 checks held, 17 screenshots); its order-4 melody (seed 2112) `1 b7 b2 4 b6 5 4 3 b2 1 b2 1 b7 b6 1 b7 b6 5 b7 b6 5 4 3 b2`. The menu check's order-4 melodies (seed 2112): Lydian `#4 5 6 7 1 7 1 2 1 2 3 1 2 3 2 1 3 5 7 2 #4 6 1 6`; Phrygian `b3 4 b3 b2 b3 4 b3 4 5 b3 4 5 b6 b7 1 b2 b3 4 5 b6 b7 5 4 b3`; double harmonic `3 4 5 b6 7 5 b6 7 1 b2 1 b2 3 4 b2 3 4 5 b6 7 5 b6 7 1`; Hindu pentatonic `5 b7 1 5 b7 1 3 4 3 1 3 1 b7 5 1 b7 5 b7 5 4 5 b7 1 5`. EM-1 (2026-11-16): EditMode tests 310 of 310; `em1` at 1920 × 1080 on `em-1-board` (exit 0, 224 checks held, 20 screenshots). EM-2: EditMode tests 319 of 319; `em2` at 1920 × 1080 on `em-2-emitter` (exit 0, 244 checks held, 21 screenshots). EM-3: EditMode tests 363 of 363; `em3` at 1920 × 1080 on `em-3-notes` (exit 0, 251 checks held, 21 screenshots).
+  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3). IN-3: EditMode tests 268 of 268; `in3-final` at 1920 × 1080 and `in3-final-720` at 1280 × 720 on `in-3-page` (exit 0 each, 185 checks held, 17 screenshots; following at 150 BPM, note ons 0.5 to 0.6 ms after their ticks; sent ticks 16.66 ms apart, worst 2.07 ms off). TH-1: EditMode tests 291 of 291; `th1` at 1920 × 1080 on `th-1-tables` (exit 0, 186 checks held, 17 screenshots). TH-2 (start on 1, "Byzantine"): EditMode tests 291 of 291 on `th-2-tuning`; the menu check not run. The phrygian dominant: EditMode tests 297 of 297; `th2pd` at 1920 × 1080 on `th-2-phrygian-dominant` (exit 0, 186 checks held, 17 screenshots); its order-4 melody (seed 2112) `1 b7 b2 4 b6 5 4 3 b2 1 b2 1 b7 b6 1 b7 b6 5 b7 b6 5 4 3 b2`. The menu check's order-4 melodies (seed 2112): Lydian `#4 5 6 7 1 7 1 2 1 2 3 1 2 3 2 1 3 5 7 2 #4 6 1 6`; Phrygian `b3 4 b3 b2 b3 4 b3 4 5 b3 4 5 b6 b7 1 b2 b3 4 5 b6 b7 5 4 b3`; double harmonic `3 4 5 b6 7 5 b6 7 1 b2 1 b2 3 4 b2 3 4 5 b6 7 5 b6 7 1`; Hindu pentatonic `5 b7 1 5 b7 1 3 4 3 1 3 1 b7 5 1 b7 5 b7 5 4 5 b7 1 5`. EM-1 (2026-11-16): EditMode tests 310 of 310; `em1` at 1920 × 1080 on `em-1-board` (exit 0, 224 checks held, 20 screenshots). EM-2: EditMode tests 319 of 319; `em2` at 1920 × 1080 on `em-2-emitter` (exit 0, 244 checks held, 21 screenshots). EM-3: EditMode tests 363 of 363; `em3` at 1920 × 1080 on `em-3-notes` (exit 0, 251 checks held, 21 screenshots). EM-4: EditMode tests 363 of 363 (none new: the panel is checked by the menu check, as the plan says); `em4` at 1920 × 1080 on `em-4-panel` (exit 0, 293 checks held, 24 screenshots; eighths at 120 BPM, worst 1.43 ms off).

@@ -230,6 +230,8 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 74. **EM-2 works well enough for now; go-ahead for EM-3** (2026-11-16). Jon: "It works well
     enough for now. I need to think on the user interaction." EM-2's open readings (moving carries
     the aim point, no raise on the gamepad, *Spray* as two actions) wait for EM-5.
+75. **EM-3 works; go-ahead for EM-4** (2026-11-16). Jon: "EM-3 work. Go ahead with EM-4." The
+    hits' notes reach Reaper; EM-3's readings stand.
 
 ## Open, each its own plan later (the plan's decision 7)
 

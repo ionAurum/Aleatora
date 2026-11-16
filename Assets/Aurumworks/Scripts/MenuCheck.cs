@@ -127,6 +127,9 @@ namespace Aurumworks.Aleatora
             // Its notes (EM-3): the hits as quantized MIDI notes on the clock thread.
             yield return CheckEmitter();
 
+            // The emitter's panel (EM-4): its controls each change what they name, H hides it, clicks on it stay on it.
+            yield return CheckPanel();
+
             // The melody tables came with the player and read.
             CheckTables();
 
@@ -360,7 +363,7 @@ namespace Aurumworks.Aleatora
             SelfTest.Check(noted == hits.Count, $"every hit carries its cell's note: {noted} of {hits.Count}");
             SelfTest.Check(hard == hits.Count, $"every hit was at Min Speed or faster: {hard} of {hits.Count}");
             SelfTest.Check(near * 2 > hits.Count, $"most hits are within two cells of the centre cell aimed at: {near} of {hits.Count}");
-            CheckEmitterNotes(midi, recording, tuning, hits);
+            CheckEmitterNotes(midi, recording, tuning, hits, 0.25d, "a sixteenth");
             midi.Close();
             midi.Bpm = bpmBefore;
             tuning.Grid = gridBefore;
@@ -418,10 +421,12 @@ namespace Aurumworks.Aleatora
         }
 
         // EM-3: the hits of two seconds' spray went out as notes, on the clock thread, into the
-        // RecordingOutput: note ons arrived, each within 5 ms of a sixteenth on the scheduler's beat
-        // line at 120 BPM; each pitch a struck cell's; each velocity in Min to Max Velocity. Panic
-        // leaves nothing sounding and forgets what waits.
-        private static void CheckEmitterNotes(MidiPlayback midi, RecordingOutput recording, EmitterTuning tuning, List<EmitterHit> hits)
+        // RecordingOutput: note ons arrived, each within 5 ms of a grid point (step beats apart: a
+        // sixteenth, ¼) on the scheduler's beat line at 120 BPM; each pitch a struck cell's; each
+        // velocity in Min to Max Velocity; each on the tuning's channel. Panic leaves nothing
+        // sounding and forgets what waits.
+        private static void CheckEmitterNotes(MidiPlayback midi, RecordingOutput recording, EmitterTuning tuning, List<EmitterHit> hits,
+            double step, string stepName)
         {
             RecordingOutput.Sent[] sent = recording.Messages;
             var pitches = new HashSet<int>();
@@ -441,7 +446,7 @@ namespace Aurumworks.Aleatora
 
                 ons++;
                 double beat = midi.Scheduler.BeatAt(one.Time);
-                double error = Math.Abs(beat - Math.Round(beat * 4d) / 4d) * 60d / 120d;
+                double error = Math.Abs(beat - (Math.Round(beat / step) * step)) * 60d / 120d;
                 worst = Math.Max(worst, error);
                 offGrid += error > 0.005d ? 1 : 0;
                 wrongPitch += pitches.Contains(MidiMessage.Data1(one.Message)) ? 0 : 1;
@@ -452,16 +457,355 @@ namespace Aurumworks.Aleatora
 
             HitScheduler scheduler = midi.Scheduler;
             Debug.Log($"Menu check: emitter notes: {hits.Count} hits, {ons} note ons, {scheduler.Merged} merged, {scheduler.Dropped} dropped, "
-                + $"the worst {worst * 1000d:0.00} ms off a sixteenth; the first: "
+                + $"the worst {worst * 1000d:0.00} ms off {stepName}; the first: "
                 + string.Join("; ", Array.ConvertAll(sent, one => one.ToString()), 0, Math.Min(12, sent.Length)));
             SelfTest.Check(ons > 0, $"the hits went out as note ons: {ons} for {hits.Count} hits");
-            SelfTest.Check(offGrid == 0, $"each note on within 5 ms of a sixteenth at 120 BPM: {offGrid} off, the worst {worst * 1000d:0.00} ms");
+            SelfTest.Check(offGrid == 0, $"each note on within 5 ms of {stepName} at 120 BPM: {offGrid} off, the worst {worst * 1000d:0.00} ms");
             SelfTest.Check(wrongPitch == 0, $"each note on is a struck cell's note: {wrongPitch} not");
             SelfTest.Check(wrongVelocity == 0, $"each velocity in {tuning.MinVelocity} to {tuning.MaxVelocity}: {wrongVelocity} not");
             SelfTest.Check(wrongChannel == 0, $"each on the emitter's channel {tuning.Channel}: {wrongChannel} not");
 
             midi.Panic();
             SelfTest.Check(recording.SoundingCount == 0 && !scheduler.HasWork, "Panic leaves nothing of the emitter's sounding or waiting");
+        }
+
+        // The emitter's panel (the emitter plan, EM-4): the bootstrap made it at the right of the
+        // screen, it isn't a menu, H hides and shows it and a menu hides it, with a screenshot with
+        // it and without. A click on it selects no cell, though a cell lies under it (the board grown
+        // to 21 × 21 × 21 for that), and a click on a cell beside it still does. Each control changes
+        // what it names: Set, Tonic, Layout and Seed the board's notes, Show degrees the labels, each
+        // slider its value on the tuning (and the panel follows a value set on the tuning, as the
+        // Inspector would); Spray, Grid and Channel together: two seconds' spray at 120 BPM whose
+        // note ons land on eighths, on channel 3.
+        private static IEnumerator CheckPanel()
+        {
+            Aleatora game = Aleatora.Instance;
+            EmitterPanel panel = game != null ? game.Panel : null;
+            if (!SelfTest.Check(panel != null && panel.IsShowing && game.Emitter != null, "the bootstrap made the emitter's panel, and it shows"))
+            {
+                yield break;
+            }
+
+            RectTransform box = panel.Box;
+            EmitterTuning tuning = game.Tuning.Emitter;
+            Emitter emitter = game.Emitter;
+            var corners = new Vector3[4];
+            box.GetWorldCorners(corners); // an overlay canvas: world is screen
+            SelfTest.Check(corners[0].x > Screen.width * 0.6f && corners[2].x <= Screen.width + 0.5f && corners[0].y >= 0f
+                && corners[2].y <= Screen.height + 0.5f,
+                $"the panel is at the right of the screen: x {corners[0].x:0} to {corners[2].x:0} of {Screen.width}");
+            SelfTest.Check(!MenuFocus.IsAnyOpen, "the panel isn't a menu: with it showing, no menu is open");
+            yield return SelfTest.Capture("3-Panel");
+            ScrollRect scroll = box.GetComponentInChildren<ScrollRect>();
+            scroll.verticalNormalizedPosition = 0f;
+            yield return null;
+            yield return SelfTest.Capture("3-Panel-Notes");
+            scroll.verticalNormalizedPosition = 1f;
+
+            yield return QueuedInput.Press(Key.H);
+            SelfTest.Check(panel.Hidden && !panel.IsShowing, "H hides the panel");
+            yield return new WaitForSecondsRealtime(0.3f);
+            yield return SelfTest.Capture("3-Panel-Hidden");
+            yield return QueuedInput.Press(Key.H);
+            SelfTest.Check(!panel.Hidden && panel.IsShowing, "H shows it again");
+            yield return QueuedInput.Press(Key.Escape);
+            SelfTest.Check(Menus.Count == 1 && !panel.IsShowing, "under the session menu the panel is hidden");
+            yield return QueuedInput.Press(Key.Escape);
+            SelfTest.Check(Menus.Count == 0 && panel.IsShowing, "with the menu closed it shows again");
+
+            // Clicks, through the input system as the mouse's own.
+            GridSelection selection = game.Selection;
+            HexGrid grid = game.Grid;
+            yield return ShowBoard(grid, game.Tuning.Grid, 21, 21, 21, HexOrientation.Flat, 1261, null);
+            var onPanel = new Vector2(corners[0].x + 6f, (corners[0].y + corners[2].y) * 0.5f); // its left margin, halfway up: no control
+            bool cellUnder = selection.PickAt(onPanel) && selection.HasSelection;
+            SelfTest.Check(cellUnder, $"a cell lies under the panel's left edge at ({onPanel.x:0}, {onPanel.y:0}): "
+                + (cellUnder ? selection.Selected.ToString() : "none"));
+            selection.Deselect();
+            yield return ClickAt(onPanel);
+            SelfTest.Check(!selection.HasSelection, "a click on the panel selects no cell");
+            HexCoord centre = game.Board.Notes.Centre;
+            Vector2 onCell = Camera.main.WorldToScreenPoint(grid.TopOf(centre));
+            yield return ClickAt(onCell);
+            SelfTest.Check(selection.HasSelection && selection.Selected == centre,
+                "a click on the centre cell beside the panel selects it: " + (selection.HasSelection ? selection.Selected.ToString() : "nothing"));
+            selection.Deselect();
+            yield return MoveMouse(new Vector2(2f, 2f));
+            yield return ShowBoard(grid, game.Tuning.Grid, 5, 5, 5, HexOrientation.Flat, 61, null);
+            SelfTest.Progress();
+
+            // The board's controls.
+            centre = game.Board.Notes.Centre;
+            string setBefore = tuning.Set;
+            int tonicBefore = tuning.Tonic;
+            CellLayout layoutBefore = tuning.Layout;
+            ulong seedBefore = tuning.Seed;
+            TMP_Dropdown set = Control<TMP_Dropdown>(box, "Dropdown: Set");
+            TMP_Dropdown tonic = Control<TMP_Dropdown>(box, "Dropdown: Tonic");
+            TMP_Dropdown layout = Control<TMP_Dropdown>(box, "Dropdown: Layout");
+            TMP_InputField seed = Control<TMP_InputField>(box, "InputField: Seed");
+            Toggle degrees = Control<Toggle>(box, "Toggle: Show degrees");
+            if (!SelfTest.Check(set != null && tonic != null && layout != null && seed != null && degrees != null,
+                "the panel has Set, Tonic, Layout, Seed and Show degrees"))
+            {
+                yield break;
+            }
+
+            IReadOnlyList<string> sets = MarkovLibrary.Names;
+            int other = 0;
+            while (other < sets.Count - 1 && sets[other] == setBefore)
+            {
+                other++;
+            }
+
+            set.value = other;
+            yield return null;
+            SelfTest.Check(tuning.Set == sets[other] && game.Board.Table != null && game.Board.Table.Name == sets[other],
+                $"Set on the panel gives the board {sets[other]}: " + (game.Board.Table != null ? game.Board.Table.Name : "none"));
+            set.value = Math.Max(0, IndexOf(sets, setBefore));
+            yield return null;
+            SelfTest.Check(game.Board.Table != null && game.Board.Table.Name == setBefore, $"and back to {setBefore}");
+
+            int noteBefore = game.Board.NoteAt(centre);
+            tonic.value = (tonicBefore + 2) % 12;
+            yield return null;
+            int rose = (((game.Board.NoteAt(centre) - noteBefore) % 12) + 12) % 12;
+            SelfTest.Check(tuning.Tonic == (tonicBefore + 2) % 12 && rose == 2, $"Tonic on the panel moves the board's notes up a tone: {rose} semitones");
+            tonic.value = tonicBefore;
+
+            tuning.Layout = CellLayout.Scattered;
+            yield return null;
+            int[] scattered = Degrees(game);
+            layout.value = (int)CellLayout.Clustered;
+            yield return null;
+            SelfTest.Check(tuning.Layout == CellLayout.Clustered && game.Board.Notes.Layout == CellLayout.Clustered && !Same(scattered, Degrees(game)),
+                "Layout on the panel lays the board out clustered");
+            layout.value = (int)CellLayout.Axes;
+            yield return null;
+            SelfTest.Check(game.Board.Notes.Layout == CellLayout.Axes && game.Board.DegreeAt(centre) == 0,
+                "and along the axes, 1 on the centre cell");
+            layout.value = (int)CellLayout.Scattered;
+            yield return null;
+
+            seed.text = "7";
+            seed.onEndEdit.Invoke("7");
+            yield return null;
+            SelfTest.Check(tuning.Seed == 7UL && !Same(scattered, Degrees(game)), $"Seed on the panel gives another board: seed {tuning.Seed}");
+            seed.text = "seven";
+            seed.onEndEdit.Invoke("seven");
+            SelfTest.Check(tuning.Seed == 7UL && seed.text == "7", $"a seed that isn't a whole number puts the last back: {seed.text}");
+            seed.text = seedBefore.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            seed.onEndEdit.Invoke(seed.text);
+            yield return null;
+            SelfTest.Check(tuning.Seed == seedBefore && Same(scattered, Degrees(game)), "the seed back, the board as it was");
+            tuning.Layout = layoutBefore;
+
+            degrees.isOn = false;
+            yield return null;
+            SelfTest.Check(!tuning.ShowDegrees && game.Board.Labels.Count > 0 && !game.Board.Labels[0].gameObject.activeSelf,
+                "Show degrees off on the panel hides the cells' labels");
+            degrees.isOn = true;
+            yield return null;
+            SelfTest.Check(game.Board.Labels[0].gameObject.activeSelf, "on again shows them");
+
+            // Each slider sets its value; then back.
+            var sliders = new (string Name, float Value, Func<float> Read)[]
+            {
+                ("Rate", 20f, () => tuning.Rate), ("Spread", 30f, () => tuning.Spread), ("Speed", 12f, () => tuning.Speed),
+                ("Speed jitter", 25f, () => tuning.SpeedJitter * 100f), ("Min size", 0.3f, () => tuning.MinSize),
+                ("Max size", 0.8f, () => tuning.MaxSize), ("Bounciness", 0.3f, () => tuning.Bounciness),
+                ("Lifetime", 5f, () => tuning.Lifetime), ("Max spheres", 150f, () => tuning.MaxSpheres),
+                ("Strength", 0.5f, () => tuning.Strength), ("Min speed", 2f, () => tuning.MinSpeed),
+                ("Max speed", 20f, () => tuning.MaxSpeed), ("Min velocity", 40f, () => tuning.MinVelocity),
+                ("Max velocity", 100f, () => tuning.MaxVelocity), ("Velocity curve", 2f, () => tuning.VelocityCurve),
+                ("Shortest", 0.5f, () => tuning.Shortest), ("Longest", 3f, () => tuning.Longest), ("Max voices", 16f, () => tuning.MaxVoices),
+            };
+            var before = new float[sliders.Length];
+            var wrong = new List<string>();
+            for (int i = 0; i < sliders.Length; i++)
+            {
+                Slider slider = Control<Slider>(box, "Slider: " + sliders[i].Name);
+                before[i] = sliders[i].Read();
+                if (slider == null)
+                {
+                    wrong.Add(sliders[i].Name + " missing");
+                    continue;
+                }
+
+                slider.value = sliders[i].Value;
+                if (Mathf.Abs(sliders[i].Read() - sliders[i].Value) > 1e-3f)
+                {
+                    wrong.Add($"{sliders[i].Name} {sliders[i].Read()}");
+                }
+            }
+
+            SelfTest.Check(wrong.Count == 0, $"each of the panel's {sliders.Length} sliders sets its value on the tuning: "
+                + (wrong.Count == 0 ? "all" : string.Join(", ", wrong)));
+            for (int i = sliders.Length - 1; i >= 0; i--) // back in reverse, so Min size's push on Max size is undone last
+            {
+                Slider slider = Control<Slider>(box, "Slider: " + sliders[i].Name);
+                if (slider != null)
+                {
+                    slider.value = before[i];
+                }
+            }
+
+            wrong.Clear();
+            for (int i = 0; i < sliders.Length; i++)
+            {
+                if (Mathf.Abs(sliders[i].Read() - before[i]) > 1e-3f)
+                {
+                    wrong.Add($"{sliders[i].Name} {sliders[i].Read()} not {before[i]}");
+                }
+            }
+
+            SelfTest.Check(wrong.Count == 0, "and back as they were: " + (wrong.Count == 0 ? "all" : string.Join(", ", wrong)));
+
+            // The smallest size pushes the largest up; the panel follows a value set on the tuning.
+            Slider minSize = Control<Slider>(box, "Slider: Min size");
+            Slider maxSize = Control<Slider>(box, "Slider: Max size");
+            float minSizeBefore = tuning.MinSize, maxSizeBefore = tuning.MaxSize, rateBefore = tuning.Rate;
+            minSize.value = 0.9f;
+            tuning.Rate = 7f;
+            yield return null;
+            Slider rate = Control<Slider>(box, "Slider: Rate");
+            SelfTest.Check(Mathf.Approximately(tuning.MaxSize, 0.9f) && Mathf.Approximately(maxSize.value, 0.9f),
+                $"Min size past Max size pushes it up: {tuning.MaxSize:0.00}, the slider {maxSize.value:0.00}");
+            SelfTest.Check(Mathf.Approximately(rate.value, 7f), $"the panel follows a Rate set on the tuning: {rate.value:0.00}");
+            tuning.MinSize = minSizeBefore;
+            tuning.MaxSize = maxSizeBefore;
+            tuning.Rate = rateBefore;
+
+            // Spray, Grid and Channel: two seconds' spray from the panel, its notes on eighths on channel 3.
+            Toggle spray = Control<Toggle>(box, "Toggle: Spray");
+            TMP_Dropdown gridChoice = Control<TMP_Dropdown>(box, "Dropdown: Grid");
+            TMP_Dropdown channel = Control<TMP_Dropdown>(box, "Dropdown: Channel");
+            Toggle quantizeLength = Control<Toggle>(box, "Toggle: Quantize length");
+            if (!SelfTest.Check(spray != null && gridChoice != null && channel != null && quantizeLength != null,
+                "the panel has Spray, Grid, Channel and Quantize length"))
+            {
+                yield break;
+            }
+
+            quantizeLength.isOn = !tuning.QuantizeLength;
+            SelfTest.Check(tuning.QuantizeLength == quantizeLength.isOn, "Quantize length on the panel sets it");
+            quantizeLength.isOn = !quantizeLength.isOn;
+
+            yield return QueuedInput.Press(Key.Space);
+            yield return null;
+            SelfTest.Check(emitter.Spraying && spray.isOn, "Space turns spraying on, and the panel's Spray shows it");
+            yield return QueuedInput.Press(Key.Space);
+            yield return null;
+            SelfTest.Check(!emitter.Spraying && !spray.isOn, "Space off, and Spray shows it");
+            emitter.Clear();
+
+            MidiPlayback midi = game.Midi;
+            var recording = new RecordingOutput("Menu check panel", () => midi.Now);
+            midi.Use(recording);
+            int bpmBefore = midi.Bpm;
+            QuantizeGrid gridBefore = tuning.Grid;
+            int channelBefore = tuning.Channel;
+            float strengthBefore = tuning.Strength;
+            midi.Bpm = 120;
+            gridChoice.value = (int)QuantizeGrid.Eighth;
+            channel.value = 3 - MidiMessage.LowestChannel;
+            Control<Slider>(box, "Slider: Strength").value = 1f;
+            SelfTest.Check(tuning.Grid == QuantizeGrid.Eighth && tuning.Channel == 3 && tuning.Strength == 1f,
+                $"Grid, Channel and Strength on the panel set them: {tuning.Grid}, {tuning.Channel}, {tuning.Strength}");
+
+            var hits = new List<EmitterHit>();
+            void OnHit(EmitterHit hit) => hits.Add(hit);
+            emitter.Hit += OnHit;
+            emitter.AimAt(grid.TopOf(centre));
+            spray.isOn = true;
+            SelfTest.Check(emitter.Spraying, "Spray on the panel turns spraying on");
+            yield return new WaitForSecondsRealtime(2f);
+            spray.isOn = false;
+            SelfTest.Check(!emitter.Spraying, "and off");
+            emitter.Hit -= OnHit;
+            CheckEmitterNotes(midi, recording, tuning, hits, 0.5d, "an eighth");
+            midi.Close();
+            midi.Bpm = bpmBefore;
+            tuning.Grid = gridBefore;
+            tuning.Channel = channelBefore;
+            tuning.Strength = strengthBefore;
+            emitter.Clear();
+            yield return null;
+            SelfTest.Check(gridChoice.value == (int)gridBefore && channel.value == channelBefore - MidiMessage.LowestChannel,
+                "the panel follows the grid and channel put back on the tuning");
+            GameObject selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+            SelfTest.Check(selected == null || !selected.transform.IsChildOf(box), "the panel holds no selection: " + SelectedName());
+            SelfTest.Progress();
+        }
+
+        private static int[] Degrees(Aleatora game)
+        {
+            CellNotes notes = game.Board.Notes;
+            var degrees = new int[notes.Shape.Count];
+            for (int i = 0; i < degrees.Length; i++)
+            {
+                degrees[i] = notes.DegreeAt(i);
+            }
+
+            return degrees;
+        }
+
+        private static bool Same(int[] a, int[] b)
+        {
+            if (a.Length != b.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < a.Length; i++)
+            {
+                if (a[i] != b[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static int IndexOf(IReadOnlyList<string> list, string item)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] == item)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        // The mouse moved to a point of the screen, queued as the device's own, with frames for the UI to see it.
+        private static IEnumerator MoveMouse(Vector2 screen)
+        {
+            Mouse mouse = Mouse.current ?? InputSystem.AddDevice<Mouse>();
+            if (!mouse.enabled)
+            {
+                InputSystem.EnableDevice(mouse);
+            }
+
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = screen });
+            yield return null;
+            yield return null;
+        }
+
+        // A left click at a point of the screen through the input system: there, pressed, released.
+        private static IEnumerator ClickAt(Vector2 screen)
+        {
+            yield return MoveMouse(screen);
+            Mouse mouse = Mouse.current;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = screen }.WithButton(MouseButton.Left));
+            yield return null;
+            yield return null;
+            InputSystem.QueueStateEvent(mouse, new MouseState { position = screen });
+            yield return null;
+            yield return null;
         }
 
         // Times the frames for a second with no spheres, then sprays at 50 a second until Max Spheres
