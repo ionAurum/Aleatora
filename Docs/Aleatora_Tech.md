@@ -520,7 +520,8 @@ responds to what comes in yet: it is read, held and queued.
   input's queue; the callback takes only its queue's.
 - **Measured** (EditMode, 2026-11-15, Jon's machine): 20 fed notes held after mean 0.15 ms, worst
   1.26 ms. The menu check's fed chord was held within 5 ms. Inputs listed: Greedo, Han, SE49,
-  MIDIIN2 (SE49); nothing opened them.
+  MIDIIN2 (SE49); nothing opened them. With Jon's "Aleatora Test" port made (the same day; Greedo and Han were
+  no longer listed), a CC and a tick sent through it came back in 1.00 ms and 1.03 ms.
 
 ## Checks
 
@@ -652,4 +653,4 @@ responds to what comes in yet: it is read, held and queued.
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
   `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128, then 131 of 131 after the CanvasRenderer fix; `m3` at
   1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean). MIDI-1: EditMode tests 166 of 166 (the loopMIDI test
-  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet); `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots).
+  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots).

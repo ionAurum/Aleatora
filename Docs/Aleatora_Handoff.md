@@ -3,14 +3,14 @@
 Status (2026-11-15): **IN-1 (MIDI in, the base layer) is done on branch `in-1-input`**, from
 `main`. Jon accepted the MIDI in plan's decisions 2, 3, 4, 5, 8 and 9 as written and gave the
 go-ahead (Design, rulings 38 to 43; 1, 6, 7 and 10 stand as defaults until IN-4). 241 EditMode
-tests: 239 pass, and the 2 that need the loopMIDI port "Aleatora Test" are skipped because the
-port doesn't exist yet. The menu check passes at both sizes (149 checks). On `main`: the Markov
+tests pass, the loopback through Jon's new loopMIDI port "Aleatora Test" included (a CC and a
+tick back in about 1 ms). The menu check passes at both sizes (149 checks). On `main`: the Markov
 plan and MIDI out (rulings to 36).
 
 Open for Jon:
-- **Make the loopMIDI port "Aleatora Test"**, then the next chat runs the EditMode tests again so
-  the two skipped tests run (`MidiPortsTests`: the test port opens; what is sent comes back).
-- **Renaming his loopMIDI ports** (he asked). Recommended: "Aleatora to Reaper" (now Greedo),
+- **Renaming his loopMIDI ports** (he asked). As of the last test run, Greedo and Han were no
+  longer listed (only SE49, MIDIIN2 (SE49) and Aleatora Test), so the saved output "Greedo" will
+  read "(not found)" until he picks a new one. Recommended: "Aleatora to Reaper" (now Greedo),
   "Reaper to Aleatora" (now Han), and "Aleatora Test". loopMIDI can't rename a port: delete it
   and add the new one. Then pick the new output on the *MIDI* page (the old one reads "Greedo (not
   found)"), and enable the new ports in Reaper's *Preferences > MIDI Devices*. Once he has
