@@ -243,8 +243,8 @@ EditMode tests pass. What was built, and the readings where this plan was silent
 
 ## IN-4 — Jon plays with Reaper and a keyboard
 
-**Done (2026-11-15; Design, rulings 45 to 47):** Jon ran 1, 2 and 3.1–3.2, all as expected;
-3.3 (the shared keyboard port) wasn't run. He accepted decisions 1, 6, 7 and 10 and the
+**Done (2026-11-15; Design, rulings 45 to 47):** Jon ran every step, all as expected,
+3.3 (the shared keyboard port) after the merge. He accepted decisions 1, 6, 7 and 10 and the
 readings, and the branches merged. The ports were renamed before the run: below, Greedo is now
 "Aleatora to Reaper" and Han "Reaper to Aleatora" (the steps are kept as written).
 

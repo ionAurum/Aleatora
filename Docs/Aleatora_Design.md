@@ -135,8 +135,8 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     the channel in front in logs.
 45. **MIDI in and clock are proved** (2026-11-15, IN-4). Jon followed Reaper's clock, led Reaper
     with *Send clock*, and played a keyboard into the *Monitor*: "it all seems to work as
-    expected." Not run: the keyboard's port held by Reaper and Aleatora at once (MIDI in plan,
-    *Risks*; still open). The loopMIDI ports are renamed (he asked): "Aleatora to Reaper" (was
+    expected." Then the keyboard's port held by Reaper and Aleatora at once (MIDI in plan,
+    *Risks*): "it works great". The loopMIDI ports are renamed (he asked): "Aleatora to Reaper" (was
     Greedo), "Reaper to Aleatora" (was Han) and "Aleatora Test".
 46. **The MIDI in work as built is accepted** (2026-11-15, IN-4). MIDI in decisions 1 (our winmm
     wrapper), 6 (the tempo over one beat), 7 (the keyboard's base layer) and 10 (nothing new on
@@ -155,4 +155,8 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 - How notes leave Aleatora as OSC. MIDI out is built (rulings 26 to 36), and MIDI in with clock
   and sync (rulings 37 to 47). Jon means to teach Aleatora Reaper's OSC (ruling 39).
 - What the keyboard's notes do (ruling 37: chords and the like, later).
+- More modes for the Markov tables (Jon, 2026-11-15): Lydian, Phrygian, Byzantine (double
+  harmonic) and the Hindu scale, which matter to him. The folk corpora have none (the tables'
+  README: Lydian and Phrygian tunes were excluded as misread major tunes). Sources are being
+  weighed; see the hand-off.
 
