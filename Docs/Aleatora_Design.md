@@ -180,6 +180,8 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     forget one scale I wanted, the phrygian dominant." Its pulls are ♭2 → 1 and ♭6 → 5, as the
     double harmonic's without the 7 (Jon chose them). `virtuoso_phrygian_dominant`, shown as
     "Virtuoso · phrygian dominant"; 22 sets in all.
+58. **The phrygian dominant is approved; `th-2-phrygian-dominant` merges to `main`** (2026-11-16).
+    Jon: "That's right on point; merge." This finishes TH-2 and the theory plan.
 
 ## Open, each its own plan later (the plan's decision 7)
 
@@ -188,5 +190,7 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 - How notes leave Aleatora as OSC. MIDI out is built (rulings 26 to 36), and MIDI in with clock
   and sync (rulings 37 to 47). Jon means to teach Aleatora Reaper's OSC (ruling 39).
 - What the keyboard's notes do (ruling 37: chords and the like, later).
-- More modes for the Markov tables: planned (rulings 48 to 50, `Docs/Aleatora_Theory_Plan.md`).
+- Rhythm: every note is still a quarter note (the MIDI plan's *Later*).
+- More modes for the Markov tables: done, five from theory (rulings 48 to 58,
+  `Docs/Aleatora_Theory_Plan.md`, finished).
 

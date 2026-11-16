@@ -11,7 +11,7 @@ what to read for it. Jon's rulings are in `Docs/Aleatora_Design.md`; how each sy
 in `Docs/Aleatora_Tech.md`; the plans with their milestones are `Docs/Aleatora_Markov_Plan.md` (finished) and
 `Docs/Aleatora_Midi_Plan.md` (MIDI out, finished) and
 `Docs/Aleatora_MidiIn_Plan.md` (MIDI in, clock and sync, finished) and
-`Docs/Aleatora_Theory_Plan.md` (melody tables from theory: TH-2, the last listening). Read
+`Docs/Aleatora_Theory_Plan.md` (melody tables from theory, finished). Read
 the sections the hand-off names, not all of them.
 
 ## Layout

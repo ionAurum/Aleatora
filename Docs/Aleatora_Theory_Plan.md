@@ -16,7 +16,9 @@ slides, vibrato, legato and anything else that lives in a player's hands; contou
 hold degrees, and `Voicing` places each nearest the note before); a change to the generator or
 the page beyond the set list.
 
-Written 2026-11-15 from `main` after the MIDI in plan (rulings to 47).
+Written 2026-11-15 from `main` after the MIDI in plan (rulings to 47). **Finished 2026-11-16**
+(Design, ruling 58), with a fifth mode, the phrygian dominant (ruling 57), and every phrase
+starting on 1 (ruling 53).
 
 ---
 
