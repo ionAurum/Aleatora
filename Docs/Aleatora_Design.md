@@ -182,10 +182,53 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     "Virtuoso · phrygian dominant"; 22 sets in all.
 58. **The phrygian dominant is approved; `th-2-phrygian-dominant` merges to `main`** (2026-11-16).
     Jon: "That's right on point; merge." This finishes TH-2 and the theory plan.
+59. **The emitter is the next plan** (2026-11-16). Jon's original idea (ruling 14): the emitter
+    cone sprays Rigidbody spheres, with parameters like Unity's ParticleSystem's but controlled
+    live in play; the player moves and aims it, vaguely like a garden hose nozzle; a sphere
+    striking a cell makes the cell react musically, at the simplest by playing a note of the
+    chosen set; the cells' notes come from the set's distribution (*The set* on the *Melodies*
+    page). Jon re-enabled the cone in `SampleScene`. The plan: `Docs/Aleatora_Emitter_Plan.md`.
+60. **The board's notes come from the unigram only, for now** (2026-11-16), not the Markov
+    orders.
+61. **Three layouts of degrees on the board, chosen by the player** (2026-11-16): scattered
+    (seeded, from the distribution), clustered (regions with character), and along the k × m × n
+    axes (intervals). Jon: "perfect for the first iteration."
+62. **What a hit carries** (2026-11-16): velocity from the impact speed, length from the sphere's
+    size, the octave from the cell's radial distance from the centre cell.
+63. **The same seed gives the same board; sessions needn't replay** (2026-11-16). Jon: this tool
+    is "about generating aleatoric/stochastic music." The emitter's own draws still come from
+    `Music/Rng`; the physics and the player's input aren't reproduced.
+64. **Hits are quantized to the MIDI clock** (2026-11-16): the note's start and its length, to the
+    nearest chosen note value (quarter, eighth, eighth triplet and so on), as a DAW's or a
+    sequencer's quantize, with a strength (the "humanizer" knob).
+65. **The cells are coloured by their degree** (2026-11-16): the root red; the others between
+    white and blue by their probability, full white at 0 and full blue at 1. Changed by ruling 71:
+    scaled to the most likely.
+66. **Quantizing moves a note forward, to the next grid point** (2026-11-16; the emitter plan's
+    decision 6, its default). Jon understands the latency "nearest" would cost.
+67. **The scattered layout shares the cells out, and the axes layout is as written**
+    (2026-11-16; the emitter plan's decision 2 and layout 3, their defaults): largest remainder,
+    then a seeded shuffle; +K and +N a third each, +M a fifth.
+68. **A step to design the emitter's real-time controls, between the panel and Jon's playing**
+    (2026-11-16). Jon: "I'm looking for richer, more intuitive user interaction than what you've
+    suggested." The emitter plan's EM-5 (design) and EM-6 (build); Jon plays it in EM-7.
+69. **The fixed timestep is 0.005 s** (2026-11-16), set by Jon in Project Settings > Time, for the
+    emitter's collisions (200 Hz; Unity's default was 0.02).
+70. **While a followed clock is stopped, the emitter plays on Aleatora's own beat line at the
+    last tempo measured** (2026-11-16; the emitter plan's decision 7, its revised default). So the
+    board can be played into a record-armed, monitored track while Reaper is stopped; when Reaper
+    plays, the notes move to its grid. Jon checked: Reaper sends clock only while its transport
+    runs. Jon: "addressed it the way I wanted."
+71. **The cells' blue is scaled to the most likely degree** (2026-11-16; changes ruling 65): the
+    root red, the likeliest other degree full blue, the rest p / p<sub>max</sub> of the way from
+    white. Jon: "lock that in."
+72. **The emitter plan's other decisions stand as their defaults; go-ahead for EM-1**
+    (2026-11-16). Jon: "Defaults are fine." So decisions 1, 3, 4, 5, 8, 9, 10 and 11 as written.
 
 ## Open, each its own plan later (the plan's decision 7)
 
 - What the grid means musically (the three axes are ready to carry, say, an interval each).
+  Begun by the emitter plan (rulings 59 to 64).
 - How the generator drives the grid.
 - How notes leave Aleatora as OSC. MIDI out is built (rulings 26 to 36), and MIDI in with clock
   and sync (rulings 37 to 47). Jon means to teach Aleatora Reaper's OSC (ruling 39).
