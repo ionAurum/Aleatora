@@ -28,7 +28,7 @@ namespace Aurumworks.Aleatora
             }
 
             /// <inheritdoc/>
-            public override string ToString() => $"{Time:0.000} {MidiMessage.Describe(Message)}";
+            public override string ToString() => $"{Time:0.000} {MidiMessage.DescribeWithChannel(Message)}";
         }
 
         private readonly object _lock = new object();

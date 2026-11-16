@@ -84,7 +84,8 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 31. **Run In Background is on** in the player (2026-11-15; MIDI decision 10, its default).
 32. **A classic *Panic!* button** (2026-11-15): note off for all 128 MIDI notes.
 33. **Virtual or mock MIDI ports are fine for Claude's tests** (2026-11-15): a loopMIDI port, or a
-    recording output. No hardware port.
+    recording output. No hardware port. Changed by ruling 42: the one test that sends and receives uses only
+    the loopMIDI port "Aleatora Test".
 34. **MIDI out is proved** (2026-11-15, MIDI-4). Jon played Aleatora into Reaper through a
     loopMIDI port ("Greedo"); Reaper received the note ons and offs.
 35. **The MIDI work as built is accepted** (2026-11-15, MIDI-4). Jon: "I accept everything you
@@ -107,12 +108,51 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     layers first; what the incoming data means comes later. Jon plans a musical keyboard for
     entering chords and the like, for a use he hasn't settled. The plan:
     `Docs/Aleatora_MidiIn_Plan.md`.
+38. **Several MIDI inputs open at once** (2026-11-15; MIDI in decision 2, as written). The
+    keyboard and Reaper's clock come in on different ports. Aleatora doesn't offer its own
+    output's loopMIDI port as an input, so it can't hear itself. Jon: "That's fine."
+39. **Reaper leads by default** (2026-11-15; MIDI in decisions 3 and 4, as written). Reaper's
+    Start, Stop and Continue drive Aleatora; Aleatora's note *n* lands on Reaper's quarter note
+    *n* from the project's start (note 1 on bar 1, beat 1, through SPP); the *BPM* box shows
+    Reaper's tempo and can't be edited while following. Jon: fine, since Aleatora will be taught
+    Reaper's OSC soon.
+40. **Aleatora can lead too: *Send clock*, off by default** (2026-11-15; MIDI in decision 5, as
+    written). How tightly Reaper follows MIDI clock, and the Reaper menu path for its sync
+    setting, are checked in IN-4. Jon: "exactly what we're after."
+41. **A *Monitor* page** (2026-11-15; MIDI in decision 8, as written): the last 16 messages, the
+    held notes by name, the clock's state. Jon: Aleatora is a sequencer, a looper and the like,
+    not a MIDI recording tool; recording is Reaper's job.
+42. **The loopback test port "Aleatora Test"** (2026-11-15; MIDI in decision 9, as written; this
+    changes ruling 33). The one test that sends and receives does so only through a loopMIDI port
+    named "Aleatora Test", which Jon makes; no test sends to his other loopMIDI ports. Without
+    the port, the test is skipped.
+43. **Go-ahead for the MIDI in plan's IN-1** (2026-11-15). Decisions 1, 6, 7 and 10, not ruled
+    on, are built as their defaults; Jon rules on them in IN-4 with the rest.
+44. **IN-1's readings where the plan was silent are accepted** (2026-11-15; Tech, *As built
+    (IN-1)*): All Notes Off (CC 123) lets go of every key on its channel, the sustain pedal still
+    holding them, and All Sound Off (CC 120) clears everything; choosing an output that is open as
+    an input closes that input; note names use ♯ (`C♯4`); a message reads "Note on E4 96", with
+    the channel in front in logs.
+45. **MIDI in and clock are proved** (2026-11-15, IN-4). Jon followed Reaper's clock, led Reaper
+    with *Send clock*, and played a keyboard into the *Monitor*: "it all seems to work as
+    expected." Not run: the keyboard's port held by Reaper and Aleatora at once (MIDI in plan,
+    *Risks*; still open). The loopMIDI ports are renamed (he asked): "Aleatora to Reaper" (was
+    Greedo), "Reaper to Aleatora" (was Han) and "Aleatora Test".
+46. **The MIDI in work as built is accepted** (2026-11-15, IN-4). MIDI in decisions 1 (our winmm
+    wrapper), 6 (the tempo over one beat), 7 (the keyboard's base layer) and 10 (nothing new on
+    the *Melodies* page) stand as their defaults. The readings flagged in IN-2 and IN-3 (Tech,
+    *As built (IN-2)* and *As built (IN-3)*, *Readings*) stand, among them: while following,
+    *Generate* and *Step* keep note *n* on beat *n*, so a new melody is heard from the next
+    beat's note; *Pause* while following is *Stop* that keeps the playhead; the monitor's beat
+    counts from 1; the output's own port is greyed by its label only.
+47. **The MIDI in branches merge to `main`** (2026-11-15): `in-1-input`, `in-2-clock` and
+    `in-3-page`, through `in-3-page`, ending the MIDI in plan.
 
 ## Open, each its own plan later (the plan's decision 7)
 
 - What the grid means musically (the three axes are ready to carry, say, an interval each).
 - How the generator drives the grid.
-- How notes leave Aleatora as OSC. MIDI out is built (rulings 26 to 36); MIDI in and clock
-  and sync are planned (ruling 37).
+- How notes leave Aleatora as OSC. MIDI out is built (rulings 26 to 36), and MIDI in with clock
+  and sync (rulings 37 to 47). Jon means to teach Aleatora Reaper's OSC (ruling 39).
 - What the keyboard's notes do (ruling 37: chords and the like, later).
 

@@ -1,30 +1,34 @@
 # Aleatora: hand-off
 
-Status (2026-11-15): **the MIDI in, clock and sync plan is written
-(`Docs/Aleatora_MidiIn_Plan.md`), waiting for Jon's go-ahead and his answers to its *Decisions
-for Jon*.** The brief is Design ruling 37: the technical base for MIDI in and for clock and sync
-with Reaper. What the keyboard's notes mean comes later. On `main`: the Markov plan and MIDI out
-(rulings to 36). 200 EditMode tests pass; the menu check passes (144 checks, both sizes).
+Status (2026-11-15): **the MIDI in plan is finished and merged to `main`** (IN-1 to IN-4;
+Design, rulings 37 to 47). Jon ran IN-4: following Reaper, leading it with *Send clock*, and a
+keyboard into the *Monitor* all worked as expected; he accepted decisions 1, 6, 7 and 10 and the
+IN-2 and IN-3 readings as built. On `main`: the Markov plan, MIDI out, MIDI in with clock and
+sync. 268 EditMode tests; the menu check at 185 checks at both sizes.
 
-Open for Jon: the plan's ten decisions, each with a default. Most worth a look:
-- 2: any number of inputs, because the keyboard and Reaper's clock arrive on different ports.
-- 3 and 4: following Reaper as the main case, with note *n* on Reaper's quarter note *n* from
-  the project's start, through SPP.
-- 5: *Send clock* (leading Reaper), off by default.
-- 8: the *Monitor* page.
-- 9: a loopMIDI port named "Aleatora Test" for the one loopback test. This changes ruling 33.
-  Jon makes the port in loopMIDI.
+Jon's loopMIDI ports are now "Aleatora to Reaper" (was Greedo), "Reaper to Aleatora" (was Han)
+and "Aleatora Test" (ruling 45). "Greedo" and "Han" in the docs, comments and tests are examples
+only.
 
-## Next: IN-1, input (branch `in-1-input`, from `main`)
+Still open from IN-4:
+- **The shared keyboard port** (MIDI in plan, *Risks*, and IN-4 step 3.3): not run. The keyboard
+  open in Reaper and Aleatora at once. Worth a try when convenient; if Windows refuses the
+  second program, Reaper can pass the keyboard on through a loopMIDI port.
 
-Start on Jon's go-ahead, with his rulings written into `Docs/Aleatora_Design.md` and the plan.
+A local change to `Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF -
+Fallback.asset` (the Editor's dynamic font atlas) is left uncommitted; it isn't ours.
 
-Read:
-- `Docs/Aleatora_MidiIn_Plan.md`: all of it.
-- `Docs/Aleatora_Midi_Plan.md`: *Engineering rules*.
-- `Docs/Aleatora_Tech.md`: *MIDI*, all three *As built* sections.
-- The code: `Assets/Aurumworks/Scripts/Midi/WinMm.cs`, `WinMmOutput.cs`, `MidiPorts.cs`,
-  `MidiMessage.cs`, and `Game/MidiPlayback.cs`.
+## Next: Jon picks the next plan
+
+Nothing is planned. The candidates (Design, *Open, each its own plan later*): OSC (Jon means to
+teach Aleatora Reaper's OSC, ruling 39), what the keyboard's notes do, what the grid means
+musically, how the generator drives the grid. When Jon picks one, write its plan as
+`Docs/Aleatora_<Name>_Plan.md`, in the shape of `Docs/Aleatora_MidiIn_Plan.md` (*Read first*,
+*Decisions for Jon* with defaults, milestones, *Risks*), and stop for his rulings.
+
+Read for it:
+- `Docs/Aleatora_Design.md`: *Open, each its own plan later*, and rulings 37 to 47.
+- `Docs/Aleatora_MidiIn_Plan.md`: *Later*, as a model of a plan.
 
 ## Not in any repository
 

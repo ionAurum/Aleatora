@@ -60,6 +60,10 @@ Rulings go into `Docs/Aleatora_Design.md`; what was built goes into `Docs/Aleato
 
 Each has the default this plan builds if Jon doesn't say otherwise.
 
+**Ruled (2026-11-15):** Jon accepted 2, 3, 4, 5, 8 and 9 as written (Design, rulings 38 to 42)
+and gave the go-ahead for IN-1 (ruling 43). 1, 6, 7 and 10 are built as their defaults until
+IN-4. At IN-4 he accepted 1, 6, 7 and 10 as built (ruling 46).
+
 1. **The library.** **Default:** our `winmm` wrapper grows the input calls (`midiInGetNumDevs`,
    `midiInGetDevCapsW`, `midiInOpen` with a callback, `midiInStart`, `midiInStop`,
    `midiInReset`, `midiInClose`, `midiInGetErrorTextW`), behind an `IMidiInput`. This is ruling
@@ -184,6 +188,10 @@ Each has the default this plan builds if Jon doesn't say otherwise.
 
 ## IN-2 — Clock (branch `in-2-clock`)
 
+**Done** (2026-11-15): 265 EditMode tests pass, the MIDI-2 ones unchanged. What was built, and
+the readings where this plan was silent, are in Tech, *As built (IN-2)*. One change from *Code
+layout*: `ClockSender.Advance` takes the player's beat, not the time.
+
 **Tasks**
 
 1. `NotePlayer` in beats, through `IBeatSource`. Every MIDI-2 test still passes unchanged in
@@ -209,6 +217,10 @@ Each has the default this plan builds if Jon doesn't say otherwise.
 
 ## IN-3 — The screens (branch `in-3-page`)
 
+**Done** (2026-11-15): the menu check passes at both sizes (185 checks, 17 screenshots); 268
+EditMode tests pass. What was built, and the readings where this plan was silent, are in Tech,
+*As built (IN-3)*.
+
 **Tasks**
 
 1. `MidiPage`: *Inputs*, *Clock*, *Send clock*, *Monitor* (decisions 2, 3, 5). The output's own
@@ -231,13 +243,18 @@ Each has the default this plan builds if Jon doesn't say otherwise.
 
 ## IN-4 — Jon plays with Reaper and a keyboard
 
+**Done (2026-11-15; Design, rulings 45 to 47):** Jon ran 1, 2 and 3.1–3.2, all as expected;
+3.3 (the shared keyboard port) wasn't run. He accepted decisions 1, 6, 7 and 10 and the
+readings, and the branches merged. The ports were renamed before the run: below, Greedo is now
+"Aleatora to Reaper" and Han "Reaper to Aleatora" (the steps are kept as written).
+
 Two loopMIDI ports: **Greedo** (Aleatora to Reaper, as now) and **Han** (Reaper to Aleatora),
 and a third, **Aleatora Test**, for the tests only.
 
 1. **Following Reaper:**
    1. In Reaper: *Preferences > MIDI Outputs*, enable Han, then right-click it and turn on
       *Send clock/SPP*.
-   2. In Aleatora: *MIDI* page, turn on input Han, set *Clock* to *Follow Han*.
+   2. In Aleatora: *MIDI* page, turn on input Han, set *Clock* to Han.
    3. Press Reaper's *Play*. Aleatora plays at Reaper's tempo, note 1 on bar 1. Recorded on a
       track from Greedo, the notes sit on Reaper's grid.
    4. Change Reaper's tempo, start mid-project, stop: Aleatora goes with it.

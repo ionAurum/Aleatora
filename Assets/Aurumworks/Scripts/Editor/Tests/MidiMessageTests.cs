@@ -6,7 +6,9 @@ namespace Aurumworks.Aleatora.Tests
     /// <summary>
     /// EditMode tests of MIDI's short messages (MIDI-1): each kind's bytes on channels 1 and 16, as
     /// winmm takes them (status lowest); channels and data clamped; the readers undo the packing;
-    /// the Panic button's 2,048 note offs, every note on every channel once.
+    /// the Panic button's 2,048 note offs, every note on every channel once. IN-1: the clock's
+    /// one-byte messages, Song Position Pointer's bytes and value, system messages have no channel,
+    /// note names with C4 = 60, and what Describe says.
     /// </summary>
     public class MidiMessageTests
     {
@@ -70,7 +72,8 @@ namespace Aurumworks.Aleatora.Tests
             Assert.That(MidiMessage.Channel(message), Is.EqualTo(7));
             Assert.That(MidiMessage.Data1(message), Is.EqualTo(64));
             Assert.That(MidiMessage.Data2(message), Is.EqualTo(99));
-            Assert.That(MidiMessage.Describe(message), Is.EqualTo("note on 7 64 99"));
+            Assert.That(MidiMessage.Describe(message), Is.EqualTo("Note on E4 99"));
+            Assert.That(MidiMessage.DescribeWithChannel(message), Is.EqualTo("ch 7 Note on E4 99"));
         }
 
         [Test]
@@ -101,6 +104,83 @@ namespace Aurumworks.Aleatora.Tests
             Assert.That(seen.Count, Is.EqualTo(16 * 128));
             Assert.That(panic[0], Is.EqualTo(MidiMessage.NoteOff(1, 0)));
             Assert.That(panic[2047], Is.EqualTo(MidiMessage.NoteOff(16, 127)));
+        }
+
+        [Test]
+        public void TheClocksMessagesAreOneByte()
+        {
+            Assert.That(MidiMessage.Clock(), Is.EqualTo(0xF8));
+            Assert.That(MidiMessage.Start(), Is.EqualTo(0xFA));
+            Assert.That(MidiMessage.Continue(), Is.EqualTo(0xFB));
+            Assert.That(MidiMessage.Stop(), Is.EqualTo(0xFC));
+            Assert.That(MidiMessage.IsClock(0xF8) && MidiMessage.IsStart(0xFA) && MidiMessage.IsContinue(0xFB) && MidiMessage.IsStop(0xFC), Is.True);
+            Assert.That(MidiMessage.IsActiveSensing(0xFE), Is.True);
+            Assert.That(MidiMessage.IsClock(0xFA) || MidiMessage.IsStart(0xF8) || MidiMessage.IsStop(0xFB), Is.False);
+        }
+
+        [TestCase(0, 0x0000F2)]
+        [TestCase(16, 0x0010F2)]
+        [TestCase(127, 0x007FF2)]
+        [TestCase(128, 0x0100F2)]
+        [TestCase(16383, 0x7F7FF2)]
+        public void SongPositionBytes(int sixteenths, int expected)
+        {
+            int message = MidiMessage.SongPosition(sixteenths);
+            Assert.That(message, Is.EqualTo(expected), "the low seven bits first");
+            Assert.That(MidiMessage.IsSongPosition(message), Is.True);
+            Assert.That(MidiMessage.SongPositionOf(message), Is.EqualTo(sixteenths));
+        }
+
+        [TestCase(-5, 0)]
+        [TestCase(20000, 16383)]
+        public void SongPositionIsClamped(int sixteenths, int used)
+        {
+            Assert.That(MidiMessage.SongPositionOf(MidiMessage.SongPosition(sixteenths)), Is.EqualTo(used));
+        }
+
+        [Test]
+        public void SystemMessagesHaveNoChannel()
+        {
+            foreach (int message in new[] { MidiMessage.Clock(), MidiMessage.Start(), MidiMessage.Continue(), MidiMessage.Stop(), MidiMessage.SongPosition(16), 0xFE })
+            {
+                Assert.That(MidiMessage.IsSystem(message), Is.True, MidiMessage.Describe(message));
+                Assert.That(MidiMessage.Kind(message), Is.EqualTo(MidiMessage.Status(message)), "a system message's kind is its status byte");
+                Assert.That(MidiMessage.IsNoteOn(message) || MidiMessage.IsNoteOff(message) || MidiMessage.IsAllNotesOff(message), Is.False);
+            }
+
+            Assert.That(MidiMessage.IsSystem(MidiMessage.NoteOn(16, 60, 100)), Is.False);
+            Assert.That(MidiMessage.IsSystem(MidiMessage.ControlChange(16, 64, 127)), Is.False);
+        }
+
+        [TestCase(60, "C4")]
+        [TestCase(61, "C♯4")]
+        [TestCase(64, "E4")]
+        [TestCase(67, "G4")]
+        [TestCase(59, "B3")]
+        [TestCase(69, "A4")]
+        [TestCase(0, "C-1")]
+        [TestCase(127, "G9")]
+        public void NoteNamesPutC4At60(int note, string name)
+        {
+            Assert.That(MidiMessage.NoteName(note), Is.EqualTo(name));
+        }
+
+        [Test]
+        public void DescribeSaysWhatAMessageIs()
+        {
+            Assert.That(MidiMessage.Describe(MidiMessage.NoteOn(1, 64, 96)), Is.EqualTo("Note on E4 96"));
+            Assert.That(MidiMessage.Describe(MidiMessage.NoteOn(1, 64, 0)), Is.EqualTo("Note off E4"), "velocity 0 is a note off");
+            Assert.That(MidiMessage.Describe(MidiMessage.NoteOff(1, 64, 30)), Is.EqualTo("Note off E4"));
+            Assert.That(MidiMessage.Describe(MidiMessage.ControlChange(1, 64, 127)), Is.EqualTo("CC 64 127"));
+            Assert.That(MidiMessage.Describe(0x0005C0), Is.EqualTo("Program 5"));
+            Assert.That(MidiMessage.Describe(0x4000E0), Is.EqualTo("Pitch bend 8192"));
+            Assert.That(MidiMessage.Describe(MidiMessage.Start()), Is.EqualTo("Clock: Start"));
+            Assert.That(MidiMessage.Describe(MidiMessage.Continue()), Is.EqualTo("Clock: Continue"));
+            Assert.That(MidiMessage.Describe(MidiMessage.Stop()), Is.EqualTo("Clock: Stop"));
+            Assert.That(MidiMessage.Describe(MidiMessage.Clock()), Is.EqualTo("Clock"));
+            Assert.That(MidiMessage.Describe(MidiMessage.SongPosition(16)), Is.EqualTo("Song position 16"));
+            Assert.That(MidiMessage.DescribeWithChannel(MidiMessage.Start()), Is.EqualTo("Clock: Start"), "no channel on a system message");
+            Assert.That(MidiMessage.DescribeWithChannel(MidiMessage.ControlChange(16, 119, 1)), Is.EqualTo("ch 16 CC 119 1"));
         }
     }
 }

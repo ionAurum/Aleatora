@@ -7,11 +7,20 @@ namespace Aurumworks.Aleatora
     /// The schedule that plays a melody out as quarter notes (the MIDI plan's decisions 6, 7, 8 and
     /// 12), with no clock of its own: whoever drives it says what time it is, in seconds. MidiPlayback
     /// drives it from its clock thread; the tests drive it with made-up times. Each note goes on at
-    /// its beat (60 / BPM seconds apart) and off NoteLength of a beat later, at Velocity, on Channel.
-    /// Advance sends everything due, in order, a note off before a note on at the same time, so a
-    /// repeated note sounds twice. Every note on gets its note off: on Pause, Stop, a change of
-    /// channel and Release. It holds its own copy of the notes, and a lock, so the clock thread and
-    /// the main thread may both call it.
+    /// its beat and off NoteLength of a beat later (in seconds, at the tempo it went on at), at
+    /// Velocity, on Channel. Advance sends everything due, in order, a note off before a note on at
+    /// the same time, so a repeated note sounds twice. Every note on gets its note off: on Pause,
+    /// Stop, a change of channel and Release. It holds its own copy of the notes, and a lock, so the
+    /// clock thread and the main thread may both call it.
+    ///
+    /// The schedule runs in beats (the MIDI in plan, IN-2), through an IBeatSource:
+    /// - Its own (InternalBeatSource): seconds × BPM ÷ 60, from Play. The notes play in order, as in
+    ///   MIDI-2. With a ClockSender (SetSender), Aleatora's clock goes out with them (decision 5).
+    /// - A ClockFollower (Follow): note n goes on as the followed clock's beat n arrives, counted from
+    ///   the song's start (decision 4): Loop wraps, Endless steps the Source on to the beat, and with
+    ///   neither nothing plays past the last note. The follower's Start or Continue plays; its Stop,
+    ///   or its ticks stopping, ends the note sounding and holds the place. Play joins on the next
+    ///   beat; Pause and Stop silence it until Play or the follower's next Start or Continue.
     /// </summary>
     public sealed class NotePlayer
     {
@@ -33,10 +42,15 @@ namespace Aurumworks.Aleatora
         /// <summary>The shortest note length, as a share of the beat; the longest is 1, held to the next note.</summary>
         public const float ShortestNoteLength = 0.05f;
 
+        // A beat reached to within this is reached: floating point.
+        private const double Epsilon = 1e-9;
+
         private readonly object _lock = new object();
         private readonly List<int> _notes = new List<int>();
+        private readonly InternalBeatSource _internal = new InternalBeatSource(DefaultBpm);
+        private ClockFollower _follower; // the clock followed, or null: the internal beats
+        private ClockSender _sender;
         private int _bpm = DefaultBpm;
-        private double _beat = 60d / DefaultBpm;
         private int _channel = MidiMessage.LowestChannel;
         private int _velocity = DefaultVelocity;
         private double _noteLength = DefaultNoteLength;
@@ -44,15 +58,18 @@ namespace Aurumworks.Aleatora
         private bool _endless;
         private INoteSource _source;
 
-        private bool _playing;
+        private bool _playing;      // following: whether it plays while the clock runs
         private bool _paused;
-        private int _next;          // the index of the next note to go on
-        private double _nextTime;   // when it goes on
+        private int _next;          // the index of the next note to go on, in order (its own beats)
+        private double _nextBeat;   // the beat it goes on
         private double _lastOnTime; // when the last note went on
         private int _position = -1;
         private int _sounding = -1; // the note sounding, or -1
         private int _soundingChannel;
-        private double _offTime;
+        private double _offTime;    // seconds
+        private int _starts;        // the follower's Starts and Jumps as last seen
+        private int _jumps;
+        private bool _join;         // following: the next note is the next whole beat's
 
         /// <summary>
         /// The player's lock. Hold it to change the Source's notes and the player's (SetNotes) as one,
@@ -142,6 +159,45 @@ namespace Aurumworks.Aleatora
                 lock (_lock)
                 {
                     return _bpm;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The tempo playing, in quarter notes a minute: the followed clock's as measured (Bpm until it
+        /// is known), else Bpm.
+        /// </summary>
+        public double Tempo
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return CurrentTempo;
+                }
+            }
+        }
+
+        /// <summary>The clock followed (Follow), or null while Aleatora keeps its own.</summary>
+        public ClockFollower Following
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _follower;
+                }
+            }
+        }
+
+        /// <summary>Where Aleatora's clock goes out (SetSender), or null.</summary>
+        public ClockSender Sender
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _sender;
                 }
             }
         }
@@ -294,11 +350,59 @@ namespace Aurumworks.Aleatora
             lock (_lock)
             {
                 _bpm = Math.Clamp(bpm, LowestBpm, HighestBpm);
-                _beat = 60d / _bpm;
-                if (_playing && _position >= 0)
+                double nextTime = _playing && _position >= 0 && _follower == null
+                    ? Math.Max(now, _lastOnTime + 60d / _bpm)
+                    : _internal.TimeOf(_nextBeat); // no note playing yet: the next beat keeps its time
+                _internal.Set(_bpm, nextTime, _nextBeat);
+            }
+        }
+
+        /// <summary>
+        /// Follows this clock, or (null) goes back to Aleatora's own. The note sounding ends. To a
+        /// clock: playing, it joins on the next beat; stopped, it waits for the clock's next Start or
+        /// Continue. Back to its own: playing, the next note goes on at once and the beats run from it.
+        /// Called again with the same clock (reset), it joins it afresh.
+        /// </summary>
+        public void Follow(ClockFollower follower, double now, IMidiOutput output)
+        {
+            lock (_lock)
+            {
+                EndSounding(output);
+                _sender?.Stop(output);
+                _follower = follower;
+                if (follower != null)
                 {
-                    _nextTime = Math.Max(now, _lastOnTime + _beat);
-                    _offTime = Math.Min(_offTime, _nextTime);
+                    _starts = follower.Starts;
+                    _jumps = follower.Jumps;
+                    _join = true;
+                }
+                else if (_playing)
+                {
+                    _internal.Anchor(now, _nextBeat);
+                    _sender?.Start(_nextBeat, resume: true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sends Aleatora's clock with its notes through this sender, or (null) none; the one replaced
+        /// sends Stop. Playing on its own clock, the new one starts with the next note (SPP, then
+        /// Continue). Following, no clock goes out (decision 5).
+        /// </summary>
+        public void SetSender(ClockSender sender, IMidiOutput output)
+        {
+            lock (_lock)
+            {
+                if (sender == _sender)
+                {
+                    return;
+                }
+
+                _sender?.Stop(output);
+                _sender = sender;
+                if (sender != null && _playing && _follower == null)
+                {
+                    sender.Start(_nextBeat, resume: _nextBeat > 0d);
                 }
             }
         }
@@ -332,15 +436,26 @@ namespace Aurumworks.Aleatora
                     return;
                 }
 
+                if (_follower != null)
+                {
+                    _paused = false;
+                    _playing = true;
+                    _join = true;
+                    return;
+                }
+
+                bool resume = _paused;
                 if (!_paused)
                 {
                     _next = 0;
                     _position = -1;
+                    _nextBeat = 0d;
                 }
 
                 _paused = false;
                 _playing = true;
-                _nextTime = now;
+                _internal.Anchor(now, _nextBeat);
+                _sender?.Start(_nextBeat, resume);
             }
         }
 
@@ -357,6 +472,7 @@ namespace Aurumworks.Aleatora
                 EndSounding(output);
                 _playing = false;
                 _paused = true;
+                _sender?.Stop(output);
             }
         }
 
@@ -370,6 +486,7 @@ namespace Aurumworks.Aleatora
                 _paused = false;
                 _next = 0;
                 _position = -1;
+                _sender?.Stop(output);
             }
         }
 
@@ -407,60 +524,189 @@ namespace Aurumworks.Aleatora
         /// Sends to the output everything due by now, in order of time, a note off before a note on at
         /// the same time; with no output the schedule moves on and nothing is sent. A note on found
         /// more than a beat late (the clock held up) goes on now and the beats go on from it, rather
-        /// than the missed notes all at once.
+        /// than the missed notes all at once; following, the note for the beat it is now goes on.
         /// </summary>
         public void Advance(double now, IMidiOutput output)
         {
             lock (_lock)
             {
-                while (true)
+                if (_follower != null)
                 {
-                    bool offDue = _sounding >= 0 && _offTime <= now;
-                    bool onDue = _playing && _nextTime <= now;
-                    if (offDue && (!onDue || _offTime <= _nextTime))
-                    {
-                        EndSounding(output);
-                    }
-                    else if (onDue)
-                    {
-                        StartNext(now, output);
-                    }
-                    else
-                    {
-                        return;
-                    }
+                    AdvanceFollowing(now, output);
+                }
+                else
+                {
+                    AdvanceInternal(now, output);
                 }
             }
         }
 
-        // The note on at _nextTime, or the end of the melody.
-        private void StartNext(double now, IMidiOutput output)
+        // On its own beats: the notes in order.
+        private void AdvanceInternal(double now, IMidiOutput output)
         {
-            if (now - _nextTime > _beat)
+            double beat = _internal.BeatAt(now);
+            if (_playing && beat - _nextBeat > 1d)
             {
-                _nextTime = now;
+                _internal.Anchor(now, _nextBeat);
+                beat = _nextBeat;
             }
 
+            while (true)
+            {
+                if (_sounding >= 0 && _offTime <= now)
+                {
+                    EndSounding(output);
+                }
+                else if (_playing && beat + Epsilon >= _nextBeat)
+                {
+                    StartNext(output);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if (_playing)
+            {
+                _sender?.Advance(beat, output);
+            }
+        }
+
+        // On its own beats: the note on at _nextBeat, or the end of the melody.
+        private void StartNext(IMidiOutput output)
+        {
             if (!TryTakeNext(out int index))
             {
                 EndSounding(output);
                 _playing = false;
                 _next = 0;
                 _position = -1;
+                _sender?.Stop(output);
                 return;
             }
 
+            double onTime = _internal.TimeOf(_nextBeat);
+            _sender?.Advance(_nextBeat, output); // the beat's tick before its note
+            Sound(index, onTime + _noteLength * 60d / _bpm, output);
+            _lastOnTime = onTime;
+            _next = index + 1;
+            _nextBeat += 1d;
+        }
+
+        // Following: note n on the clock's beat n.
+        private void AdvanceFollowing(double now, IMidiOutput output)
+        {
+            ClockFollower follower = _follower;
+            int starts = follower.Starts;
+            if (starts != _starts)
+            {
+                _starts = starts; // the clock started: Aleatora plays, after its own Stop too
+                _playing = true;
+                _paused = false;
+            }
+
+            int jumps = follower.Jumps;
+            if (jumps != _jumps)
+            {
+                _jumps = jumps;
+                _join = false;
+                _nextBeat = Math.Ceiling(follower.JumpBeat - Epsilon);
+            }
+
+            if (!follower.IsRunning)
+            {
+                EndSounding(output); // the clock's Stop: the place is held
+                return;
+            }
+
+            double beat = follower.BeatAt(now);
+            if (_join)
+            {
+                _join = false;
+                _nextBeat = Math.Ceiling(beat - Epsilon);
+            }
+
+            if (_playing && beat - _nextBeat >= 1d)
+            {
+                _nextBeat = Math.Floor(beat + Epsilon); // held up: this beat's note, not the missed ones
+            }
+
+            while (true)
+            {
+                if (_sounding >= 0 && _offTime <= now)
+                {
+                    EndSounding(output);
+                }
+                else if (_playing && beat + Epsilon >= _nextBeat)
+                {
+                    PlayBeat((long)_nextBeat, now, output);
+                    _nextBeat += 1d;
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        // Following: the note for beat n goes on now (none past the end, the playhead −1).
+        private void PlayBeat(long beat, double now, IMidiOutput output)
+        {
+            int index = IndexOfBeat(beat);
+            if (index < 0)
+            {
+                EndSounding(output);
+                _position = -1;
+                return;
+            }
+
+            Sound(index, now + _noteLength * 60d / CurrentTempo, output);
+            _lastOnTime = now;
+            _next = index + 1;
+        }
+
+        // Following: the index of beat n's note: n, the Source stepped on to it (Endless), n wrapped
+        // (Loop), or −1.
+        private int IndexOfBeat(long beat)
+        {
+            if (beat < 0)
+            {
+                return -1;
+            }
+
+            while (beat >= _notes.Count && _endless && _source != null && _source.TryNext(out int note))
+            {
+                _notes.Add(Math.Clamp(note, 0, MidiMessage.HighestData));
+            }
+
+            if (beat < _notes.Count)
+            {
+                return (int)beat;
+            }
+
+            if (_loop && _notes.Count > 0)
+            {
+                return (int)(beat % _notes.Count);
+            }
+
+            return -1;
+        }
+
+        // The note at an index goes on, the note sounding ending first; off at the time given.
+        private void Sound(int index, double offTime, IMidiOutput output)
+        {
             EndSounding(output);
             int note = _notes[index];
             output?.Send(MidiMessage.NoteOn(_channel, note, _velocity));
             _sounding = note;
             _soundingChannel = _channel;
-            _offTime = _nextTime + _beat * _noteLength;
+            _offTime = offTime;
             _position = index;
-            _lastOnTime = _nextTime;
-            _next = index + 1;
-            _nextTime += _beat;
         }
+
+        // Under the lock.
+        private double CurrentTempo => _follower != null && _follower.Tempo > 0d ? _follower.Tempo : _bpm;
 
         // The index of the note to play next: the next in the melody, else (Endless) a new one from
         // the source, else (Loop) the first. False at the end of the melody.

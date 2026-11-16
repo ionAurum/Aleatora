@@ -21,7 +21,8 @@ namespace Aurumworks.Aleatora
     /// menus, and the board behind the menus (its 61 cells, picking them, its shapes in both
     /// orientations) and that the melody tables came with the player and read, MIDI out (the MIDI page
     /// from Settings and from Output, the transport on the Melodies page, into a RecordingOutput: no
-    /// port is opened), then quits with exit code
+    /// port is opened), MIDI in (a FeedInput's chord held: no input is opened; the MIDI page's inputs,
+    /// clock and monitor, following a fed clock and sending one, IN-3), then quits with exit code
     /// 1 if anything didn't hold or any error was logged. -aleatoraScreenshots folder saves a screenshot of each menu. It
     /// saves no setting. Tools/menucheck.sh builds the player and runs it. Without the flag none of
     /// this runs.
@@ -126,6 +127,7 @@ namespace Aurumworks.Aleatora
             CheckGenerator();
 
             // MIDI out (MIDI-1): no port opened in a self-test; Panic and closing, into a recording.
+            // MIDI in (IN-1): no input opened; a fed chord held.
             CheckMidi();
 
             // The session menu, opened with Escape.
@@ -333,6 +335,33 @@ namespace Aurumworks.Aleatora
             SelfTest.Check(recording.IsDisposed && !midi.IsOpen && sent.Length > 0
                 && sent[sent.Length - 1].Message == MidiMessage.AllNotesOff(midi.Channel),
                 $"closing sends All Notes Off on channel {midi.Channel} and closes the output");
+
+            // MIDI in (IN-1): no input opened in a self-test; a fed chord shows as held, through the
+            // clock thread, and closing the feed forgets it.
+            SelfTest.Check(midi.InputNames.Count == 0, "a self-test opens no MIDI input");
+            IReadOnlyList<string> inputs = MidiPorts.Inputs;
+            Debug.Log("Menu check: MIDI inputs: " + (inputs.Count == 0 ? "none" : string.Join(", ", inputs)));
+            var feed = new FeedInput("Menu check keys", () => midi.Now);
+            SelfTest.Check(midi.UseInput(feed) && midi.IsClockRunning, "a fed input opens and starts the clock thread");
+            feed.Feed(MidiMessage.NoteOn(1, 60, 100));
+            feed.Feed(MidiMessage.NoteOn(1, 64, 100));
+            feed.Feed(MidiMessage.NoteOn(1, 67, 100));
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            while (midi.Held.Count < 3 && watch.ElapsedMilliseconds < 500)
+            {
+                System.Threading.Thread.Sleep(1);
+            }
+
+            var held = new List<HeldNotes.Held>();
+            midi.Held.CopyTo(held);
+            string names = string.Join(" ", held.ConvertAll(h => h.ToString()));
+            SelfTest.Check(names == "C4 E4 G4", $"the fed chord shows as held in {watch.ElapsedMilliseconds} ms: {names}");
+            var received = new List<TimedMessage>();
+            midi.DrainReceived(received);
+            SelfTest.Check(received.Count == 3, "and goes to the monitor's queue: " + received.Count);
+            midi.CloseInput(feed.Name);
+            SelfTest.Check(feed.IsDisposed && midi.Held.Count == 0 && midi.InputNames.Count == 0,
+                "closing the input forgets what it held");
         }
 
         // The Melodies page (M3), opened from a menu by its Melodies button: it opens over it with
@@ -359,18 +388,7 @@ namespace Aurumworks.Aleatora
             SelfTest.Check(!UiProbe.HasInteractable(under), "nothing under the Melodies page can be used");
             SelfTest.Check(MenuFocus.IsAnyOpen, "the Melodies page holds the controls");
             CheckNavigation("the Melodies page", top);
-            List<Selectable> reached = UiProbe.Reachable();
-            var unreached = new List<string>();
-            foreach (Selectable control in top.GetComponentsInChildren<Selectable>())
-            {
-                if (control.IsInteractable() && !reached.Contains(control))
-                {
-                    unreached.Add(control.transform.parent.name + "/" + control.name);
-                }
-            }
-
-            SelfTest.Check(unreached.Count == 0, "navigation reaches every control from Generate: " +
-                (unreached.Count == 0 ? reached.Count + " controls" : "not " + string.Join(", ", unreached)));
+            CheckReachesAll("the Melodies page", top);
             SelfTest.Check(page.Strip.Count == MelodiesPage.MelodyLength, $"it opens with a melody of 32 notes: {page.Strip.Count}");
 
             if (full)
@@ -401,6 +419,9 @@ namespace Aurumworks.Aleatora
 
                 // The transport (MIDI-3), into a recording; it ends with Generate's 32 notes again.
                 yield return CheckTransport(page, top);
+
+                // MIDI in on the screens (IN-3): the inputs, the monitor, following a fed clock, sending one.
+                yield return CheckMidiIn(page, top);
 
                 Slider order = Control<Slider>(top, "Slider: Order");
                 if (SelfTest.Check(order != null, "the page has its Order slider"))
@@ -528,6 +549,7 @@ namespace Aurumworks.Aleatora
             CheckMidiList(top);
             SelfTest.Check(!UiProbe.HasInteractable(under), "nothing under the MIDI page can be used");
             CheckNavigation("the MIDI page", top);
+            CheckReachesAll("the MIDI page", top);
             Debug.Log("Menu check: MIDI page: " + UiProbe.Texts(top));
             if (shoot)
             {
@@ -720,6 +742,280 @@ namespace Aurumworks.Aleatora
             SelfTest.Progress();
         }
 
+        // MIDI in on the screens (IN-3), with a RecordingOutput and two FeedInputs, a keyboard and a
+        // clock. The recording stands in as the output under the name of a listed input port, if any,
+        // so the MIDI page greys that port. The MIDI page lists the inputs, the fed ones on, with
+        // Clock, Send clock and Monitor, every control reachable (6-MidiIn). The fed keys show in the
+        // monitor, newest first, and as held, the one let go under the pedal sustained (6-Monitor).
+        // Clock follows the fed clock: at 150 BPM from Start, the BPM box reads 150.0 and can't be
+        // edited, the first note on comes with the first tick, note n on beat n, and the playhead
+        // moves (6-Following); the fed Stop leaves nothing sounding. Then Aleatora's own clock with
+        // Send clock on, BPM 150, Play: SPP 0, Start, ticks about 16.7 ms apart, and Stop on Stop.
+        // It ends with the feeds closed, the clock Aleatora's and Send clock off.
+        private static IEnumerator CheckMidiIn(MelodiesPage page, RectTransform top)
+        {
+            MidiPlayback midi = page.Midi;
+            if (!SelfTest.Check(midi != null, "the page has MidiPlayback for MIDI in"))
+            {
+                yield break;
+            }
+
+            var ports = new List<string>(MidiPorts.Inputs);
+            string outputName = ports.Count == 0 ? "Menu check" : ports.Contains("Aleatora Test") ? "Aleatora Test" : ports[0];
+            var recording = new RecordingOutput(outputName, () => midi.Now);
+            midi.Use(recording);
+            var keys = new FeedInput("Menu check keys", () => midi.Now);
+            var reaper = new FeedInput("Menu check clock", () => midi.Now);
+            SelfTest.Check(midi.UseInput(keys) && midi.UseInput(reaper), "two fed inputs open, a keyboard and a clock");
+            Debug.Log($"Menu check: the recording stands in as the output '{outputName}'; MIDI inputs: " +
+                (ports.Count == 0 ? "none" : string.Join(", ", ports)));
+
+            // The MIDI page, over the Melodies page, with the inputs.
+            Press(top, "Button: Output");
+            yield return null;
+            RectTransform midiPage = Menus.Top != null && Menus.Top.name == "MIDI" ? Menus.Top : null;
+            if (!SelfTest.Check(midiPage != null, "Output opens the MIDI page"))
+            {
+                yield break;
+            }
+
+            var rows = new List<string>();
+            bool listed = true;
+            foreach ((string name, string label) in MidiPage.InputRows(midi))
+            {
+                Toggle toggle = UiProbe.Find<Toggle>(midiPage, "Toggle: " + label);
+                listed &= toggle != null;
+                rows.Add(label + (toggle == null ? " (missing)" : toggle.isOn ? " [on]" : toggle.IsInteractable() ? " [off]" : " [greyed]"));
+            }
+
+            Toggle keysToggle = UiProbe.Find<Toggle>(midiPage, "Toggle: Menu check keys");
+            Toggle clockToggle = UiProbe.Find<Toggle>(midiPage, "Toggle: Menu check clock");
+            SelfTest.Check(listed && keysToggle != null && keysToggle.isOn && clockToggle != null && clockToggle.isOn,
+                "the MIDI page lists every input, the fed ones on: " + string.Join(" | ", rows));
+            if (ports.Count > 0)
+            {
+                Toggle greyed = UiProbe.Find<Toggle>(midiPage, $"Toggle: {outputName} (the output)");
+                SelfTest.Check(greyed != null && !greyed.isOn && !greyed.IsInteractable(), $"the output's own port, {outputName}, is greyed and can't be turned on");
+            }
+            else
+            {
+                Debug.Log("Menu check: no input port listed, so no greyed output's port to see.");
+            }
+
+            TMP_Dropdown clock = Control<TMP_Dropdown>(midiPage, "Dropdown: Clock");
+            string options = clock != null ? string.Join(", ", clock.options.ConvertAll(o => o.text)) : "none";
+            SelfTest.Check(clock != null && options == "Aleatora, Menu check keys, Menu check clock" && clock.value == 0,
+                "Clock offers Aleatora, then each open input, Aleatora chosen: " + options);
+            Toggle send = Control<Toggle>(midiPage, "Toggle: Send clock");
+            SelfTest.Check(send != null && !send.isOn, "Send clock is there, off");
+            SelfTest.Check(UiProbe.Find<Button>(midiPage, "Button: Monitor") != null, "Monitor is there");
+            CheckMidiList(midiPage);
+            CheckNavigation("the MIDI page with inputs", midiPage);
+            CheckReachesAll("the MIDI page with inputs", midiPage);
+            Debug.Log("Menu check: MIDI page with inputs: " + UiProbe.Texts(midiPage));
+            yield return new WaitForSecondsRealtime(0.2f);
+            yield return SelfTest.Capture("6-MidiIn");
+
+            // The keyboard: C4, E4 and G4 down, the pedal down, G4 let go: G4 sustained.
+            keys.Feed(MidiMessage.NoteOn(1, 60, 100));
+            keys.Feed(MidiMessage.NoteOn(1, 64, 90));
+            keys.Feed(MidiMessage.NoteOn(1, 67, 80));
+            keys.Feed(MidiMessage.ControlChange(1, 64, 127));
+            keys.Feed(MidiMessage.NoteOff(1, 67));
+            float start = Time.realtimeSinceStartup;
+            while (!midi.Held.IsSustained(keys.Name, 1, 67) && Time.realtimeSinceStartup - start < 0.5f)
+            {
+                yield return null;
+            }
+
+            Press(midiPage, "Button: Monitor");
+            yield return null;
+            MidiMonitorPage monitor = Menus.Top != null ? Menus.Top.GetComponent<MidiMonitorPage>() : null;
+            if (!SelfTest.Check(monitor != null, "Monitor opens the monitor over the MIDI page"))
+            {
+                yield break;
+            }
+
+            IReadOnlyList<string> lines = monitor.MessageLines;
+            Debug.Log("Menu check: the monitor: " + monitor.ClockLine + " / " + monitor.HeldLine + " / " + string.Join(" / ", lines));
+            SelfTest.Check(lines.Count == 5 && lines[0].StartsWith("Menu check keys · ch 1 · Note off G4 · ", StringComparison.Ordinal)
+                && lines[1].Contains(" · CC 64 127 · ") && lines[4].Contains(" · Note on C4 100 · "),
+                "the monitor lists the five fed messages, newest first, with port, channel and time: " + lines.Count);
+            SelfTest.Check(monitor.HeldLine == "C4 E4 G4 (sustained)", "the monitor shows the keys held, G4 sustained: " + monitor.HeldLine);
+            SelfTest.Check(monitor.ClockLine == "Aleatora: " + midi.Bpm + " BPM", "the monitor shows Aleatora's clock: " + monitor.ClockLine);
+            CheckNavigation("the monitor", Menus.Top);
+            CheckReachesAll("the monitor", Menus.Top);
+            yield return new WaitForSecondsRealtime(0.2f);
+            yield return SelfTest.Capture("6-Monitor");
+            yield return QueuedInput.Press(Key.Escape);
+            SelfTest.Check(Menus.Top == midiPage, "Escape closes the monitor, back to the MIDI page");
+
+            // Clock: follow the fed clock.
+            if (clock != null)
+            {
+                clock.value = 2;
+            }
+
+            SelfTest.Check(midi.IsFollowing && midi.Followed == reaper.Name && midi.ClockName == reaper.Name,
+                "Clock follows the fed clock: " + midi.Followed);
+            yield return QueuedInput.Press(Key.Escape);
+            SelfTest.Check(Menus.Top == top, "Escape closes the MIDI page, back to the Melodies page");
+            yield return null;
+            TMP_InputField bpm = UiProbe.Find<TMP_InputField>(top, "InputField: BPM");
+            SelfTest.Check(bpm != null && !bpm.IsInteractable(), "while following, the BPM box can't be edited");
+
+            // 150 BPM from Start, eight beats, then Stop, fed on a thread of its own as a port would
+            // deliver them, each tick stamped with the time it was due.
+            var first = new List<int>(page.Notes);
+            recording.Clear();
+            const double gap = 60d / (150d * ClockFollower.TicksPerBeat);
+            const int beats = 8;
+            var tickTimes = new double[beats * ClockFollower.TicksPerBeat];
+            var feeder = new System.Threading.Thread(() =>
+            {
+                double begin = midi.Now + 0.05;
+                reaper.Feed(MidiMessage.Start());
+                for (int i = 0; i < tickTimes.Length; i++)
+                {
+                    double due = begin + i * gap;
+                    while (midi.Now < due)
+                    {
+                        System.Threading.Thread.Sleep(due - midi.Now > 0.003 ? 1 : 0);
+                    }
+
+                    tickTimes[i] = due;
+                    reaper.Feed(MidiMessage.Clock(), due);
+                }
+
+                reaper.Feed(MidiMessage.Stop());
+            })
+            {
+                Name = "Menu check clock feed",
+                IsBackground = true,
+                Priority = System.Threading.ThreadPriority.AboveNormal,
+            };
+            feeder.Start();
+            yield return new WaitForSecondsRealtime(1.05f); // about two and a half beats
+            int earlier = page.Strip.Playhead;
+            string shows = bpm != null ? bpm.text : null;
+            SelfTest.Check(shows == "150.0", "following a fed clock at 150 BPM, the BPM box reads 150.0: " + shows);
+            string says = MidiMonitorPage.ClockText(midi);
+            SelfTest.Check(says.StartsWith("Following Menu check clock: 150.0 BPM, playing, beat ", StringComparison.Ordinal),
+                "the monitor would say: " + says);
+            yield return SelfTest.Capture("6-Following");
+            yield return new WaitForSecondsRealtime(0.8f);
+            int later = page.Strip.Playhead;
+            SelfTest.Check(earlier >= 1 && later > earlier && page.Strip.PlayheadColumn >= 0,
+                $"the playhead moves with the clock: note {earlier}, then {later}");
+
+            start = Time.realtimeSinceStartup;
+            while ((feeder.IsAlive || midi.Follower.IsRunning || recording.SoundingCount > 0) && Time.realtimeSinceStartup - start < 6f)
+            {
+                yield return null;
+            }
+
+            RecordingOutput.Sent[] sent = recording.Messages;
+            var ons = new List<RecordingOutput.Sent>();
+            foreach (RecordingOutput.Sent one in sent)
+            {
+                if (MidiMessage.IsNoteOn(one.Message))
+                {
+                    ons.Add(one);
+                }
+            }
+
+            bool onBeats = ons.Count == beats;
+            double worst = 0d;
+            for (int n = 0; onBeats && n < ons.Count; n++)
+            {
+                double late = ons[n].Time - tickTimes[n * ClockFollower.TicksPerBeat];
+                worst = Math.Max(worst, late);
+                onBeats &= MidiMessage.Data1(ons[n].Message) == first[n] && late >= 0d && late < 0.005;
+            }
+
+            double firstLate = ons.Count > 0 ? (ons[0].Time - tickTimes[0]) * 1000d : double.NaN;
+            SelfTest.Check(onBeats, $"the first note on comes with the first tick ({firstLate:0.00} ms after it), and note n with beat n's tick, the melody's notes: {ons.Count} of {beats}, worst {worst * 1000d:0.00} ms");
+            SelfTest.Check(!feeder.IsAlive && !midi.Follower.IsRunning && recording.SoundingCount == 0, "the fed Stop leaves nothing sounding");
+            SelfTest.Progress();
+
+            // Aleatora's own clock with Send clock on: Start, ticks at 150 BPM, Stop.
+            Press(top, "Button: Stop");
+            Press(top, "Button: Output");
+            yield return null;
+            midiPage = Menus.Top != null && Menus.Top.name == "MIDI" ? Menus.Top : null;
+            clock = midiPage != null ? Control<TMP_Dropdown>(midiPage, "Dropdown: Clock") : null;
+            send = midiPage != null ? Control<Toggle>(midiPage, "Toggle: Send clock") : null;
+            if (!SelfTest.Check(clock != null && send != null && clock.value == 2, "the MIDI page again, Clock on the fed clock"))
+            {
+                yield break;
+            }
+
+            clock.value = 0;
+            send.isOn = true;
+            SelfTest.Check(!midi.IsFollowing && midi.ClockName.Length == 0 && midi.SendClock, "Clock on Aleatora, Send clock on");
+            yield return QueuedInput.Press(Key.Escape);
+            yield return null;
+            string own = midi.Bpm.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            SelfTest.Check(bpm != null && bpm.IsInteractable() && bpm.text == own, "the BPM box is Aleatora's again, and editable: " + bpm?.text);
+            if (bpm != null)
+            {
+                bpm.text = "150";
+                bpm.onEndEdit.Invoke("150");
+            }
+
+            recording.Clear();
+            Press(top, "Button: Play");
+            yield return new WaitForSecondsRealtime(1.05f);
+            Press(top, "Button: Stop");
+            yield return null;
+            sent = recording.Messages;
+            int startAt = -1;
+            int sppAt = -1;
+            var ticks = new List<double>();
+            int lastSystem = 0;
+            foreach (RecordingOutput.Sent one in sent)
+            {
+                int message = one.Message;
+                if (MidiMessage.IsSongPosition(message) && startAt < 0 && sppAt < 0 && MidiMessage.SongPositionOf(message) == 0)
+                {
+                    sppAt = ticks.Count;
+                }
+                else if (MidiMessage.IsStart(message) && startAt < 0)
+                {
+                    startAt = ticks.Count;
+                }
+                else if (MidiMessage.IsClock(message) && startAt >= 0)
+                {
+                    ticks.Add(one.Time);
+                }
+
+                if (MidiMessage.IsSystem(message))
+                {
+                    lastSystem = message;
+                }
+            }
+
+            double mean = ticks.Count > 1 ? (ticks[ticks.Count - 1] - ticks[0]) / (ticks.Count - 1) : 0d;
+            double spread = 0d;
+            for (int i = 1; i < ticks.Count; i++)
+            {
+                spread = Math.Max(spread, Math.Abs(ticks[i] - ticks[i - 1] - gap));
+            }
+
+            SelfTest.Check(midi.Bpm == 150 && sppAt == 0 && startAt == 0 && ticks.Count >= 55 && Math.Abs(mean - gap) < 0.0005 && spread < 0.005,
+                $"Send clock with Aleatora's clock at 150 BPM: SPP 0, Start, then {ticks.Count} ticks {mean * 1000d:0.00} ms apart (worst {spread * 1000d:0.00} ms off {gap * 1000d:0.00})");
+            SelfTest.Check(MidiMessage.IsStop(lastSystem) && recording.SoundingCount == 0, "and Stop on Stop, with nothing sounding");
+
+            // As it was: no feeds, Aleatora's clock, Send clock off.
+            midi.ChooseSendClock(false);
+            midi.CloseInput(keys.Name);
+            midi.CloseInput(reaper.Name);
+            midi.DrainReceived(new List<TimedMessage>()); // the fed clock's Start and Stop: CheckMidi counts the queue afresh
+            SelfTest.Check(!midi.SendClock && midi.InputNames.Count == 0 && keys.IsDisposed && reaper.IsDisposed && midi.Held.Count == 0,
+                "the feeds closed, Send clock off");
+            SelfTest.Progress();
+        }
+
         // Whether the note on at sent[index] has its note off, on its channel, length seconds after it (to 15 ms):
         // the first message after it that ends that note.
         private static bool HasNoteOff(RecordingOutput.Sent[] sent, int index, double length)
@@ -855,6 +1151,23 @@ namespace Aurumworks.Aleatora
 
         private static void Press(RectTransform menu, string buttonName) =>
             UiProbe.Press(UiProbe.Find<Button>(menu, buttonName), buttonName);
+
+        // Every usable control on the menu on top can be reached by navigation from the selected one.
+        private static void CheckReachesAll(string what, RectTransform menu)
+        {
+            List<Selectable> reached = UiProbe.Reachable();
+            var unreached = new List<string>();
+            foreach (Selectable control in menu.GetComponentsInChildren<Selectable>())
+            {
+                if (control.IsInteractable() && !reached.Contains(control))
+                {
+                    unreached.Add(control.transform.parent.name + "/" + control.name);
+                }
+            }
+
+            SelfTest.Check(unreached.Count == 0, $"navigation in {what} reaches every control from {SelectedName()}: " +
+                (unreached.Count == 0 ? reached.Count + " controls" : "not " + string.Join(", ", unreached)));
+        }
 
         // What the stack promises of the menu on top, and of the main menu with none over it:
         // keyboard and gamepad navigation, from its selected control, stays in it.
