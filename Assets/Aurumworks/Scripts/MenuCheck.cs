@@ -249,7 +249,7 @@ namespace Aurumworks.Aleatora
         private static void CheckTables()
         {
             IReadOnlyList<string> names = MarkovLibrary.Names;
-            SelfTest.Check(names.Count == 21, $"the index lists the 21 sets: {names.Count}");
+            SelfTest.Check(names.Count == 22, $"the index lists the 22 sets: {names.Count}");
             int read = 0;
             int inMode = 0;
             GeneratorSettings settings = GeneratorSettings.Default;

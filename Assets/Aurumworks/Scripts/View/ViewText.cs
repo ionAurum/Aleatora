@@ -12,7 +12,7 @@ namespace Aurumworks.Aleatora
         private static readonly string[] _plainTonics = { "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B" };
         private static readonly string[] _modes =
         {
-            "harmonic_minor", "double_harmonic", "hindu_pentatonic", "ionian", "dorian", "aeolian", "mixolydian", "lydian", "phrygian",
+            "harmonic_minor", "double_harmonic", "hindu_pentatonic", "phrygian_dominant", "ionian", "dorian", "aeolian", "mixolydian", "lydian", "phrygian",
             "gong", "zhi", "yu",
         };
         private static bool? _hasSigns;

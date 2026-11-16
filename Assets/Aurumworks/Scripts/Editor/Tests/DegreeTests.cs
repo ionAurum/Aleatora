@@ -62,6 +62,7 @@ namespace Aurumworks.Aleatora.Tests
         [TestCase("phrygian", "1 b2 b3 4 5 b6 b7")]
         [TestCase("double_harmonic", "1 b2 3 4 5 b6 7")]
         [TestCase("hindu_pentatonic", "1 3 4 5 b7")]
+        [TestCase("phrygian_dominant", "1 b2 3 4 5 b6 b7")]
         [TestCase("locrian", "1 b2 2 b3 3 4 #4 5 b6 6 b7 7")]
         public void AModeHasItsDegrees(string mode, string degrees)
         {

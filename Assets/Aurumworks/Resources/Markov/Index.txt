@@ -20,3 +20,4 @@ virtuoso_double_harmonic
 virtuoso_hindu_pentatonic
 virtuoso_lydian
 virtuoso_phrygian
+virtuoso_phrygian_dominant

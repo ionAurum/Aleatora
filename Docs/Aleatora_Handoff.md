@@ -1,33 +1,30 @@
 # Aleatora: hand-off
 
-Status (2026-11-16): **TH-2's first round is merged to `main`** (Design, rulings 53 to 55):
-every Virtuoso phrase starts on 1 (in `virtuoso.py`; the folk sets unchanged), and the double
-harmonic set shows as "Virtuoso · Byzantine". EditMode tests 291 of 291; the menu check has not
-been run since TH-1 (Tech, *As built (TH-2)*). On `main` too: TH-1, the Markov plan, MIDI out,
-MIDI in with clock and sync (all finished).
+Status (2026-11-16): **The theory plan is finished and merged to `main`** (Design, rulings 53
+to 58). Five Virtuoso sets (Lydian, Phrygian, Byzantine (double harmonic), the Hindu pentatonic,
+the phrygian dominant) ship with the 17 folk sets, 22 in all; every Virtuoso phrase starts and
+ends on 1. EditMode tests 297 of 297; the menu check `th2pd` exit 0, 186 checks held (Tech,
+*Checks*, *Runs*). Also finished on `main`: the Markov plan, MIDI out, MIDI in with clock and sync.
 
 Jon's loopMIDI ports: "Aleatora to Reaper", "Reaper to Aleatora", "Aleatora Test" (ruling 45).
 
 A local change to `Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF -
 Fallback.asset` (the Editor's dynamic font atlas) is left uncommitted; it isn't ours.
 
-## Next: TH-2, more listening if Jon wants it; then the plan is finished
+## Next: Jon picks the next plan
 
-Jon plays the Virtuoso sets again and says what else to change, or that TH-2 is done. For a
-change, on a new branch from `main` (`th-2-tuning-2`): edit `Tools/Markov/Theory/virtuoso.json`
-(or the script, for a rule), re-run `python -I Tools/Markov/Theory/virtuoso.py`, then
-`python -I Tools/markov.py Tools/Markov/Source Tools/Markov/Theory/Output Assets/Aurumworks/Resources/Markov`,
-then the EditMode tests (`TheoryTableTests` checks the pulls, counts and the start on 1). Record
-his rulings in Design, what was built in Tech, *As built (TH-2)*. The menu check
-(`bash Tools/menucheck.sh th2`) is owed: run it with the next change, or on `main` when Jon
-allows (it plays on his screen).
+No plan is under way. The open questions, each its own plan later, are in Design, *Open, each
+its own plan later*: what the grid means musically, how the generator drives the grid, OSC out
+(Reaper's OSC, ruling 39), what the keyboard's notes do (ruling 37), and rhythm (the MIDI plan's
+*Later*). When Jon picks one, write its plan in `Docs/` the way the earlier plans are written,
+and wait for his go-ahead.
 
-Read for it: Tech, *Melody tables*, *As built (TH-1)* and *(TH-2)*; the Theory plan, *TH-2* and
-*Risks*; the docstring of `Tools/Markov/Theory/virtuoso.py`.
+Read for it: Design, *Open, each its own plan later*; the latest plan
+(`Docs/Aleatora_Theory_Plan.md`) for the shape.
 
-Open for Jon: the Lydian pull is still the weakest (after ♯4: 5 43%, 3 31%). To make it
-stronger, raise `pull`, or have pulls apply inside figures too. The second changes the rules, so
-it is his call.
+Left open, not pressing (Jon approved the sets as they are): the Lydian pull is the weakest
+(after ♯4: 5 43%, 3 31%); raise `pull` in `Tools/Markov/Theory/virtuoso.json`, or have pulls
+apply inside figures too (a rule change, his call).
 
 ## Not in any repository
 
