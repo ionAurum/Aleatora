@@ -217,6 +217,10 @@ layout*: `ClockSender.Advance` takes the player's beat, not the time.
 
 ## IN-3 — The screens (branch `in-3-page`)
 
+**Done** (2026-11-15): the menu check passes at both sizes (185 checks, 17 screenshots); 268
+EditMode tests pass. What was built, and the readings where this plan was silent, are in Tech,
+*As built (IN-3)*.
+
 **Tasks**
 
 1. `MidiPage`: *Inputs*, *Clock*, *Send clock*, *Monitor* (decisions 2, 3, 5). The output's own
@@ -245,7 +249,7 @@ and a third, **Aleatora Test**, for the tests only.
 1. **Following Reaper:**
    1. In Reaper: *Preferences > MIDI Outputs*, enable Han, then right-click it and turn on
       *Send clock/SPP*.
-   2. In Aleatora: *MIDI* page, turn on input Han, set *Clock* to *Follow Han*.
+   2. In Aleatora: *MIDI* page, turn on input Han, set *Clock* to Han.
    3. Press Reaper's *Play*. Aleatora plays at Reaper's tempo, note 1 on bar 1. Recorded on a
       track from Greedo, the notes sit on Reaper's grid.
    4. Change Reaper's tempo, start mid-project, stop: Aleatora goes with it.

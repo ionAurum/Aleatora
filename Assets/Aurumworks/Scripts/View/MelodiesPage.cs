@@ -19,7 +19,9 @@ namespace Aurumworks.Aleatora
     /// the melody out through MidiPlayback: Play (Pause while playing), Stop, Loop, Endless, Panic!,
     /// Channel, BPM and Output, which opens the MIDI page; the strip frames the note playing. The
     /// generator and voicing are in a MelodySource, which Endless steps from the clock thread; the
-    /// page takes the notes it made each frame. Closing the page stops playback.
+    /// page takes the notes it made each frame. Closing the page stops playback. While following an
+    /// input's clock (IN-3; the MIDI in plan's decision 4) the BPM box shows its tempo to one decimal
+    /// and can't be edited.
     /// </summary>
     public class MelodiesPage : MonoBehaviour
     {
@@ -64,6 +66,7 @@ namespace Aurumworks.Aleatora
         private TMP_InputField _bpmField;
         private TextMeshProUGUI _outputLabel;
         private bool _showsPlaying;
+        private bool _showsFollowing;
         private IMidiOutput _shownOutput;
         private MenuStack _menus;
 
@@ -444,9 +447,14 @@ namespace Aurumworks.Aleatora
             }
         }
 
-        // A whole number from 20 to 300; anything else puts the last value back.
+        // A whole number from 20 to 300; anything else puts the last value back. Read-only while following.
         private void OnBpm(string text)
         {
+            if (_showsFollowing)
+            {
+                return;
+            }
+
             if (_midi != null && int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out int bpm)
                 && bpm >= NotePlayer.LowestBpm && bpm <= NotePlayer.HighestBpm)
             {
@@ -499,6 +507,35 @@ namespace Aurumworks.Aleatora
             if (_midi != null && _midi.Output != _shownOutput)
             {
                 ShowOutput(); // the port changed elsewhere (Settings, or a stand-in)
+            }
+
+            ShowBpm();
+        }
+
+        // While following a clock (the MIDI in plan's decision 4) the BPM box shows its tempo to one
+        // decimal and can't be edited; back on Aleatora's own, its BPM, a whole number, editable.
+        private void ShowBpm()
+        {
+            bool following = _midi != null && _midi.IsFollowing;
+            if (following != _showsFollowing)
+            {
+                _showsFollowing = following;
+                _bpmField.contentType = following ? TMP_InputField.ContentType.Standard : TMP_InputField.ContentType.IntegerNumber;
+                _bpmField.characterLimit = following ? 0 : 3;
+                _bpmField.interactable = !following;
+                if (!following)
+                {
+                    _bpmField.SetTextWithoutNotify(Bpm.ToString(CultureInfo.InvariantCulture));
+                }
+            }
+
+            if (following)
+            {
+                string tempo = _midi.Tempo.ToString("0.0", CultureInfo.InvariantCulture);
+                if (_bpmField.text != tempo)
+                {
+                    _bpmField.SetTextWithoutNotify(tempo);
+                }
             }
         }
 

@@ -28,7 +28,7 @@ All in Assembly-CSharp (no asmdefs), namespace `Aurumworks.Aleatora`, under
 | `Music/` (M1; M2 from `Rng` on) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing` | No |
 | `Midi/` (MIDI-1) | `MidiMessage`, `IMidiOutput`, `MidiPorts`, `RecordingOutput`; internal `WinMm`, `WinMmOutput`; `NotePlayer`, `INoteSource`, `MelodySource` (MIDI-2, 3); `IMidiInput`, `TimedMessage`, `FeedInput`, `HeldNotes`, internal `WinMmInput` (IN-1); `IBeatSource`, `InternalBeatSource`, `ClockFollower`, `ClockSender` (IN-2) | No |
 | `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2), `MelodyViewTuning` (M3), `MidiTuning`, `MidiPlayback` (MIDI-1) | Yes |
-| `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip`; the static `ViewText` and `ViewMesh` | Yes |
+| `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip`; the static `ViewText` and `ViewMesh`; the static `MidiPage` (MIDI-3), `MidiMonitorPage` (IN-3) | Yes |
 | (root) | `MainMenu`, `SessionMenu`, `SettingsMenu`, `MenuCheck` | Yes |
 | `Editor/`, `Editor/Tests/` | `PlayerBuild`, `TuningMaker` (*Aleatora > Make Tuning*), EditMode tests | Editor |
 
@@ -592,10 +592,52 @@ The clock (the MIDI in plan's decisions 4 to 6; rulings 39 and 40). Nothing on s
   ±1 ms of jitter at 120 BPM read at most 0.472 BPM off (the worst a ±1 ms jitter can make is
   0.48); MIDI-2's 16 notes at 300 BPM on its own clock, mean 0.63 ms late, worst 1.96 ms.
 
+### As built (IN-3, 2026-11-15, branch `in-3-page`)
+
+The screens (the MIDI in plan's decisions 2 to 5, 8 and 10). Nothing new is saved beyond IN-1's
+and IN-2's keys.
+
+- **`View/MidiPage`** is now 0.6 of the screen wide (the stack's `DialogWidth`, put back after, as
+  the framework's Credits page does), in **two equal columns**: *Output* at the left as before;
+  *Inputs* at the right, then *Clock* and *Send clock*; under both a row of *Monitor*, *Refresh*
+  and *Back*. The chosen output port still has the selection as it opens.
+  - *Inputs* are toggles (`MidiPage.InputRows`): each port listed, then each open input not listed
+    (a stand-in), then each chosen input neither listed nor open as "Han (not found)". A toggle is
+    on while its input is open or chosen; flipping it is `ChooseInput`, then the page opens again
+    (as a port's button does) with that toggle selected. The output's own port reads "Aleatora
+    Test (the output)" in the muted colour, can't be used, and navigation skips it
+    (`MidiPlayback.IsOutputName`, now public). Why a chosen input didn't open shows under the
+    toggles in the danger colour.
+  - *Clock* is a dropdown (`Dropdown: Clock`): *Aleatora*, then each open input; a chosen clock
+    whose input isn't open is listed after them as "Han (not open)" and stays chosen. Picking one
+    is `ChooseClock`; the page doesn't rebuild.
+  - *Send clock* is a toggle, `ChooseSendClock`.
+- **`View/MidiMonitorPage`** (new; a MonoBehaviour on its dialog, 0.5 of the screen wide): *Clock*,
+  *Held*, *Messages* and *Back*. Each frame it drains `MidiPlayback.DrainReceived` (it is the only
+  reader, so opening it shows what came since it was last open, up to the queue's 256), keeps the
+  newest 16, and lists them newest first in columns: port, channel (blank for a system message),
+  what it is (`MidiMessage.Describe`), the time in seconds on `MidiPlayback.Now` (muted). *Held*:
+  the notes on every input, lowest first, sustained ones muted; "None" with none. `ClockText`:
+  "Following Han: 150.0 BPM, playing, beat 3", "Following Han: no clock yet" before a tempo is
+  measured, "Aleatora: 120 BPM", with ", sending clock" or " (Han isn't open)". For the menu check:
+  `ClockLine`, `HeldLine` ("C4 E4 G4 (sustained)"), `MessageLines` ("Keys · ch 1 · Note on C4 100 ·
+  12.003"), and the static `Describe`.
+- **`MelodiesPage`**: while following, the *BPM* box shows `MidiPlayback.Tempo` to one decimal
+  (Aleatora's own BPM until two ticks have come), can't be used (its content type goes to Standard
+  and its limit off, so "150.0" fits), and reads Aleatora's BPM again, editable, when it stops
+  following. Checked each frame with the playhead.
+- **Readings where the plan was silent**, for Jon at IN-4:
+  - **The beat in the monitor counts from 1** at the song's start, as Reaper's bar 1, beat 1 is the
+    first beat (Aleatora's note 0 plays on it).
+  - **The monitor's clock line adds** ", sending clock" with Send clock on, and "(Han isn't open)"
+    when the chosen clock's input isn't open.
+  - **The greyed output's port** is greyed by its label only; the kit's toggle box looks the same
+    switched off (`ButtonLook`). A box look for switched-off toggles would be a framework change.
+
 ## Checks
 
 - **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2, 131 as of M3,
-  166 as of MIDI-1, 193 as of MIDI-2, 200 as of MIDI-3, 241 as of IN-1, 265 as of IN-2:
+  166 as of MIDI-1, 193 as of MIDI-2, 200 as of MIDI-3, 241 as of IN-1, 265 as of IN-2, 268 as of IN-3:
   - `HexCoordTests`: Q + R + S = 0; the directions as named; a neighbour is one step away and its
     opposite comes back; six distinct neighbours; distance symmetric with the triangle
     inequality; equality and hashing; rounding a centre gives the cell; points round a corner
@@ -690,6 +732,10 @@ The clock (the MIDI in plan's decisions 4 to 6; rulings 39 and 40). Nothing on s
     logged) and nothing sounding after Stop; a clock input not open leaves Aleatora on its own
     until it opens and after it closes; Send clock sends with its own clock (48 ticks for two
     notes, Stop at the end), not while following.
+  - IN-3: `MidiMonitorTests`: a message's line (port, channel, what, time; no channel for a system
+    message); the clock's line on Aleatora's own clock, with Send clock, with a clock chosen whose
+    input isn't open, and following a fed clock before its tempo is known, playing on beat 3 at
+    150.0 and stopped.
   - Only the M2 tests draw random numbers, from `Rng` with fixed seeds.
 - **The menu check** (`MenuCheck.cs`), as of M0 (10 screenshots): the template's walk (main menu,
   Settings, Play, session menu and its Settings, Quit to Menu), with no volumes and no
@@ -732,6 +778,20 @@ The clock (the MIDI in plan's decisions 4 to 6; rulings 39 and 40). Nothing on s
   As of IN-1, `CheckMidi` goes on: no input opened in a self-test; the inputs logged; a
   `FeedInput` opens and starts the thread; C4, E4 and G4 fed show as held ("C4 E4 G4"), and go to
   the monitor's queue; closing the input forgets them. 149 checks.
+  As of IN-3, `CheckMidiIn` after `CheckTransport`, with a `RecordingOutput` named after a listed
+  input port ("Aleatora Test" when listed) and two `FeedInput`s, a keyboard and a clock: the MIDI
+  page lists every input, the fed ones on and the output's port greyed; *Clock* offers Aleatora
+  and each open input; *Send clock* off; *Monitor*; every control reachable (`6-MidiIn`). C4, E4,
+  G4, the pedal and G4 off: the monitor lists the five newest first and holds "C4 E4 G4
+  (sustained)" (`6-Monitor`). *Clock* on the fed clock: the *BPM* box can't be used; a fed clock at
+  150 BPM (ticks fed on a thread of its own, each stamped with its due time) reads 150.0, the
+  monitor would say "Following …: 150.0 BPM, playing, beat 3", the playhead moves from note 2 to 4
+  (`6-Following`); eight beats: eight note ons, the melody's first eight, each 0 to 5 ms after its
+  beat's tick; the fed Stop leaves nothing sounding. Then *Clock* on Aleatora, *Send clock* on,
+  *BPM* 150, *Play* for a second, *Stop*: SPP 0, Start, about 63 ticks 16.67 ms apart on average
+  (each within 5 ms), Stop, nothing sounding. The feeds close and Send clock goes off.
+  `CheckReachesAll` (the Melodies page's old check, made a helper) runs on the MIDI page from
+  Settings and the monitor too. 185 checks, 17 screenshots.
   `menucheck.sh` takes `WIDTH` and `HEIGHT` (1920 × 1080 unless given).
 - **Runs (2026-11-15):** `m0-setup` and `m0-setup2` on `main` (exit 0; the second left the tree
   clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean). M1: EditMode tests 69 of 69;
@@ -739,4 +799,4 @@ The clock (the MIDI in plan's decisions 4 to 6; rulings 39 and 40). Nothing on s
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
   `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128, then 131 of 131 after the CanvasRenderer fix; `m3` at
   1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean). MIDI-1: EditMode tests 166 of 166 (the loopMIDI test
-  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3).
+  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3). IN-3: EditMode tests 268 of 268; `in3-final` at 1920 × 1080 and `in3-final-720` at 1280 × 720 on `in-3-page` (exit 0 each, 185 checks held, 17 screenshots; following at 150 BPM, note ons 0.5 to 0.6 ms after their ticks; sent ticks 16.66 ms apart, worst 2.07 ms off).

@@ -487,8 +487,8 @@ namespace Aurumworks.Aleatora
             return true;
         }
 
-        // Whether a name is the output's: the open one's, or the saved one's with none open.
-        private bool IsOutputName(string name)
+        /// <summary>Whether a port's name is the output's (the open one's, or the saved one's with none open), which is never opened as an input.</summary>
+        public bool IsOutputName(string name)
         {
             IMidiOutput output = _output;
             return !string.IsNullOrEmpty(name) && name == (output != null ? output.Name : Chosen);
