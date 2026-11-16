@@ -790,8 +790,10 @@ namespace Aurumworks.Aleatora
         // nothing, the camera's input is off, the left button sprays while down; the mouse's
         // movement tilts the cone on the camera's axes, to the horizon and back at once; the target
         // is where the spray lands; the wheel steps Rate between its limits, with the right button
-        // Spread; G lets go and takes, Escape lets go and opens the menu; the gamepad's right stick
-        // tilts, its trigger sprays by pressure, the D-pad steps, LB and RB lower and raise; Grid
+        // Spread; G lets go and takes, Escape lets go and opens the menu; the gamepad's View takes
+        // and lets go, held its right stick tilts, its right trigger sprays from the least rate to
+        // Rate, its left trigger widens and with A narrows Spread, the D-pad steps, released none of
+        // them; LB and RB lower and raise; R3 and R reset the tilt, Y and T the position; Grid
         // Lock's moves end on a cell's middle, in both orientations.
         private static IEnumerator CheckControls()
         {
@@ -943,7 +945,10 @@ namespace Aurumworks.Aleatora
             SelfTest.Check(Menus.Count == 0 && !emitter.Held, "closing the menu doesn't take it again");
             SelfTest.Progress();
 
-            // The gamepad (B): the right stick tilts, the trigger sprays by pressure, the D-pad steps, LB and RB.
+            // The gamepad (B; ruling 80): View takes and lets go; held, the right stick tilts, the
+            // right trigger sprays from the least rate up to Rate, the left trigger widens Spread and
+            // with A narrows it, the D-pad steps Rate; released, none of those; LB and RB either way;
+            // R3 and R reset the tilt, Y and T the position.
             // A pad made for the run and made current: a real pad plugged in (an XInput controller)
             // has its own state format, which a queued GamepadState doesn't fit. The later checks'
             // gamepad presses (QueuedInput, on Gamepad.current) go to it too.
@@ -953,18 +958,41 @@ namespace Aurumworks.Aleatora
             gamepad.MakeCurrent();
 
             emitter.SetTilt(0, 0);
+            launched = emitter.Launched;
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightStick = new Vector2(1f, 0f), rightTrigger = 1f, leftTrigger = 1f }
+                .WithButton(GamepadButton.DpadUp));
+            yield return new WaitForSecondsRealtime(0.25f);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            yield return null;
+            SelfTest.Check(!emitter.Held && emitter.TiltX == 0 && emitter.TiltZ == 0 && emitter.Launched == launched
+                && tuning.Rate == 4f && tuning.Spread == 20f,
+                "released, the right stick, both triggers and the D-pad do nothing");
+
+            yield return QueuedInput.Press(GamepadButton.Select);
+            SelfTest.Check(emitter.Held && Cursor.lockState == CursorLockMode.Locked, "View takes it");
+
             InputSystem.QueueStateEvent(gamepad, new GamepadState { rightStick = new Vector2(1f, 0f) });
             yield return new WaitForSecondsRealtime(0.25f);
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             yield return null;
             double along = (emitter.TiltX * right.x) + (emitter.TiltZ * right.z);
-            SelfTest.Check(along > 10.0, $"the right stick tilts the cone along the camera's right, unheld: {along:0.#}°");
-            emitter.SetTilt(0, 0);
+            SelfTest.Check(along > 10.0, $"held, the right stick tilts the cone along the camera's right: {along:0.#}°");
+            yield return QueuedInput.Press(GamepadButton.RightStick);
+            SelfTest.Check(emitter.TiltX == 0 && emitter.TiltZ == 0, $"R3 points it straight down: {emitter.TiltX:0.#}, {emitter.TiltZ:0.#}");
+            emitter.SetTilt(20, -10);
+            yield return QueuedInput.Press(Key.R);
+            SelfTest.Check(emitter.TiltX == 0 && emitter.TiltZ == 0, $"and R: {emitter.TiltX:0.#}, {emitter.TiltZ:0.#}");
 
-            InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 0.5f });
-            yield return null;
-            yield return null;
-            SelfTest.Check(Mathf.Abs(emitter.CurrentRate - (tuning.Rate * 0.5f)) < 0.05f, $"the right trigger half pressed sprays at half Rate: {emitter.CurrentRate}");
+            foreach (float pull in new[] { 0.5f, 1f })
+            {
+                InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = pull });
+                yield return null;
+                yield return null;
+                float expected = (float)TriggerRate.Rate(pull, EmitterTuning.LeastWheelRate, tuning.Rate);
+                SelfTest.Check(Mathf.Abs(emitter.CurrentRate - expected) < 0.01f,
+                    $"the right trigger pulled {pull:0.0} sprays at {expected:0.00}/s, from {EmitterTuning.LeastWheelRate} to Rate {tuning.Rate}: {emitter.CurrentRate:0.00}");
+            }
+
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             yield return null;
             yield return null;
@@ -973,14 +1001,30 @@ namespace Aurumworks.Aleatora
 
             yield return QueuedInput.Press(GamepadButton.DpadUp);
             SelfTest.Check(Mathf.Abs(tuning.Rate - (4f * tuning.WheelStep)) < 1e-3f, $"the D-pad's up steps Rate as a notch: {tuning.Rate}");
-            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 1f }.WithButton(GamepadButton.DpadDown));
-            yield return null;
-            yield return null;
+            yield return QueuedInput.Press(GamepadButton.DpadDown);
+            SelfTest.Check(Mathf.Abs(tuning.Rate - 4f) < 1e-3f, $"and its down back: {tuning.Rate}");
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 1f });
+            yield return new WaitForSecondsRealtime(0.25f);
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             yield return null;
-            SelfTest.Check(Mathf.Abs(tuning.Spread - (20f - tuning.SpreadStep)) < 1e-3f, $"with the left trigger, its down narrows Spread: {tuning.Spread}");
+            float widened = tuning.Spread;
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 1f }.WithButton(GamepadButton.South));
+            yield return new WaitForSecondsRealtime(0.1f);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            yield return null;
+            SelfTest.Check(widened > 20f + 5f && tuning.Spread < widened - 2f && Mathf.Abs(tuning.Rate - 4f) < 1e-3f,
+                $"the left trigger widens Spread (20 to {widened:0.#}) and with A narrows it ({tuning.Spread:0.#}), Rate unchanged");
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 1f }.WithButton(GamepadButton.South));
+            yield return new WaitForSecondsRealtime(0.5f + (EmitterTuning.MostSpread / Mathf.Max(1f, tuning.SpreadSpeed)));
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            yield return null;
+            SelfTest.Check(tuning.Spread == 0f, $"narrowed, Spread stops at 0: {tuning.Spread}");
             tuning.Rate = 4f;
             tuning.Spread = 20f;
+
+            yield return QueuedInput.Press(GamepadButton.Select);
+            SelfTest.Check(!emitter.Held && Cursor.lockState == CursorLockMode.None, "View lets it go");
 
             float height = emitter.transform.position.y;
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.RightShoulder));
@@ -993,7 +1037,20 @@ namespace Aurumworks.Aleatora
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             yield return null;
             SelfTest.Check(raised > height + 0.3f && emitter.transform.position.y < raised - 0.3f,
-                $"RB raises it ({height:0.00} to {raised:0.00}) and LB lowers it ({emitter.transform.position.y:0.00})");
+                $"released, RB raises it ({height:0.00} to {raised:0.00}) and LB lowers it ({emitter.transform.position.y:0.00})");
+
+            // Reset Position: T puts it back where it began; moved and raised, Y does the same.
+            yield return QueuedInput.Press(Key.T);
+            Vector3 home = emitter.transform.position;
+            emitter.transform.position = home + new Vector3(3f, 0f, -2f);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.RightShoulder));
+            yield return new WaitForSecondsRealtime(0.25f);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            yield return null;
+            Vector3 away = emitter.transform.position;
+            yield return QueuedInput.Press(GamepadButton.North);
+            SelfTest.Check((away - home).magnitude > 1f && (emitter.transform.position - home).magnitude < 1e-3f,
+                $"moved and raised to {away}, Y puts it back where T does, {home}: {emitter.transform.position}");
             SelfTest.Progress();
 
             // Grid Lock (A9): Shift and D, then D let go: it ends on a cell's middle, to the right on the screen.

@@ -251,6 +251,46 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""initialStateCheck"": true,
                     ""priority"": 0
+                },
+                {
+                    ""name"": ""Spread Pressure"",
+                    ""type"": ""Value"",
+                    ""id"": ""400b90e3-7aba-4475-8b95-a5e68cd33fa3"",
+                    ""expectedControlType"": ""Axis"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Narrow Spread"",
+                    ""type"": ""Button"",
+                    ""id"": ""b27e2077-1c5d-41d6-8649-cb33037e717b"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Reset Tilt"",
+                    ""type"": ""Button"",
+                    ""id"": ""78efe609-d854-4eb2-b6b3-8767470e56b8"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Reset Position"",
+                    ""type"": ""Button"",
+                    ""id"": ""1fa2ff17-9e0b-4126-b92f-09505661ed7c"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 }
             ],
             ""bindings"": [
@@ -542,6 +582,17 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""d3dbea58-8703-436e-a5f2-1b3ae7b2000a"",
+                    ""path"": ""<Gamepad>/select"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Grab Emitter"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""68e03be7-33bc-4b26-b620-2e0dace9794f"",
                     ""path"": ""<Mouse>/delta"",
                     ""interactions"": """",
@@ -613,7 +664,62 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Gamepad"",
-                    ""action"": ""Wheel Modifier"",
+                    ""action"": ""Spread Pressure"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""fef6ae83-4050-4dd3-8577-0004641ce731"",
+                    ""path"": ""<Gamepad>/buttonSouth"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Narrow Spread"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""57d3f1a6-a188-4d0f-b29b-356a32c0ec61"",
+                    ""path"": ""<Keyboard>/r"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Reset Tilt"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1e87726e-4ac4-4fe6-bc0d-f8b3cf029721"",
+                    ""path"": ""<Gamepad>/rightStickPress"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Reset Tilt"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""44d69b9f-bcc5-4b5a-9cb9-8f80c81bbb74"",
+                    ""path"": ""<Keyboard>/t"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Reset Position"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""15a22f76-bee3-4a4e-a373-93e108facd18"",
+                    ""path"": ""<Gamepad>/buttonNorth"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Reset Position"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1259,6 +1365,10 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Player_Wheel = m_Player.FindAction("Wheel", throwIfNotFound: true);
         m_Player_WheelStep = m_Player.FindAction("Wheel Step", throwIfNotFound: true);
         m_Player_WheelModifier = m_Player.FindAction("Wheel Modifier", throwIfNotFound: true);
+        m_Player_SpreadPressure = m_Player.FindAction("Spread Pressure", throwIfNotFound: true);
+        m_Player_NarrowSpread = m_Player.FindAction("Narrow Spread", throwIfNotFound: true);
+        m_Player_ResetTilt = m_Player.FindAction("Reset Tilt", throwIfNotFound: true);
+        m_Player_ResetPosition = m_Player.FindAction("Reset Position", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1369,6 +1479,10 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Wheel;
     private readonly InputAction m_Player_WheelStep;
     private readonly InputAction m_Player_WheelModifier;
+    private readonly InputAction m_Player_SpreadPressure;
+    private readonly InputAction m_Player_NarrowSpread;
+    private readonly InputAction m_Player_ResetTilt;
+    private readonly InputAction m_Player_ResetPosition;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1445,6 +1559,22 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @WheelModifier => m_Wrapper.m_Player_WheelModifier;
         /// <summary>
+        /// Provides access to the underlying input action "Player/SpreadPressure".
+        /// </summary>
+        public InputAction @SpreadPressure => m_Wrapper.m_Player_SpreadPressure;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/NarrowSpread".
+        /// </summary>
+        public InputAction @NarrowSpread => m_Wrapper.m_Player_NarrowSpread;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/ResetTilt".
+        /// </summary>
+        public InputAction @ResetTilt => m_Wrapper.m_Player_ResetTilt;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/ResetPosition".
+        /// </summary>
+        public InputAction @ResetPosition => m_Wrapper.m_Player_ResetPosition;
+        /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
         public InputActionMap Get() { return m_Wrapper.m_Player; }
@@ -1518,6 +1648,18 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @WheelModifier.started += instance.OnWheelModifier;
             @WheelModifier.performed += instance.OnWheelModifier;
             @WheelModifier.canceled += instance.OnWheelModifier;
+            @SpreadPressure.started += instance.OnSpreadPressure;
+            @SpreadPressure.performed += instance.OnSpreadPressure;
+            @SpreadPressure.canceled += instance.OnSpreadPressure;
+            @NarrowSpread.started += instance.OnNarrowSpread;
+            @NarrowSpread.performed += instance.OnNarrowSpread;
+            @NarrowSpread.canceled += instance.OnNarrowSpread;
+            @ResetTilt.started += instance.OnResetTilt;
+            @ResetTilt.performed += instance.OnResetTilt;
+            @ResetTilt.canceled += instance.OnResetTilt;
+            @ResetPosition.started += instance.OnResetPosition;
+            @ResetPosition.performed += instance.OnResetPosition;
+            @ResetPosition.canceled += instance.OnResetPosition;
         }
 
         /// <summary>
@@ -1577,6 +1719,18 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @WheelModifier.started -= instance.OnWheelModifier;
             @WheelModifier.performed -= instance.OnWheelModifier;
             @WheelModifier.canceled -= instance.OnWheelModifier;
+            @SpreadPressure.started -= instance.OnSpreadPressure;
+            @SpreadPressure.performed -= instance.OnSpreadPressure;
+            @SpreadPressure.canceled -= instance.OnSpreadPressure;
+            @NarrowSpread.started -= instance.OnNarrowSpread;
+            @NarrowSpread.performed -= instance.OnNarrowSpread;
+            @NarrowSpread.canceled -= instance.OnNarrowSpread;
+            @ResetTilt.started -= instance.OnResetTilt;
+            @ResetTilt.performed -= instance.OnResetTilt;
+            @ResetTilt.canceled -= instance.OnResetTilt;
+            @ResetPosition.started -= instance.OnResetPosition;
+            @ResetPosition.performed -= instance.OnResetPosition;
+            @ResetPosition.canceled -= instance.OnResetPosition;
         }
 
         /// <summary>
@@ -2000,6 +2154,34 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnWheelModifier(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Spread Pressure" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSpreadPressure(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Narrow Spread" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnNarrowSpread(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Reset Tilt" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnResetTilt(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Reset Position" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnResetPosition(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

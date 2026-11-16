@@ -2,9 +2,11 @@
 
 Status (2026-11-16): **EM-6, the controls, is built on `em-6-controls`** (from `em-4-panel`; the
 emitter plan, `Docs/Aleatora_Emitter_Plan.md`, *EM-6*; `Docs/Aleatora_Emitter_Controls.md`,
-schemes A and B as written, rulings 77 and 78). EditMode tests 383 of 383; the menu check `em6`
-exit 0, 329 checks held, 26 screenshots (Tech, *Emitter*, *As built (EM-6)*, *Checks*).
-Committed. **Waiting for Jon to try the controls in the Editor**, then EM-7.
+schemes A and B as written, rulings 77 and 78), **and revised after Jon's first try** (ruling 80:
+View takes the emitter on the gamepad, the right trigger's pull sweeps the rate, the left trigger
+and A set *Spread*, R/R3 and T/Y reset the tilt and the position). EditMode tests 393 of 393; the
+menu check `em6b` exit 0, 338 checks held, 26 screenshots (Tech, *Emitter*, *As built (EM-6)*,
+*Checks*). Committed. **Waiting for Jon to try the revised controls in the Editor**, then EM-7.
 
 Finished on `main`: the Markov plan, MIDI out, MIDI in with clock and sync, the theory plan.
 `em-1-board` to `em-6-controls` aren't merged; the plan merges at EM-7.
@@ -18,15 +20,14 @@ Fallback.asset` (the Editor's dynamic font atlas) is left uncommitted; it isn't 
 
 ## Open, for Jon
 
-- **Try EM-6** (Editor): G or a click on the cone takes the emitter; the mouse tilts it; the left
-  button sprays; the wheel sets *Rate*, the right button and the wheel *Spread*; Shift with W A S D
-  glides along the grid; G or Escape lets go. The gamepad: right stick, right trigger, D-pad (with
-  the left trigger for *Spread*), LB and RB, the left stick pressed for Grid Lock. The feel is on
-  `AleatoraTuning` (*Emitter: controls*: *Tilt Sensitivity*, *Swing*, *Stick Tilt Speed*, *Wheel
-  Step*, *Spread Step*; *Aim Line Width*, *Held Color* under the look).
+- **Try ruling 80's changes** (Editor; the controls doc's scheme B table has them all): View takes
+  and lets go; held, the right trigger sprays from 0.5/s at a light pull to *Rate* at a full pull
+  (the Space or panel *Spray* latch, if on, holds it at *Rate*); the left trigger widens *Spread*,
+  A with it narrows; the right stick and D-pad only while held. R or R3 resets the tilt, T or Y
+  the position. The feel is on `AleatoraTuning` (*Emitter: controls*, new *Spread Speed* 90).
 - **EM-6's readings** (Tech, *As built (EM-6)*): the target shows a middle-sized sphere at
-  *Speed*, so jitter and sizes scatter round it; the wheel writes the tuning, as the panel does
-  (in the Editor it stays on the asset after play); the gamepad's stick and D-pad work held or not.
+  *Speed*, so jitter and sizes scatter round it; the wheel and the left trigger write the tuning,
+  as the panel does (in the Editor what they set stays on the asset after play).
 - **From EM-3** (Tech, *As built (EM-3)*): the grid sixteenth and strength 1 are C2's starting
   values; readings for EM-7.
 

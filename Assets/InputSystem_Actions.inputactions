@@ -165,6 +165,46 @@
                     "interactions": "",
                     "initialStateCheck": true,
                     "priority": 0
+                },
+                {
+                    "name": "Spread Pressure",
+                    "type": "Value",
+                    "id": "400b90e3-7aba-4475-8b95-a5e68cd33fa3",
+                    "expectedControlType": "Axis",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true,
+                    "priority": 0
+                },
+                {
+                    "name": "Narrow Spread",
+                    "type": "Button",
+                    "id": "b27e2077-1c5d-41d6-8649-cb33037e717b",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true,
+                    "priority": 0
+                },
+                {
+                    "name": "Reset Tilt",
+                    "type": "Button",
+                    "id": "78efe609-d854-4eb2-b6b3-8767470e56b8",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
+                },
+                {
+                    "name": "Reset Position",
+                    "type": "Button",
+                    "id": "1fa2ff17-9e0b-4126-b92f-09505661ed7c",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
                 }
             ],
             "bindings": [
@@ -456,6 +496,17 @@
                 },
                 {
                     "name": "",
+                    "id": "d3dbea58-8703-436e-a5f2-1b3ae7b2000a",
+                    "path": "<Gamepad>/select",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Grab Emitter",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "68e03be7-33bc-4b26-b620-2e0dace9794f",
                     "path": "<Mouse>/delta",
                     "interactions": "",
@@ -527,7 +578,62 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
-                    "action": "Wheel Modifier",
+                    "action": "Spread Pressure",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "fef6ae83-4050-4dd3-8577-0004641ce731",
+                    "path": "<Gamepad>/buttonSouth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Narrow Spread",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "57d3f1a6-a188-4d0f-b29b-356a32c0ec61",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Reset Tilt",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "1e87726e-4ac4-4fe6-bc0d-f8b3cf029721",
+                    "path": "<Gamepad>/rightStickPress",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Reset Tilt",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "44d69b9f-bcc5-4b5a-9cb9-8f80c81bbb74",
+                    "path": "<Keyboard>/t",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Reset Position",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "15a22f76-bee3-4a4e-a373-93e108facd18",
+                    "path": "<Gamepad>/buttonNorth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Reset Position",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

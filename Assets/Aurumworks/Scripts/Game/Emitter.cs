@@ -19,10 +19,13 @@ namespace Aurumworks.Aleatora
     /// Emitter again; a menu opening, or the window losing the focus). While it is held the pointer
     /// is locked and hidden, the mouse's movement tilts the cone (ConeTilt, on the camera's
     /// flattened axes), the left button sprays while down and the wheel steps Rate, or Spread with
-    /// Wheel Modifier (the right button). Held or not: Spray latches spraying on and off, Move
-    /// Emitter moves it relative to the camera, along the grid's lines while Grid Lock is held,
-    /// Raise Emitter lowers and raises it; on the gamepad the right stick tilts, the right trigger
-    /// sprays by its pressure, the D-pad steps as the wheel, the left trigger as the modifier.
+    /// Wheel Modifier (the right button). On the gamepad (View takes and lets go, as G), while it
+    /// is held, the right stick tilts, the right trigger sprays from the wheel's least rate up to
+    /// Rate by how far it is pulled (TriggerRate), the left trigger widens Spread, narrowing it with
+    /// A held, and the D-pad steps Rate as the wheel (ruling 80). Held or not: Spray latches
+    /// spraying on and off, Move Emitter moves it relative to the camera, along the grid's lines
+    /// while Grid Lock is held, Raise Emitter lowers and raises it, Reset Tilt points it straight
+    /// down and Reset Position puts it back where it began.
     /// The cone follows the tilt set after Swing. A marker shows where the axis's sphere lands and
     /// an outline where the spray's edge does (SprayLanding). While a menu is open it reads no input
     /// and launches nothing; spheres in the air land. While a text field has the keyboard it reads
@@ -43,6 +46,10 @@ namespace Aurumworks.Aleatora
         private const string WheelStepActionPath = "Player/Wheel Step";
         private const string WheelModifierActionPath = "Player/Wheel Modifier";
         private const string ClickActionPath = "Player/Left Click";
+        private const string SpreadPressureActionPath = "Player/Spread Pressure";
+        private const string NarrowActionPath = "Player/Narrow Spread";
+        private const string ResetTiltActionPath = "Player/Reset Tilt";
+        private const string ResetPositionActionPath = "Player/Reset Position";
 
         private const ulong SprayStream = 0x5350524159UL; // "SPRAY": the spray's draws apart from the layout's, from one seed
         private const float BelowBoard = 2f;               // a sphere this far below the cells' bottoms is gone
@@ -66,6 +73,7 @@ namespace Aurumworks.Aleatora
         private Camera _camera;
         private InputAction _sprayAction, _pressureAction, _moveAction, _raiseAction, _gridLockAction, _stickTiltAction;
         private InputAction _grabAction, _tiltAction, _wheelAction, _wheelStepAction, _wheelModifierAction, _clickAction;
+        private InputAction _spreadPressureAction, _narrowAction, _resetTiltAction, _resetPositionAction;
         private WheelBinding[] _wheelBindings;
         private Transform _sphereRoot;
         private PhysicsMaterial _physicsMaterial;
@@ -78,6 +86,8 @@ namespace Aurumworks.Aleatora
         private double _setX, _setZ;   // the tilt the controls set, degrees
         private double _tiltX, _tiltZ; // the cone's tilt, following it after Swing
         private float _height;     // the emitter's height above the cells' tops
+        private Vector3 _startPosition; // where it began, for Reset Position
+        private float _startHeight;
         private float _rate;       // spheres a second, as the controls and the menus have it this frame
         private float _owed = 1f;  // spheres owed; starts at one, so spraying launches at once
         private float _pressure;
@@ -101,10 +111,10 @@ namespace Aurumworks.Aleatora
             Spread,
         }
 
-        /// <summary>Whether spraying is latched on (Spray toggles it). The left button, held, and the right trigger spray while it is off.</summary>
+        /// <summary>Whether spraying is latched on (Spray toggles it), at Rate. The left button and the right trigger, held, spray while it is off.</summary>
         public bool Spraying { get; set; }
 
-        /// <summary>Whether the player holds the emitter: the mouse tilts it, the left button sprays, the wheel steps.</summary>
+        /// <summary>Whether the player holds the emitter: the mouse and the right stick tilt it, the left button and the right trigger spray, the wheel, the D-pad and the left trigger step.</summary>
         public bool Held { get; private set; }
 
         /// <summary>Spheres a second being launched this frame: 0 while a menu is open or nothing sprays.</summary>
@@ -172,6 +182,10 @@ namespace Aurumworks.Aleatora
             _wheelStepAction = FindAction(WheelStepActionPath);
             _wheelModifierAction = FindAction(WheelModifierActionPath);
             _clickAction = FindAction(ClickActionPath);
+            _spreadPressureAction = FindAction(SpreadPressureActionPath);
+            _narrowAction = FindAction(NarrowActionPath);
+            _resetTiltAction = FindAction(ResetTiltActionPath);
+            _resetPositionAction = FindAction(ResetPositionActionPath);
 
             // What the wheel steps (A6): the first modifier held picks; none, Rate. A later
             // modifier is one more line here.
@@ -187,6 +201,8 @@ namespace Aurumworks.Aleatora
             _seed = _tuning.Seed;
             _rng = new Rng(_seed ^ SprayStream);
             _height = transform.position.y - TopY();
+            _startPosition = transform.position;
+            _startHeight = _height;
             _marker = MakeMarker(parent);
             _outline = MakeOutline(parent);
             Orient();
@@ -213,6 +229,24 @@ namespace Aurumworks.Aleatora
             _setZ = ConeTilt.Clamp(tiltZ);
             _tiltX = _setX;
             _tiltZ = _setZ;
+            Orient();
+            Land();
+        }
+
+        /// <summary>Points the cone straight down (Reset Tilt); with Swing, it swings there.</summary>
+        public void ResetTilt()
+        {
+            _setX = 0.0;
+            _setZ = 0.0;
+        }
+
+        /// <summary>Puts the emitter back where it began, its height too (Reset Position), at once; its tilt is kept.</summary>
+        public void ResetPosition()
+        {
+            _gliding = false;
+            _glideDirection = -1;
+            _height = _startHeight;
+            transform.position = _startPosition;
             Orient();
             Land();
         }
@@ -343,7 +377,8 @@ namespace Aurumworks.Aleatora
             }
 
             float on = Spraying || _sprayHeld ? 1f : 0f;
-            _rate = menuOpen ? 0f : _tuning.Rate * Mathf.Max(on, _pressure);
+            float squeezed = (float)TriggerRate.Rate(_pressure, EmitterTuning.LeastWheelRate, _tuning.Rate);
+            _rate = menuOpen ? 0f : Mathf.Max(_tuning.Rate * on, squeezed);
             Swing(Time.deltaTime);
             Orient();
             SyncSphereMaterial();
@@ -436,7 +471,18 @@ namespace Aurumworks.Aleatora
                 Spraying = !Spraying;
             }
 
-            _pressure = _pressureAction != null ? Mathf.Clamp01(_pressureAction.ReadValue<float>()) : 0f;
+            // The gamepad's tilt, triggers and D-pad work only while it is held (ruling 80).
+            _pressure = Held && _pressureAction != null ? Mathf.Clamp01(_pressureAction.ReadValue<float>()) : 0f;
+
+            if (_resetTiltAction != null && _resetTiltAction.WasPressedThisFrame())
+            {
+                ResetTilt();
+            }
+
+            if (_resetPositionAction != null && _resetPositionAction.WasPressedThisFrame())
+            {
+                ResetPosition();
+            }
 
             CameraAxes(out Vector3 right, out Vector3 forward);
 
@@ -447,7 +493,7 @@ namespace Aurumworks.Aleatora
                 turn += _tiltAction.ReadValue<Vector2>() * _tuning.TiltSensitivity;
             }
 
-            if (_stickTiltAction != null)
+            if (Held && _stickTiltAction != null)
             {
                 turn += _stickTiltAction.ReadValue<Vector2>() * (_tuning.StickTiltSpeed * deltaTime);
             }
@@ -457,7 +503,7 @@ namespace Aurumworks.Aleatora
 
             // The wheel while held, the D-pad: Rate, or with a modifier its parameter (A6).
             int notches = Held && _wheelAction != null ? Notches(_wheelAction.ReadValue<Vector2>().y) : 0;
-            float stepValue = _wheelStepAction != null ? _wheelStepAction.ReadValue<float>() : 0f;
+            float stepValue = Held && _wheelStepAction != null ? _wheelStepAction.ReadValue<float>() : 0f;
             int step = Mathf.Abs(stepValue) > 0.5f ? (int)Mathf.Sign(stepValue) : 0;
             if (step != 0 && step != _lastStep)
             {
@@ -468,6 +514,14 @@ namespace Aurumworks.Aleatora
             if (notches != 0)
             {
                 Step(WheelTargetNow(), notches);
+            }
+
+            // The left trigger widens Spread by how far it is pulled; with A held it narrows it.
+            float widen = Held && _spreadPressureAction != null ? Mathf.Clamp01(_spreadPressureAction.ReadValue<float>()) : 0f;
+            if (widen > (float)TriggerRate.DeadZone)
+            {
+                float sign = _narrowAction != null && _narrowAction.IsPressed() ? -1f : 1f;
+                _tuning.Spread = Mathf.Clamp(_tuning.Spread + (sign * widen * _tuning.SpreadSpeed * deltaTime), 0f, EmitterTuning.MostSpread);
             }
 
             // Moving (A9, A10).

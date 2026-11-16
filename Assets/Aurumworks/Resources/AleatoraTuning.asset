@@ -100,6 +100,7 @@ MonoBehaviour:
     _stickTiltSpeed: 120
     _wheelStep: 1.25
     _spreadStep: 5
+    _spreadSpeed: 90
     _sphereMaterial: {fileID: 2100000, guid: 31f2b24e3d4248d409519971af8dbd52, type: 2}
     _aimMaterial: {fileID: 2100000, guid: 31f2b24e3d4248d409519971af8dbd52, type: 2}
     _aimColor: {r: 1, g: 0.85, b: 0, a: 1}

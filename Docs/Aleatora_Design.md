@@ -253,6 +253,17 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     "I don't have many hardware MIDI controllers with knobs, really. I wanted to allow Reaper stuff
     (track automation streams, plugins' LFOs, and such) that produce CC messages to be mappable to
     Aleatora Emitter parameters." Scheme M is written for that (the controls doc, *Scheme M*).
+80. **EM-6 tried: the gamepad takes the emitter, its triggers are analog, both schemes reset**
+    (2026-11-16). Jon, after trying EM-6: the gamepad needs an equivalent of G; a spray-angle
+    control, "left trigger to widen and A + left trigger to narrow"; the right trigger analog, "the
+    more trigger pull distance controls spray rate"; both schemes need "reset rotation" and "reset
+    position". Picked from C2's options the same day: **View** takes and lets go, and the gamepad's
+    tilt, triggers and D-pad work only while the emitter is held (the left stick, LB and RB either
+    way, as W A S D and Q/E); the right trigger sweeps from 0.5 a second at a light pull to *Rate*
+    at a full pull, on the wheel's geometric curve (the D-pad still sets *Rate*, the ceiling);
+    **R** and **R3** point the cone straight down, **T** and **Y** put it back where it began,
+    its height too. Changes B and B3's table in the controls doc (the left trigger no longer the
+    D-pad's modifier).
 
 ## Open, each its own plan later (the plan's decision 7)
 

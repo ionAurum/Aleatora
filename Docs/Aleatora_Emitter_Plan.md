@@ -246,7 +246,10 @@ as written in EM-6; M later, for CC streams from Reaper.
 ## EM-6 — The controls (branch `em-6-controls`, from `em-4-panel`)
 
 Schemes A (mouse and keyboard) and B (gamepad) of `Docs/Aleatora_Emitter_Controls.md`, as
-written (rulings 77 and 78). They replace decision 8's controls.
+written (rulings 77 and 78). They replace decision 8's controls. Revised after Jon's try (ruling
+80): View takes the emitter on the gamepad, whose tilt, triggers and D-pad then work only while
+held; the right trigger's pull sweeps the rate; the left trigger (with A) sets *Spread*; R/R3 and
+T/Y reset the tilt and the position (Tech, *As built (EM-6)*).
 
 1. **Input** (`Player`): *Grab Emitter* (G), *Tilt* (the mouse's movement), *Stick Tilt* (the
    right stick, in place of *Aim Point*), *Wheel* (the mouse's wheel), *Wheel Step* (the D-pad's

@@ -29,7 +29,7 @@ All in Assembly-CSharp (no asmdefs), namespace `Aurumworks.Aleatora`, under
 | `Grid/` | `HexCoord`, `HexDirection` (with `HexDirections`), `HexShape`, `HexLayout` (with `HexOrientation`, `HexPoint`): plain C#. `HexGrid`, `HexCellView`, `GridSelection` | The last three only |
 | `Music/` (M1; M2 from `Rng` on) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing`; `CellNotes` (with `CellLayout`, EM-1); `Quantize` (with `QuantizeGrid`), `HitNote` (EM-3) | No |
 | `Midi/` (MIDI-1) | `MidiMessage`, `IMidiOutput`, `MidiPorts`, `RecordingOutput`; internal `WinMm`, `WinMmOutput`; `NotePlayer`, `INoteSource`, `MelodySource` (MIDI-2, 3); `IMidiInput`, `TimedMessage`, `FeedInput`, `HeldNotes`, internal `WinMmInput` (IN-1); `IBeatSource`, `InternalBeatSource`, `ClockFollower`, `ClockSender` (IN-2); `HitScheduler` (EM-3) | No |
-| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2), `MelodyViewTuning` (M3), `MidiTuning`, `MidiPlayback` (MIDI-1); `EmitterTuning`, `BoardNotes` (EM-1); `Emitter`, `EmitterSphere`, and the plain C# `SprayDraws` (with `SprayDraw`) and `EmitterHit` (EM-2); the plain C# `ConeTilt` and `SprayLanding` (EM-6) | Yes, but for the plain C# |
+| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2), `MelodyViewTuning` (M3), `MidiTuning`, `MidiPlayback` (MIDI-1); `EmitterTuning`, `BoardNotes` (EM-1); `Emitter`, `EmitterSphere`, and the plain C# `SprayDraws` (with `SprayDraw`) and `EmitterHit` (EM-2); the plain C# `ConeTilt`, `SprayLanding` and `TriggerRate` (EM-6) | Yes, but for the plain C# |
 | `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip`; the static `ViewText` and `ViewMesh`; the static `MidiPage` (MIDI-3), `MidiMonitorPage` (IN-3); `EmitterPanel` and the static `UiInput` (EM-4) | Yes |
 | (root) | `MainMenu`, `SessionMenu`, `SettingsMenu`, `MenuCheck` | Yes |
 | `Editor/`, `Editor/Tests/` | `PlayerBuild`, `TuningMaker` (*Aleatora > Make Tuning*), EditMode tests | Editor |
@@ -537,11 +537,27 @@ The emitter plan's EM-6: schemes A (mouse and keyboard) and B (gamepad) of
   *Tilt* (the mouse's delta), *Wheel* (the mouse's scroll), *Wheel Step* (the D-pad's down and
   up), *Wheel Modifier* (the right button, the left trigger); *Raise Emitter* gains LB and RB.
   Unity regenerated `InputSystem_Actions.cs` on the headless test run.
+- **After Jon's try (ruling 80, same branch):**
+  - *Grab Emitter* gains View; new *Spread Pressure* (the left trigger, taken off *Wheel
+    Modifier*), *Narrow Spread* (A), *Reset Tilt* (R, the right stick pressed), *Reset Position*
+    (T, Y). Unity regenerated `InputSystem_Actions.cs`.
+  - The gamepad's tilt, both triggers and the D-pad read only while the emitter is held; the left
+    stick, its press and LB and RB either way, as the keys.
+  - **`Game/TriggerRate`** (plain C#): the right trigger's rate, `Rate(pull, least, rate)`:
+    nothing up to `DeadZone` (0.02), then from *Least Wheel Rate* (0.5) at a light pull to *Rate*
+    at a full pull, geometric (equal travel, equal factor); a *Rate* at or below the least,
+    linear. The rate this frame is the larger of *Rate* × the latch or the left button and the
+    trigger's, so the latch on still sprays at *Rate* whatever the trigger.
+  - The left trigger changes *Spread* by its pull × *Spread Speed* (90° a second, on the tuning
+    and the asset) × the frame, narrowing with A held, between 0 and 180; it writes the tuning, as
+    the wheel does. The D-pad steps only *Rate* now.
+  - `ResetTilt` sets the tilt straight down (with *Swing* the cone swings there); `ResetPosition`
+    puts it where `Begin` found it, its height too, at once, keeping the tilt and ending a glide.
+    Both work held or not.
 - **Readings for Jon at EM-7:**
   - The target shows a middle-sized sphere at *Speed*; *Speed jitter* and the sizes scatter the
     real spray round it, and the bounces carry it on.
-  - The D-pad and the right stick work whether or not the emitter is held (the gamepad has no
-    pointer to give up); the wheel only while held (released, it zooms).
+  - The wheel only while held (released, it zooms).
   - The outline faces the camera (a `LineRenderer`'s own way); in the lit aim material it shades
     with the light.
 
@@ -1211,10 +1227,13 @@ and IN-2's keys.
   the menu. **The gamepad's checks run on a pad made for the run and made current** ("Menu Check
   Pad"): a real XInput pad plugged in (Jon's, on 2026-11-16) has its own state format, so a queued
   `GamepadState` on it does nothing, and the framework's `QueuedInput` presses later in the run go
-  to `Gamepad.current`. On it: the right stick tilts unheld, the trigger half pressed sprays at half
-  *Rate*, the D-pad steps *Rate*, with the left trigger *Spread*, RB raises and LB lowers. Grid Lock
+  to `Gamepad.current`. On it (ruling 80): released, the right stick, both triggers and the D-pad do
+  nothing; View takes it; the right stick tilts; R3 and R point it straight down; the right trigger
+  at 0.5 and 1 sprays at `TriggerRate`'s rate; the D-pad steps *Rate* up and back; the left trigger
+  widens *Spread*, with A narrows it, down to 0; View lets go; RB raises and LB lowers, released;
+  moved and raised, Y puts it back where T does. Grid Lock
   (Shift and D, then D let go) ends on a cell's middle, to the right on the screen, Flat and
-  Pointy. 329 checks, 26 screenshots (*3-Controls-Horizon*, *3-Controls-Held*).
+  Pointy. 338 checks, 26 screenshots (*3-Controls-Horizon*, *3-Controls-Held*).
   `menucheck.sh` takes `WIDTH` and `HEIGHT` (1920 × 1080 unless given).
 - **Runs (2026-11-15):** `m0-setup` and `m0-setup2` on `main` (exit 0; the second left the tree
   clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean). M1: EditMode tests 69 of 69;
@@ -1222,4 +1241,4 @@ and IN-2's keys.
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
   `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128, then 131 of 131 after the CanvasRenderer fix; `m3` at
   1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean). MIDI-1: EditMode tests 166 of 166 (the loopMIDI test
-  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3). IN-3: EditMode tests 268 of 268; `in3-final` at 1920 × 1080 and `in3-final-720` at 1280 × 720 on `in-3-page` (exit 0 each, 185 checks held, 17 screenshots; following at 150 BPM, note ons 0.5 to 0.6 ms after their ticks; sent ticks 16.66 ms apart, worst 2.07 ms off). TH-1: EditMode tests 291 of 291; `th1` at 1920 × 1080 on `th-1-tables` (exit 0, 186 checks held, 17 screenshots). TH-2 (start on 1, "Byzantine"): EditMode tests 291 of 291 on `th-2-tuning`; the menu check not run. The phrygian dominant: EditMode tests 297 of 297; `th2pd` at 1920 × 1080 on `th-2-phrygian-dominant` (exit 0, 186 checks held, 17 screenshots); its order-4 melody (seed 2112) `1 b7 b2 4 b6 5 4 3 b2 1 b2 1 b7 b6 1 b7 b6 5 b7 b6 5 4 3 b2`. The menu check's order-4 melodies (seed 2112): Lydian `#4 5 6 7 1 7 1 2 1 2 3 1 2 3 2 1 3 5 7 2 #4 6 1 6`; Phrygian `b3 4 b3 b2 b3 4 b3 4 5 b3 4 5 b6 b7 1 b2 b3 4 5 b6 b7 5 4 b3`; double harmonic `3 4 5 b6 7 5 b6 7 1 b2 1 b2 3 4 b2 3 4 5 b6 7 5 b6 7 1`; Hindu pentatonic `5 b7 1 5 b7 1 3 4 3 1 3 1 b7 5 1 b7 5 b7 5 4 5 b7 1 5`. EM-1 (2026-11-16): EditMode tests 310 of 310; `em1` at 1920 × 1080 on `em-1-board` (exit 0, 224 checks held, 20 screenshots). EM-2: EditMode tests 319 of 319; `em2` at 1920 × 1080 on `em-2-emitter` (exit 0, 244 checks held, 21 screenshots). EM-3: EditMode tests 363 of 363; `em3` at 1920 × 1080 on `em-3-notes` (exit 0, 251 checks held, 21 screenshots). EM-4: EditMode tests 363 of 363 (none new: the panel is checked by the menu check, as the plan says); `em4` at 1920 × 1080 on `em-4-panel` (exit 0, 293 checks held, 24 screenshots; eighths at 120 BPM, worst 1.43 ms off). EM-6: EditMode tests 383 of 383; `em6` at 1920 × 1080 on `em-6-controls` (exit 0, 329 checks held, 26 screenshots; the first run failed every gamepad check, a real XInput pad being `Gamepad.current`, so the check now makes its own).
+  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3). IN-3: EditMode tests 268 of 268; `in3-final` at 1920 × 1080 and `in3-final-720` at 1280 × 720 on `in-3-page` (exit 0 each, 185 checks held, 17 screenshots; following at 150 BPM, note ons 0.5 to 0.6 ms after their ticks; sent ticks 16.66 ms apart, worst 2.07 ms off). TH-1: EditMode tests 291 of 291; `th1` at 1920 × 1080 on `th-1-tables` (exit 0, 186 checks held, 17 screenshots). TH-2 (start on 1, "Byzantine"): EditMode tests 291 of 291 on `th-2-tuning`; the menu check not run. The phrygian dominant: EditMode tests 297 of 297; `th2pd` at 1920 × 1080 on `th-2-phrygian-dominant` (exit 0, 186 checks held, 17 screenshots); its order-4 melody (seed 2112) `1 b7 b2 4 b6 5 4 3 b2 1 b2 1 b7 b6 1 b7 b6 5 b7 b6 5 4 3 b2`. The menu check's order-4 melodies (seed 2112): Lydian `#4 5 6 7 1 7 1 2 1 2 3 1 2 3 2 1 3 5 7 2 #4 6 1 6`; Phrygian `b3 4 b3 b2 b3 4 b3 4 5 b3 4 5 b6 b7 1 b2 b3 4 5 b6 b7 5 4 b3`; double harmonic `3 4 5 b6 7 5 b6 7 1 b2 1 b2 3 4 b2 3 4 5 b6 7 5 b6 7 1`; Hindu pentatonic `5 b7 1 5 b7 1 3 4 3 1 3 1 b7 5 1 b7 5 b7 5 4 5 b7 1 5`. EM-1 (2026-11-16): EditMode tests 310 of 310; `em1` at 1920 × 1080 on `em-1-board` (exit 0, 224 checks held, 20 screenshots). EM-2: EditMode tests 319 of 319; `em2` at 1920 × 1080 on `em-2-emitter` (exit 0, 244 checks held, 21 screenshots). EM-3: EditMode tests 363 of 363; `em3` at 1920 × 1080 on `em-3-notes` (exit 0, 251 checks held, 21 screenshots). EM-4: EditMode tests 363 of 363 (none new: the panel is checked by the menu check, as the plan says); `em4` at 1920 × 1080 on `em-4-panel` (exit 0, 293 checks held, 24 screenshots; eighths at 120 BPM, worst 1.43 ms off). EM-6: EditMode tests 383 of 383; `em6` at 1920 × 1080 on `em-6-controls` (exit 0, 329 checks held, 26 screenshots; the first run failed every gamepad check, a real XInput pad being `Gamepad.current`, so the check now makes its own). Ruling 80's changes: EditMode tests 393 of 393; `em6b` at 1920 × 1080 (exit 0, 338 checks held, 26 screenshots).

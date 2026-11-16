@@ -137,8 +137,10 @@ namespace Aurumworks.Aleatora
         [SerializeField, Range(10f, 720f)] private float _stickTiltSpeed = 120f;
         [Tooltip("Each notch of the wheel (or press of the D-pad) multiplies or divides Rate by this.")]
         [SerializeField, Range(1.01f, 2f)] private float _wheelStep = 1.25f;
-        [Tooltip("Each notch of the wheel with the right button (or the D-pad with the left trigger) widens or narrows Spread by this, in degrees.")]
+        [Tooltip("Each notch of the wheel with the right button widens or narrows Spread by this, in degrees.")]
         [SerializeField, Range(0.5f, 30f)] private float _spreadStep = 5f;
+        [Tooltip("How fast the gamepad's left trigger widens Spread at a full pull (narrows it with A held), in degrees a second.")]
+        [SerializeField, Range(5f, 720f)] private float _spreadSpeed = 90f;
 
         [Header("Emitter: look")]
         [Tooltip("The spheres' material. Empty: Unity's default for a sphere.")]
@@ -443,6 +445,9 @@ namespace Aurumworks.Aleatora
 
         /// <summary>The degrees a notch of the wheel widens or narrows Spread by.</summary>
         public float SpreadStep => Mathf.Max(0f, _spreadStep);
+
+        /// <summary>The degrees a second the left trigger widens or narrows Spread by at a full pull.</summary>
+        public float SpreadSpeed => Mathf.Max(0f, _spreadSpeed);
 
         /// <summary>The spheres' material, or null for Unity's default.</summary>
         public Material SphereMaterial => _sphereMaterial;

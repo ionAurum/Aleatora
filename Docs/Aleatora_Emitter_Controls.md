@@ -47,6 +47,7 @@ on it, Reaper only recording.
 | G | Takes the emitter | Releases it |
 | Escape | The menu, as now | Releases it and opens the menu |
 | Space | Spray on and off (A8) | The same |
+| R / T | Reset the tilt (straight down) / the position (where it began, its height too); ruling 80 | The same |
 | H, Tab | Hide Panel, Focus, as now | The same |
 
 ### Decisions
@@ -154,18 +155,24 @@ land, Shift's moves ending on a cell's middle in both orientations, the camera s
 
 ## Scheme B: gamepad
 
-The gamepad has no pointer to give up, so it always holds the emitter: no taking or releasing.
-It mirrors A where it can.
+It mirrors A where it can. **Revised by ruling 80** (Jon, after trying EM-6): as first written the
+gamepad always held the emitter, with no taking or releasing, and the left trigger was the D-pad's
+modifier for *Spread*. Now View takes and lets go as G does, and what the mouse does only while
+held, the gamepad's tilt, triggers and D-pad do only while held.
 
 | Input | Does |
 |---|---|
-| Left stick | Moves the emitter, relative to the camera (as now) |
+| View | Takes and lets go of the emitter, as G (ruling 80) |
+| Left stick | Moves the emitter, relative to the camera (held or not) |
 | Left stick pressed (held) | Along the grid, as Shift (A9) |
-| Right stick | Tilts the cone (B1) |
-| Right trigger | Sprays; how far it is pressed scales the rate (as now: Jon's "squeeze") |
-| Left trigger (held) | The modifier, as A's right button |
-| D-pad up / down | Rate up / down a step; with the left trigger, *Spread* |
-| LB / RB | Lower / raise the emitter (B2) |
+| Right stick (emitter held) | Tilts the cone (B1) |
+| Right stick pressed | Resets the tilt, straight down, as R |
+| Right trigger (emitter held) | Sprays; the pull sweeps the rate from 0.5 a second to *Rate*, on the wheel's geometric curve (`Game/TriggerRate`; ruling 80) |
+| Left trigger (emitter held) | Widens *Spread* by how far it is pulled (*Spread Speed*, 90° a second at a full pull) |
+| A + left trigger (emitter held) | Narrows *Spread* |
+| D-pad up / down (emitter held) | Rate up / down a step |
+| Y | Resets the position, where it began, as T |
+| LB / RB | Lower / raise the emitter (B2; held or not) |
 | Start | The menu (the menu shell's) |
 
 **B1. The right stick tilts.** **Default:** the stick's push is the tilt's speed (*Stick Tilt
