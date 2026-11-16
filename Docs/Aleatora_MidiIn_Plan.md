@@ -60,6 +60,10 @@ Rulings go into `Docs/Aleatora_Design.md`; what was built goes into `Docs/Aleato
 
 Each has the default this plan builds if Jon doesn't say otherwise.
 
+**Ruled (2026-11-15):** Jon accepted 2, 3, 4, 5, 8 and 9 as written (Design, rulings 38 to 42)
+and gave the go-ahead for IN-1 (ruling 43). 1, 6, 7 and 10 are built as their defaults until
+IN-4.
+
 1. **The library.** **Default:** our `winmm` wrapper grows the input calls (`midiInGetNumDevs`,
    `midiInGetDevCapsW`, `midiInOpen` with a callback, `midiInStart`, `midiInStop`,
    `midiInReset`, `midiInClose`, `midiInGetErrorTextW`), behind an `IMidiInput`. This is ruling

@@ -21,7 +21,7 @@ namespace Aurumworks.Aleatora
     /// menus, and the board behind the menus (its 61 cells, picking them, its shapes in both
     /// orientations) and that the melody tables came with the player and read, MIDI out (the MIDI page
     /// from Settings and from Output, the transport on the Melodies page, into a RecordingOutput: no
-    /// port is opened), then quits with exit code
+    /// port is opened), MIDI in (a FeedInput's chord held: no input is opened), then quits with exit code
     /// 1 if anything didn't hold or any error was logged. -aleatoraScreenshots folder saves a screenshot of each menu. It
     /// saves no setting. Tools/menucheck.sh builds the player and runs it. Without the flag none of
     /// this runs.
@@ -126,6 +126,7 @@ namespace Aurumworks.Aleatora
             CheckGenerator();
 
             // MIDI out (MIDI-1): no port opened in a self-test; Panic and closing, into a recording.
+            // MIDI in (IN-1): no input opened; a fed chord held.
             CheckMidi();
 
             // The session menu, opened with Escape.
@@ -333,6 +334,33 @@ namespace Aurumworks.Aleatora
             SelfTest.Check(recording.IsDisposed && !midi.IsOpen && sent.Length > 0
                 && sent[sent.Length - 1].Message == MidiMessage.AllNotesOff(midi.Channel),
                 $"closing sends All Notes Off on channel {midi.Channel} and closes the output");
+
+            // MIDI in (IN-1): no input opened in a self-test; a fed chord shows as held, through the
+            // clock thread, and closing the feed forgets it.
+            SelfTest.Check(midi.InputNames.Count == 0, "a self-test opens no MIDI input");
+            IReadOnlyList<string> inputs = MidiPorts.Inputs;
+            Debug.Log("Menu check: MIDI inputs: " + (inputs.Count == 0 ? "none" : string.Join(", ", inputs)));
+            var feed = new FeedInput("Menu check keys", () => midi.Now);
+            SelfTest.Check(midi.UseInput(feed) && midi.IsClockRunning, "a fed input opens and starts the clock thread");
+            feed.Feed(MidiMessage.NoteOn(1, 60, 100));
+            feed.Feed(MidiMessage.NoteOn(1, 64, 100));
+            feed.Feed(MidiMessage.NoteOn(1, 67, 100));
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            while (midi.Held.Count < 3 && watch.ElapsedMilliseconds < 500)
+            {
+                System.Threading.Thread.Sleep(1);
+            }
+
+            var held = new List<HeldNotes.Held>();
+            midi.Held.CopyTo(held);
+            string names = string.Join(" ", held.ConvertAll(h => h.ToString()));
+            SelfTest.Check(names == "C4 E4 G4", $"the fed chord shows as held in {watch.ElapsedMilliseconds} ms: {names}");
+            var received = new List<TimedMessage>();
+            midi.DrainReceived(received);
+            SelfTest.Check(received.Count == 3, "and goes to the monitor's queue: " + received.Count);
+            midi.CloseInput(feed.Name);
+            SelfTest.Check(feed.IsDisposed && midi.Held.Count == 0 && midi.InputNames.Count == 0,
+                "closing the input forgets what it held");
         }
 
         // The Melodies page (M3), opened from a menu by its Melodies button: it opens over it with

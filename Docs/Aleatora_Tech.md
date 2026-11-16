@@ -461,10 +461,71 @@ Our own wrapper over `winmm.dll` (Design, ruling 27), plain C# in `Midi/`.
   playing framed 3 px in the theme's text colour, a little outside the strip; the newest note's
   frame stays in Line. A note off the strip's left edge plays with nothing framed.
 
+### As built (IN-1, 2026-11-15, branch `in-1-input`)
+
+MIDI in, the base layer (the MIDI in plan; Design, rulings 38 to 43). Nothing in Aleatora
+responds to what comes in yet: it is read, held and queued.
+
+- **`MidiMessage`** gains the system messages: `Clock`, `Start`, `Continue`, `Stop`,
+  `SongPosition(sixteenths)` (0–16,383, clamped; the low seven bits first) and their readers
+  (`IsClock`, `IsStart`, `IsContinue`, `IsStop`, `IsSongPosition`, `SongPositionOf`,
+  `IsActiveSensing`), `IsSystem` (0xF0 and up: no channel; `Kind` gives a system message's whole
+  status byte), `NoteName` (C4 = 60, sharps as `C♯4`, the sign the *Melodies* page uses), and
+  constants for the other channel kinds, CC 64 and CC 120. **`Describe` changed** for the
+  monitor: "Note on E4 96", "Note off E4", "CC 64 127", "Program 5", "Pitch bend 8192",
+  "Clock: Start", "Song position 16", without the channel; `DescribeWithChannel` puts "ch 3 " in
+  front for logs (`RecordingOutput.Sent.ToString`, `TimedMessage.ToString`).
+- **`IMidiInput`**: `Name`, `Signal` (an auto-reset event, never disposed, so a waiter never holds
+  a closed handle), `TryRead(out TimedMessage)`, `Dispose`. **`TimedMessage`**: the message, its
+  time in seconds on the clock given, its port's name.
+- **`WinMm`** gains `midiInGetNumDevs`, `midiInGetDevCapsW`, `midiInOpen` (with
+  `CALLBACK_FUNCTION`), `midiInStart`, `midiInStop`, `midiInReset`, `midiInClose` and
+  `InputErrorText` over `midiInGetErrorTextW`.
+- **`WinMmInput`** (internal): an open input. The callback is static, marked
+  `[AOT.MonoPInvokeCallback]`, kept alive in a static field, and finds its input through a
+  **weak** `GCHandle` passed as the instance (so a lost input can still be finalized and closed).
+  For `MIM_DATA` only, it stamps the time, queues under the queue's lock (at most 4,096; past that
+  the oldest go, counted in `Dropped`), sets `Signal`, and catches everything. `Dispose`: stop,
+  reset, close (a lock of its own for the handle, never the queue's, so the callback can't
+  deadlock a close), then the handle is freed. No SysEx buffers are given, so SysEx never arrives.
+- **`MidiPorts`**: `Inputs` (all listed; GS Wavetable is an output only) and
+  **`TryOpenInput(name, clock, out input, out error)`**: the plan's signature plus the clock to
+  stamp with (`MidiPlayback.Now` in the game). "Han (not found)" or Windows' words as for outputs.
+- **`FeedInput`**: the stand-in. `Feed(message)` stamps now on its clock, `Feed(message, time)`
+  with the time given; `Pending`; `IsDisposed`; nothing taken once disposed.
+- **`HeldNotes`** (decision 7): per port and channel, keys down with velocities and the pedal (CC
+  64, down from 64). A key let go under the pedal is sustained until it comes up; struck again it
+  is down again (the new velocity). Velocity 0 is a note off. **Not in the plan:** All Notes Off
+  (CC 123) lets go of every key on its channel, the pedal still holding; All Sound Off (CC 120)
+  ends everything on its channel. `IsDown`, `IsHeld`, `IsSustained`, `Velocity`, `IsPedalDown`,
+  `Count`, `CopyTo(list)` (lowest note first; `Held.ToString` is "E4" or "E4 (sustained)"),
+  `Clear(port)`, `Version` (up by one with each change). Thread-safe.
+- **`MidiPlayback`**: `InputsKey` (`Aurumworks.Midi.Inputs`, names one to a line). `Begin` opens
+  the saved inputs after the output, none in a self-test. `ChooseInput(name, on)` saves and opens
+  or closes; `UseInput(input)` puts a stand-in in, unsaved; `CloseInput`, `CloseInputs`;
+  `InputNames`, `ChosenInputs`, `IsInputOpen`, `InputError` ("Greedo is the output", "Han (not
+  found)", Windows' words); `Held`; `DrainReceived(list)`, the monitor's queue (at most 256, the
+  oldest dropped), with every message but clock ticks and Active Sensing. **The output's port is
+  never an input** (ruling 38): `ChooseInput` and `UseInput` refuse the open output's name (or the
+  saved one's with none open), and `Choose`ing an output that is an open input closes that input
+  (its choice stays saved; `Begin` skips it while it is the output). `Shutdown` closes the inputs
+  after the output.
+- **The clock thread** starts on *Play* or on opening an input and ends once nothing plays and no
+  input is open. Each turn, under the playback's lock, it reads every input (to `Held` and the
+  queue), then advances the player; then it waits on the inputs' signals for up to 1 ms
+  (`WaitHandle.WaitAny`; `Sleep(1)` with no input). It holds `timeBeginPeriod(1)` for its life,
+  so while an input is open the 1 ms timer is held the whole time. Closing an input takes it out
+  of the list under the lock, then disposes it outside the lock (a port's close waits for Windows'
+  callback). Lock order: the playback's, the player's, then the source's, the output's or an
+  input's queue; the callback takes only its queue's.
+- **Measured** (EditMode, 2026-11-15, Jon's machine): 20 fed notes held after mean 0.15 ms, worst
+  1.26 ms. The menu check's fed chord was held within 5 ms. Inputs listed: Greedo, Han, SE49,
+  MIDIIN2 (SE49); nothing opened them.
+
 ## Checks
 
 - **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2, 131 as of M3,
-  166 as of MIDI-1, 193 as of MIDI-2, 200 as of MIDI-3:
+  166 as of MIDI-1, 193 as of MIDI-2, 200 as of MIDI-3, 241 as of IN-1:
   - `HexCoordTests`: Q + R + S = 0; the directions as named; a neighbour is one step away and its
     opposite comes back; six distinct neighbours; distance symmetric with the triangle
     inequality; equality and hashing; rounding a centre gives the cell; points round a corner
@@ -506,7 +567,8 @@ Our own wrapper over `winmm.dll` (Design, ruling 27), plain C# in `Midi/`.
   - `MidiPortsTests` (MIDI-1): listing doesn't throw; GS Wavetable never listed nor opened; a port
     not there, or no name, doesn't open and says so; **a loopMIDI port** (found through loopMIDI's
     registry key) opens, takes an All Notes Off, closes and opens again (skipped without one;
-    ruling 33). It is the only test that opens a port, and it sends no note.
+    ruling 33). It is the only test that opens a port, and it sends no note. Changed in IN-1: it
+    opens only "Aleatora Test" (ruling 42), without the registry.
   - `MidiPlaybackTests` (MIDI-1): `RecordingOutput` keeps what, when and what is sounding;
     `MidiPlayback` with a recording: `Panic`, `Close`'s All Notes Off on the channel in use,
     another output closing the first, the channel clamped; `MidiTuning`'s defaults. `Begin` is
@@ -527,6 +589,20 @@ Our own wrapper over `winmm.dll` (Design, ruling 27), plain C# in `Midi/`.
     ends; `Begin` drops what waited; voicing and settings from the next note; the page's melody
     stays the player's with *Step* between Endless's notes, on made-up times and on a real thread
     at 300 BPM (19 notes, 15 from *Step*, on the first run).
+  - IN-1: `MidiMessageTests` adds the clock's one-byte messages, SPP's bytes, value and clamping,
+    system messages having no channel, note names (C4 = 60) and `Describe`. `HeldNotesTests`: on
+    and off, velocity 0, the pedal holding and releasing (down from 64), a key struck again under
+    it, two channels and two ports apart, All Notes Off and All Sound Off, what isn't a note
+    changes nothing, the list's order, a port's notes going as it closes. `MidiPortsTests`:
+    `Inputs` doesn't throw; an input not there or unnamed doesn't open and says why; **only the
+    loopMIDI port "Aleatora Test"** is ever opened (ruling 42; the MIDI-1 test that opened the
+    first loopMIDI port, "Greedo", now opens only it): its output opens, takes an All Notes Off on
+    channel 16 and closes, and a CC 119 on channel 16 and a tick sent come back in order, within
+    0.1 s; both skipped without the port. `MidiInputTests`, with `FeedInput`s: the feed's order
+    and closing; a fed note held within 5 ms through the real thread (20 notes, the spread
+    logged); the monitor's queue without ticks or Active Sensing, and keeping the newest 256; two
+    inputs apart and one closed; the last input closed ends the thread, playing keeps it; the
+    output's name refused; `Shutdown` closes the inputs.
   - Only the M2 tests draw random numbers, from `Rng` with fixed seeds.
 - **The menu check** (`MenuCheck.cs`), as of M0 (10 screenshots): the template's walk (main menu,
   Settings, Play, session menu and its Settings, Quit to Menu), with no volumes and no
@@ -566,6 +642,9 @@ Our own wrapper over `winmm.dll` (Design, ruling 27), plain C# in `Midi/`.
   MIDI page over the page (as from Settings) and playing goes on; *Stop*, *Generate* again. At
   the end, Escape while playing closes the page with nothing sounding, and the recording is
   closed for `CheckMidi`. 14 screenshots.
+  As of IN-1, `CheckMidi` goes on: no input opened in a self-test; the inputs logged; a
+  `FeedInput` opens and starts the thread; C4, E4 and G4 fed show as held ("C4 E4 G4"), and go to
+  the monitor's queue; closing the input forgets them. 149 checks.
   `menucheck.sh` takes `WIDTH` and `HEIGHT` (1920 × 1080 unless given).
 - **Runs (2026-11-15):** `m0-setup` and `m0-setup2` on `main` (exit 0; the second left the tree
   clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean). M1: EditMode tests 69 of 69;
@@ -573,4 +652,4 @@ Our own wrapper over `winmm.dll` (Design, ruling 27), plain C# in `Midi/`.
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
   `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128, then 131 of 131 after the CanvasRenderer fix; `m3` at
   1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean). MIDI-1: EditMode tests 166 of 166 (the loopMIDI test
-  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots).
+  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet); `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots).

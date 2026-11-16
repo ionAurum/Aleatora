@@ -48,7 +48,7 @@ namespace Aurumworks.Aleatora.Tests
             Assert.That(sent[0].Time, Is.EqualTo(1.5));
             Assert.That(sent[0].Message, Is.EqualTo(MidiMessage.NoteOn(3, 60, 100)));
             Assert.That(sent[1].Time, Is.EqualTo(2.0));
-            Assert.That(sent[1].ToString(), Is.EqualTo("2.000 note off 3 60"));
+            Assert.That(sent[1].ToString(), Is.EqualTo("2.000 ch 3 Note off C4"));
             Assert.That(output.Name, Is.EqualTo("Test"));
         }
 

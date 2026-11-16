@@ -1,30 +1,35 @@
 # Aleatora: hand-off
 
-Status (2026-11-15): **the MIDI in, clock and sync plan is written
-(`Docs/Aleatora_MidiIn_Plan.md`), waiting for Jon's go-ahead and his answers to its *Decisions
-for Jon*.** The brief is Design ruling 37: the technical base for MIDI in and for clock and sync
-with Reaper. What the keyboard's notes mean comes later. On `main`: the Markov plan and MIDI out
-(rulings to 36). 200 EditMode tests pass; the menu check passes (144 checks, both sizes).
+Status (2026-11-15): **IN-1 (MIDI in, the base layer) is done on branch `in-1-input`**, from
+`main`. Jon accepted the MIDI in plan's decisions 2, 3, 4, 5, 8 and 9 as written and gave the
+go-ahead (Design, rulings 38 to 43; 1, 6, 7 and 10 stand as defaults until IN-4). 241 EditMode
+tests: 239 pass, and the 2 that need the loopMIDI port "Aleatora Test" are skipped because the
+port doesn't exist yet. The menu check passes at both sizes (149 checks). On `main`: the Markov
+plan and MIDI out (rulings to 36).
 
-Open for Jon: the plan's ten decisions, each with a default. Most worth a look:
-- 2: any number of inputs, because the keyboard and Reaper's clock arrive on different ports.
-- 3 and 4: following Reaper as the main case, with note *n* on Reaper's quarter note *n* from
-  the project's start, through SPP.
-- 5: *Send clock* (leading Reaper), off by default.
-- 8: the *Monitor* page.
-- 9: a loopMIDI port named "Aleatora Test" for the one loopback test. This changes ruling 33.
-  Jon makes the port in loopMIDI.
+Open for Jon:
+- **Make the loopMIDI port "Aleatora Test"**, then the next chat runs the EditMode tests again so
+  the two skipped tests run (`MidiPortsTests`: the test port opens; what is sent comes back).
+- **Renaming his loopMIDI ports** (he asked). Recommended: "Aleatora to Reaper" (now Greedo),
+  "Reaper to Aleatora" (now Han), and "Aleatora Test". loopMIDI can't rename a port: delete it
+  and add the new one. Then pick the new output on the *MIDI* page (the old one reads "Greedo (not
+  found)"), and enable the new ports in Reaper's *Preferences > MIDI Devices*. Once he has
+  chosen the names, the plan's IN-4 steps and examples (Greedo, Han) are updated to match.
+- Readings in IN-1 where the plan was silent (Tech, *As built (IN-1)*): `HeldNotes` treats CC 123
+  as letting go of every key (the pedal still holds) and CC 120 as ending all; choosing an
+  output that is an open input closes that input; note names use ♯ (`C♯4`), as the *Melodies*
+  page does; `Describe` now reads "Note on E4 96" (logs put "ch 3 " in front).
 
-## Next: IN-1, input (branch `in-1-input`, from `main`)
+## Next: IN-2, clock (branch `in-2-clock`, from `in-1-input`)
 
-Start on Jon's go-ahead, with his rulings written into `Docs/Aleatora_Design.md` and the plan.
+Start on Jon's go-ahead after he has reviewed IN-1.
 
 Read:
-- `Docs/Aleatora_MidiIn_Plan.md`: all of it.
-- `Docs/Aleatora_Midi_Plan.md`: *Engineering rules*.
-- `Docs/Aleatora_Tech.md`: *MIDI*, all three *As built* sections.
-- The code: `Assets/Aurumworks/Scripts/Midi/WinMm.cs`, `WinMmOutput.cs`, `MidiPorts.cs`,
-  `MidiMessage.cs`, and `Game/MidiPlayback.cs`.
+- `Docs/Aleatora_MidiIn_Plan.md`: *Engineering rules*, *Decisions for Jon* 3 to 6, *Code
+  layout*, *IN-2*.
+- `Docs/Aleatora_Tech.md`: *MIDI*, *As built (MIDI-2)* and *As built (IN-1)*.
+- The code: `Assets/Aurumworks/Scripts/Midi/NotePlayer.cs`, `Game/MidiPlayback.cs`, and
+  `Editor/Tests/NotePlayerTests.cs` (every check must still hold after the move to beats).
 
 ## Not in any repository
 
