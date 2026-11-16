@@ -13,6 +13,7 @@ One section per system, each with what was built under "As built". The plans are
 - *Melody tables* (as built)
 - *Melody generator* (as built)
 - *Melodies page* (as built)
+- *Board notes* (the emitter plan's EM-1, as built)
 - *Cell look* (the gel pad shader, as built)
 - *MIDI* (as built)
 - *Checks*
@@ -25,9 +26,9 @@ All in Assembly-CSharp (no asmdefs), namespace `Aurumworks.Aleatora`, under
 | Folder | Holds | Unity in it? |
 |---|---|---|
 | `Grid/` | `HexCoord`, `HexDirection` (with `HexDirections`), `HexShape`, `HexLayout` (with `HexOrientation`, `HexPoint`): plain C#. `HexGrid`, `HexCellView`, `GridSelection` | The last three only |
-| `Music/` (M1; M2 from `Rng` on) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing` | No |
+| `Music/` (M1; M2 from `Rng` on) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing`; `CellNotes` (with `CellLayout`, EM-1) | No |
 | `Midi/` (MIDI-1) | `MidiMessage`, `IMidiOutput`, `MidiPorts`, `RecordingOutput`; internal `WinMm`, `WinMmOutput`; `NotePlayer`, `INoteSource`, `MelodySource` (MIDI-2, 3); `IMidiInput`, `TimedMessage`, `FeedInput`, `HeldNotes`, internal `WinMmInput` (IN-1); `IBeatSource`, `InternalBeatSource`, `ClockFollower`, `ClockSender` (IN-2) | No |
-| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2), `MelodyViewTuning` (M3), `MidiTuning`, `MidiPlayback` (MIDI-1) | Yes |
+| `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2), `MelodyViewTuning` (M3), `MidiTuning`, `MidiPlayback` (MIDI-1); `EmitterTuning`, `BoardNotes` (EM-1) | Yes |
 | `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip`; the static `ViewText` and `ViewMesh`; the static `MidiPage` (MIDI-3), `MidiMonitorPage` (IN-3) | Yes |
 | (root) | `MainMenu`, `SessionMenu`, `SettingsMenu`, `MenuCheck` | Yes |
 | `Editor/`, `Editor/Tests/` | `PlayerBuild`, `TuningMaker` (*Aleatora > Make Tuning*), EditMode tests | Editor |
@@ -245,6 +246,60 @@ Four sets written from theory (`Docs/Aleatora_Theory_Plan.md`; Design, rulings 5
   and the menu check's counts. The other four tables came out unchanged (each mode has its own
   seed). As run: 564,055 notes, 1.8% passing notes; after ♭2, 1 52% (3 27%); after ♭6, 5 43%
   (♭7 31%).
+
+## Board notes
+
+### As built (EM-1, 2026-11-16, branch `em-1-board`)
+
+The emitter plan's EM-1 (`Docs/Aleatora_Emitter_Plan.md`; rulings 60 to 67, 71, 72).
+
+- **`Music/CellNotes`** (plain C#, with the enum `CellLayout`: Scattered, Clustered, Axes): built
+  from a `HexShape`, twelve probabilities, the mode's mask, a layout, a seed, the K and N
+  intervals, the octaves and which way they run. `DegreeAt(index)`, `OctaveAt(index)`,
+  `CellsOf(degree)`, `Probability(degree)`, `Blue(degree)` (p / p<sub>max</sub> over the degrees
+  but the root; 0 for the root), `Note(index, tonic, lowestOctave)`, `Centre`, `Rings`. Static:
+  `Probabilities(counts, mask, chromaticWeight)` (all zero: the mode's degrees as likely),
+  `ShareOut(probabilities, cells)` (largest remainder; ties to the larger probability, then the
+  lower degree), `CentreCell(shape)` (the mean rounded; the nearest cell if that is off the
+  board), `OctaveOfRing` (⌊ring · octaves / rings⌋, or turned round), `NoteOf` (kept in 0–127 by
+  octaves).
+  - *Scattered*: the shared-out degrees shuffled (Fisher–Yates on `Rng`).
+  - *Clustered* is **carved, not grown** (the plan's first wording grew every region at once; a
+    Python trial left a region in pieces on nearly every board, 6 or 7 stray pieces each):
+    regions one at a time, in an order shuffled from the seed; each starts on a free cell with the
+    fewest free neighbours and grows into the free neighbour with most of its own (ties shuffled
+    from the seed), taking a cell only if the free cells left stay connected. The check is local
+    first (the free neighbours in one unbroken arc around the cell, or none, or all six), a search
+    of the free cells only otherwise. A region with no such cell takes the first candidate anyway
+    (it may then be in two pieces); boxed in, its candidates are the nearest free cells. Tested:
+    599 of 600 boards whole (5 × 5 × 5, 3 × 5 × 7, 9 × 9 × 9); 40 × 40 × 40 in 266 ms.
+  - *Axes*: scale steps = ΔQ · K − ΔR · N from the centre cell (so +K moves K, +N moves N, +M
+    both), over the mode's degrees in order. Defaults K = N = 2: +K and +N a third, +M a fifth.
+- **`Game/EmitterTuning`**, on `AleatoraTuning` as `Emitter` (added to the asset): *Board: notes*
+  (`Set` european_ionian, `Tonic` 0–11, `Layout`, `Seed` 2112, `ChromaticWeight` 0, `KInterval`
+  and `NInterval` 2, −7 to 7), *Board: octaves* (`LowestOctave` 3, `Octaves` 3, `OutwardLower`
+  off), *Board: look* (`RootColor` red, `UnlikelyColor` white, `LikelyColor` blue, `ShowDegrees`
+  on, `LabelColorFromTheme` on, `LabelColor` near-black, `LabelSize` 5, `LabelHeight` 0.01).
+  `CellColor(degree, blue)`.
+- **`Game/BoardNotes`**, on the grid's object, made by `Aleatora` (`Aleatora.Board`): lays the
+  notes out on `Begin`, on the grid's `Rebuilt`, and when a notes value changes in the tuning (each
+  frame compared); a look value or the cells' top height redraws only. Each cell's colour at rest
+  through `HexCellView.SetRestColor`; one TextMeshPro label a cell (under `Labels` on the grid,
+  not on the cell, so the cell's renderers and `TopHeight` are untouched), flat on the top, the
+  theme's body face, `ViewText.DegreeName`. `Notes`, `Table`, `Labels`, `NoteAt(coord)`,
+  `DegreeAt(coord)`, `ColorOf(degree)`, `Changed`. A set the index doesn't list: one warning, no
+  notes, the cells back to the tuning's rest colour. Tonic and lowest octave change only the
+  notes asked for, nothing drawn.
+- **`Grid/HexCellView`**: `OwnRestColor` and `SetRestColor(color, tuning)`; a cell's own colour
+  stands in for the grid tuning's *Rest Color* (base tint and, on the gel, the glow at rest).
+  The grid's *Rest Color* now shows only on a board without notes.
+- **Readings for Jon at EM-7** (none changes a ruling):
+  - **The labels in the theme's text colour (decision 10) are near-white, and can't be read on
+    the pale cells** (6 and 7 in `european_ionian`; the screenshots `3-Board-*`). Turning off
+    *Label Color From Theme* uses *Label Color* (near-black by default). The labels are also small
+    against the glow; *Label Size* is on the tuning.
+  - The Axes layout ignores the probabilities, so its cells' counts aren't the set's (9 or 8 a
+    degree on 5 × 5 × 5); its colours still are.
 
 ## Cell look
 
@@ -694,7 +749,7 @@ and IN-2's keys.
 
 - **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2, 131 as of M3,
   166 as of MIDI-1, 193 as of MIDI-2, 200 as of MIDI-3, 241 as of IN-1, 265 as of IN-2, 268 as of IN-3,
-  291 as of TH-1 (all pass):
+  291 as of TH-1, 297 as of the phrygian dominant, 310 as of EM-1 (all pass):
   - `HexCoordTests`: Q + R + S = 0; the directions as named; a neighbour is one step away and its
     opposite comes back; six distinct neighbours; distance symmetric with the triangle
     inequality; equality and hashing; rounding a centre gives the cell; points round a corner
@@ -801,7 +856,14 @@ and IN-2's keys.
     re-run of the generator found 99.9%; the test passes). `DegreeTests` gains the four modes' masks (an unknown
     mode is now `locrian`, as `phrygian` was); `MelodiesPageTests` their names; the set count is
     21.
-  - Only the M2 tests draw random numbers, from `Rng` with fixed seeds.
+  - `CellNotesTests` (EM-1): the probabilities at chromatic weight 0 and 1, and of nothing; the
+    share-out of `european_ionian` on 61 (13 9 11 6 12 5 5) and largest remainder on 500 random
+    cases; the same seed the same board, another another; Scattered and Clustered hold the counts
+    on five shapes and 20 seeds; Clustered whole on at least 95% of 200 boards on three shapes
+    (199 or 200 as run); 40 × 40 × 40 in under 3 s; the Axes steps and every triad a triangle; the
+    centre cell on every shape to 7 × 7 × 7; the octaves by ring both ways, on 5 × 5 × 5, 1 × 1 × 1
+    and 3 × 5 × 7; the blue scaled to the likeliest; the notes.
+  - Only the M2 and EM-1 tests draw random numbers, from `Rng` with fixed seeds.
 - **The menu check** (`MenuCheck.cs`), as of M0 (10 screenshots): the template's walk (main menu,
   Settings, Play, session menu and its Settings, Quit to Menu), with no volumes and no
   AudioSource in place of the mixer check; then `CheckGrid`: the bootstrap made the grid; the
@@ -860,6 +922,12 @@ and IN-2's keys.
   As of TH-1, `CheckTables` counts 21 sets and makes a 200-note melody from each at order 4 and
   chromatic weight 0, every note in its mode; the four theory sets' first 24 are logged. 186
   checks.
+  As of EM-1, `CheckBoard` after `CheckGrid`: the bootstrap made the board's notes; for each
+  layout, set through the tuning (`3-Board-Scattered`, `3-Board-Clustered`, `3-Board-Axes`), and
+  after rebuilds to 3 × 5 × 7 and back: every cell's degree in the mode, its octave its ring's,
+  its MIDI note, its colour its degree's, its label its degree's name; the root the root colour
+  and the likeliest other degree the likely colour. The degree counts are logged. 224 checks, 20
+  screenshots.
   `menucheck.sh` takes `WIDTH` and `HEIGHT` (1920 × 1080 unless given).
 - **Runs (2026-11-15):** `m0-setup` and `m0-setup2` on `main` (exit 0; the second left the tree
   clean); EditMode tests 21 of 21; `m0-grid` on `m0-grid` (exit 0, 47 checks held, tree clean). M1: EditMode tests 69 of 69;
@@ -867,4 +935,4 @@ and IN-2's keys.
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
   `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128, then 131 of 131 after the CanvasRenderer fix; `m3` at
   1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean). MIDI-1: EditMode tests 166 of 166 (the loopMIDI test
-  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3). IN-3: EditMode tests 268 of 268; `in3-final` at 1920 × 1080 and `in3-final-720` at 1280 × 720 on `in-3-page` (exit 0 each, 185 checks held, 17 screenshots; following at 150 BPM, note ons 0.5 to 0.6 ms after their ticks; sent ticks 16.66 ms apart, worst 2.07 ms off). TH-1: EditMode tests 291 of 291; `th1` at 1920 × 1080 on `th-1-tables` (exit 0, 186 checks held, 17 screenshots). TH-2 (start on 1, "Byzantine"): EditMode tests 291 of 291 on `th-2-tuning`; the menu check not run. The phrygian dominant: EditMode tests 297 of 297; `th2pd` at 1920 × 1080 on `th-2-phrygian-dominant` (exit 0, 186 checks held, 17 screenshots); its order-4 melody (seed 2112) `1 b7 b2 4 b6 5 4 3 b2 1 b2 1 b7 b6 1 b7 b6 5 b7 b6 5 4 3 b2`. The menu check's order-4 melodies (seed 2112): Lydian `#4 5 6 7 1 7 1 2 1 2 3 1 2 3 2 1 3 5 7 2 #4 6 1 6`; Phrygian `b3 4 b3 b2 b3 4 b3 4 5 b3 4 5 b6 b7 1 b2 b3 4 5 b6 b7 5 4 b3`; double harmonic `3 4 5 b6 7 5 b6 7 1 b2 1 b2 3 4 b2 3 4 5 b6 7 5 b6 7 1`; Hindu pentatonic `5 b7 1 5 b7 1 3 4 3 1 3 1 b7 5 1 b7 5 b7 5 4 5 b7 1 5`.
+  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3). IN-3: EditMode tests 268 of 268; `in3-final` at 1920 × 1080 and `in3-final-720` at 1280 × 720 on `in-3-page` (exit 0 each, 185 checks held, 17 screenshots; following at 150 BPM, note ons 0.5 to 0.6 ms after their ticks; sent ticks 16.66 ms apart, worst 2.07 ms off). TH-1: EditMode tests 291 of 291; `th1` at 1920 × 1080 on `th-1-tables` (exit 0, 186 checks held, 17 screenshots). TH-2 (start on 1, "Byzantine"): EditMode tests 291 of 291 on `th-2-tuning`; the menu check not run. The phrygian dominant: EditMode tests 297 of 297; `th2pd` at 1920 × 1080 on `th-2-phrygian-dominant` (exit 0, 186 checks held, 17 screenshots); its order-4 melody (seed 2112) `1 b7 b2 4 b6 5 4 3 b2 1 b2 1 b7 b6 1 b7 b6 5 b7 b6 5 4 3 b2`. The menu check's order-4 melodies (seed 2112): Lydian `#4 5 6 7 1 7 1 2 1 2 3 1 2 3 2 1 3 5 7 2 #4 6 1 6`; Phrygian `b3 4 b3 b2 b3 4 b3 4 5 b3 4 5 b6 b7 1 b2 b3 4 5 b6 b7 5 4 b3`; double harmonic `3 4 5 b6 7 5 b6 7 1 b2 1 b2 3 4 b2 3 4 5 b6 7 5 b6 7 1`; Hindu pentatonic `5 b7 1 5 b7 1 3 4 3 1 3 1 b7 5 1 b7 5 b7 5 4 5 b7 1 5`. EM-1 (2026-11-16): EditMode tests 310 of 310; `em1` at 1920 × 1080 on `em-1-board` (exit 0, 224 checks held, 20 screenshots).

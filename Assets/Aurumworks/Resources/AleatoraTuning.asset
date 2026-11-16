@@ -50,3 +50,22 @@ MonoBehaviour:
     _bpm: 120
     _velocity: 100
     _noteLength: 0.9
+  _emitter:
+    _set: european_ionian
+    _tonic: 0
+    _layout: 0
+    _seed: 2112
+    _chromaticWeight: 0
+    _kInterval: 2
+    _nInterval: 2
+    _lowestOctave: 3
+    _octaves: 3
+    _outwardLower: 0
+    _rootColor: {r: 1, g: 0, b: 0, a: 1}
+    _unlikelyColor: {r: 1, g: 1, b: 1, a: 1}
+    _likelyColor: {r: 0, g: 0, b: 1, a: 1}
+    _showDegrees: 1
+    _labelColorFromTheme: 1
+    _labelColor: {r: 0.1, g: 0.1, b: 0.1, a: 1}
+    _labelSize: 5
+    _labelHeight: 0.01

@@ -120,6 +120,9 @@ namespace Aurumworks.Aleatora
             // The board behind the menus: its cells, picking them, its shapes and orientations.
             yield return CheckGrid();
 
+            // The board's notes (EM-1): each cell's degree, octave, colour and label; the three layouts.
+            yield return CheckBoard();
+
             // The melody tables came with the player and read.
             CheckTables();
 
@@ -241,6 +244,95 @@ namespace Aurumworks.Aleatora
             yield return ShowBoard(grid, tuning, 3, 5, 7, HexOrientation.Flat, 57, "3-Grid-Uneven");
             yield return ShowBoard(grid, tuning, 5, 5, 5, HexOrientation.Pointy, 61, "3-Grid-Pointy");
             yield return ShowBoard(grid, tuning, 5, 5, 5, HexOrientation.Flat, 61, null);
+        }
+
+        // The board's notes (the emitter plan, EM-1), set through the tuning as Jon would in the
+        // Inspector: each of the three layouts, with a screenshot; then a rebuild to 3 × 5 × 7 and
+        // back, every cell noted each time.
+        private static IEnumerator CheckBoard()
+        {
+            Aleatora game = Aleatora.Instance;
+            if (!SelfTest.Check(game != null && game.Board != null && game.Board.Notes != null,
+                "the bootstrap made the board's notes, from the tuning's set"))
+            {
+                yield break;
+            }
+
+            EmitterTuning tuning = game.Tuning.Emitter;
+            CellLayout before = tuning.Layout;
+            foreach (CellLayout layout in new[] { CellLayout.Scattered, CellLayout.Clustered, CellLayout.Axes })
+            {
+                tuning.Layout = layout;
+                yield return null;
+                CheckNotes(game, layout.ToString());
+                yield return new WaitForSecondsRealtime(0.5f);
+                yield return SelfTest.Capture("3-Board-" + layout);
+            }
+
+            tuning.Layout = before;
+            yield return ShowBoard(game.Grid, game.Tuning.Grid, 3, 5, 7, HexOrientation.Flat, 57, null);
+            CheckNotes(game, "3 × 5 × 7");
+            yield return ShowBoard(game.Grid, game.Tuning.Grid, 5, 5, 5, HexOrientation.Flat, 61, null);
+            CheckNotes(game, "5 × 5 × 5 again");
+        }
+
+        // Every cell: a degree of the set's mode; its octave by its ring (the centre lowest); its MIDI
+        // note from the tonic, the lowest octave, its octave and its degree; its colour at rest its
+        // degree's (the root red, the likeliest other degree full blue); its label its degree's name.
+        private static void CheckNotes(Aleatora game, string what)
+        {
+            BoardNotes board = game.Board;
+            CellNotes notes = board.Notes;
+            HexGrid grid = game.Grid;
+            EmitterTuning tuning = game.Tuning.Emitter;
+            if (!SelfTest.Check(notes != null && notes.Shape == grid.Shape && notes.Layout == tuning.Layout && board.Labels.Count == grid.CellCount,
+                $"{what}: the notes and labels are for the board as it is"))
+            {
+                return;
+            }
+
+            int mask = ModeScale.Mask(board.Table.Mode);
+            int count = grid.CellCount;
+            int inMode = 0, octaves = 0, midi = 0, colours = 0, labels = 0;
+            var perDegree = new int[Degree.Count];
+            for (int i = 0; i < count; i++)
+            {
+                HexCoord coord = grid.Shape.Cells[i];
+                int degree = notes.DegreeAt(i);
+                perDegree[degree]++;
+                inMode += ModeScale.Has(mask, degree) ? 1 : 0;
+                int octave = HexCoord.Distance(coord, notes.Centre) * notes.Octaves / notes.Rings;
+                octaves += notes.OctaveAt(i) == octave ? 1 : 0;
+                int note = ((tuning.LowestOctave + 1 + octave) * Degree.Count) + tuning.Tonic + degree;
+                midi += board.NoteAt(coord) == note ? 1 : 0;
+                colours += grid.TryGetCell(coord, out HexCellView cell) && cell.OwnRestColor == board.ColorOf(degree) ? 1 : 0;
+                TextMeshPro label = board.Labels[i];
+                labels += label.text == ViewText.DegreeName(degree) && label.gameObject.activeSelf == tuning.ShowDegrees ? 1 : 0;
+            }
+
+            int likeliest = 1;
+            for (int d = 2; d < Degree.Count; d++)
+            {
+                likeliest = notes.Probability(d) > notes.Probability(likeliest) ? d : likeliest;
+            }
+
+            var shares = new System.Text.StringBuilder();
+            for (int d = 0; d < Degree.Count; d++)
+            {
+                if (perDegree[d] > 0)
+                {
+                    shares.Append(Degree.Name(d)).Append('×').Append(perDegree[d]).Append(' ');
+                }
+            }
+
+            Debug.Log($"Menu check: board {what}, {notes.Layout}, {board.Table.Name}, centre {notes.Centre}, {notes.Rings} rings: {shares}");
+            SelfTest.Check(inMode == count, $"{what}: every cell's degree is in the mode: {inMode} of {count}");
+            SelfTest.Check(octaves == count, $"{what}: every cell's octave is its ring's: {octaves} of {count}");
+            SelfTest.Check(midi == count, $"{what}: every cell's note is its tonic, octave and degree: {midi} of {count}");
+            SelfTest.Check(colours == count, $"{what}: every cell is coloured for its degree: {colours} of {count}");
+            SelfTest.Check(board.ColorOf(0) == tuning.RootColor && board.ColorOf(likeliest) == tuning.LikelyColor,
+                $"{what}: the root's cells are the root colour, {Degree.Name(likeliest)}'s (the likeliest but the root) the likely colour");
+            SelfTest.Check(labels == count, $"{what}: every cell's label is its degree: {labels} of {count}");
         }
 
         // The tables are in the player's Resources: the index lists them and each reads (a set that

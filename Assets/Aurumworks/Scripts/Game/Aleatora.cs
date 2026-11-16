@@ -6,7 +6,7 @@ namespace Aurumworks.Aleatora
     /// <summary>
     /// Aleatora, made in code as each scene loads (Docs/Aleatora_Tech.md, Building in code): this
     /// object reads the tuning (AleatoraTuning) and makes the board (HexGrid, on a child at the
-    /// origin), what selects its cells (GridSelection) and MIDI out (MidiPlayback, which opens the
+    /// origin), what selects its cells (GridSelection), the cells' notes (BoardNotes) and MIDI out (MidiPlayback, which opens the
     /// saved port). The scene holds the camera, the Cinemachine camera and the lights. Quit to Menu
     /// loads the scene afresh, and with it a fresh Aleatora. It makes no sound.
     /// </summary>
@@ -23,6 +23,9 @@ namespace Aurumworks.Aleatora
 
         /// <summary>What selects the board's cells.</summary>
         public GridSelection Selection { get; private set; }
+
+        /// <summary>The board's notes: each cell's degree, octave and colour.</summary>
+        public BoardNotes Board { get; private set; }
 
         /// <summary>MIDI out: the open port.</summary>
         public MidiPlayback Midi { get; private set; }
@@ -73,6 +76,9 @@ namespace Aurumworks.Aleatora
 
             Selection = board.AddComponent<GridSelection>();
             Selection.Begin(Grid, Tuning.Grid);
+
+            Board = board.AddComponent<BoardNotes>();
+            Board.Begin(Grid, Tuning.Grid, Tuning.Emitter);
 
             Midi = gameObject.AddComponent<MidiPlayback>();
             Midi.Begin(Tuning.Midi);

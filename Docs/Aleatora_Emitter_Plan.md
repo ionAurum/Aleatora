@@ -42,11 +42,12 @@ mode multiplied by *Chromatic weight* (decision 3). Three layouts (ruling 61):
    largest remainder: on 61 cells `european_ionian` gives 1 ×13, 2 ×9, 3 ×11, 4 ×6, 5 ×12, 6 ×5,
    7 ×5. Then the cells are shuffled with the seed. The board holds the set's proportions exactly
    as near as whole cells allow, rather than drawing 61 times and hoping.
-2. **Clustered.** The same counts, each degree one connected region: one starting cell per
-   degree, placed with the seed, then the regions grow a cell at a time, the degree with most
-   cells still to place growing first, into a free neighbouring cell picked with the seed. A
-   region boxed in before it is full continues from the nearest free cell (so the counts hold;
-   a region may then come in two pieces, rarely).
+2. **Clustered.** The same counts, each degree one connected region, carved one region at a
+   time in an order drawn from the seed (as built in EM-1; growing all the regions at once, as
+   first written here, left a region in pieces on nearly every board). A region starts on the
+   edge of the free cells and grows into the free neighbour with most of its own; a cell is
+   taken only if the cells still free stay connected, so the last region is whole too. On 600
+   test boards, 599 had every region whole; the counts always hold.
 3. **Along the axes.** An isomorphic layout, like a harmonic table: the centre cell is 1, a step
    along +K moves the degree up *K interval* scale steps, a step along +N up *N interval*, and +M
    is their sum. The default, K a third and N a third, makes M a fifth, so every triad of the mode

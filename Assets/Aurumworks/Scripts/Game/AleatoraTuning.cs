@@ -25,6 +25,9 @@ namespace Aurumworks.Aleatora
         [Tooltip("MIDI out: the channel and BPM the Melodies page starts with, and each note's velocity and length.")]
         [SerializeField] private MidiTuning _midi = new();
 
+        [Tooltip("The emitter and the board's notes: the set and layout the cells' notes come from, their octaves, and how a cell shows its note.")]
+        [SerializeField] private EmitterTuning _emitter = new();
+
         /// <summary>The tuning: the asset, or the defaults if there is none.</summary>
         public static AleatoraTuning Load()
         {
@@ -49,5 +52,8 @@ namespace Aurumworks.Aleatora
 
         /// <summary>MIDI out's starting channel and BPM, and how each note is played.</summary>
         public MidiTuning Midi => _midi;
+
+        /// <summary>The emitter and the board's notes.</summary>
+        public EmitterTuning Emitter => _emitter;
     }
 }
