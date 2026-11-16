@@ -29,6 +29,12 @@ namespace Aurumworks.Aleatora
         /// <summary>The cell's own colour at rest (BoardNotes gives it its degree's), or null for the tuning's.</summary>
         public Color? OwnRestColor { get; private set; }
 
+        /// <summary>How much of a hit's glow is on the cell: 1 as a sphere strikes it, fading to 0 (the emitter drives it).</summary>
+        public float HitAmount { get; private set; }
+
+        private float _hitGlow;
+        private Color _hitColor;
+
         // Statics survive play mode when domain reload is disabled; reset them.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics() => _block = null;
@@ -66,9 +72,23 @@ namespace Aurumworks.Aleatora
         }
 
         /// <summary>
+        /// Lays a hit's glow over the cell: amount 1 is the hit's full glow level and colour, 0 none
+        /// (the cell as its state has it), and between, the two mixed. The emitter calls it as a
+        /// sphere strikes the cell and as the glow fades.
+        /// </summary>
+        public void SetHit(float amount, float glow, Color color, GridTuning tuning)
+        {
+            HitAmount = Mathf.Clamp01(amount);
+            _hitGlow = glow;
+            _hitColor = color;
+            Refresh(tuning);
+        }
+
+        /// <summary>
         /// Colours the cell for its state from the tuning: at rest, or selected. The base colour is
         /// the material's own times the rest colour (the cell's own, or the tuning's). With a glow, the state's colour lights the cell
         /// at the state's glow level; without one, the selected colour replaces the base colour.
+        /// A hit's glow (SetHit) goes over either, by its amount.
         /// </summary>
         public void Refresh(GridTuning tuning)
         {
@@ -81,6 +101,7 @@ namespace Aurumworks.Aleatora
             Color restColor = OwnRestColor ?? tuning.RestColor;
             Color stateColor = IsSelected ? tuning.SelectedColor : restColor;
             float glow = IsSelected ? tuning.SelectedGlow : tuning.RestGlow;
+            float hit = HitAmount;
             for (int i = 0; i < _renderers.Length; i++)
             {
                 Renderer cellRenderer = _renderers[i];
@@ -88,12 +109,13 @@ namespace Aurumworks.Aleatora
                 if (_glows[i])
                 {
                     _block.SetColor(_baseColorId, _materialBaseColors[i] * restColor);
-                    _block.SetColor(_glowColorId, stateColor);
-                    _block.SetFloat(_glowId, glow);
+                    _block.SetColor(_glowColorId, hit > 0f ? Color.Lerp(stateColor, _hitColor, hit) : stateColor);
+                    _block.SetFloat(_glowId, hit > 0f ? Mathf.Lerp(glow, _hitGlow, hit) : glow);
                 }
                 else
                 {
-                    _block.SetColor(_baseColorId, IsSelected ? stateColor : _materialBaseColors[i] * restColor);
+                    Color baseColor = IsSelected ? stateColor : _materialBaseColors[i] * restColor;
+                    _block.SetColor(_baseColorId, hit > 0f ? Color.Lerp(baseColor, _hitColor, hit) : baseColor);
                 }
 
                 cellRenderer.SetPropertyBlock(_block);

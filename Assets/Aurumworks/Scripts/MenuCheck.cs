@@ -123,6 +123,9 @@ namespace Aurumworks.Aleatora
             // The board's notes (EM-1): each cell's degree, octave, colour and label; the three layouts.
             yield return CheckBoard();
 
+            // The emitter (EM-2): the cone sprays spheres, hits glow, the cap holds, a menu stops it.
+            yield return CheckEmitter();
+
             // The melody tables came with the player and read.
             CheckTables();
 
@@ -274,6 +277,173 @@ namespace Aurumworks.Aleatora
             CheckNotes(game, "3 × 5 × 7");
             yield return ShowBoard(game.Grid, game.Tuning.Grid, 5, 5, 5, HexOrientation.Flat, 61, null);
             CheckNotes(game, "5 × 5 × 5 again");
+        }
+
+        // The emitter (the emitter plan, EM-2): the bootstrap gave the scene's cone its Emitter; aimed
+        // at the centre cell, Space sprays for two seconds and spheres hit cells, which glow; at a
+        // high rate Max Spheres holds; under the session menu nothing is launched, and spraying goes
+        // on when it closes; Space stops it. No MIDI yet: the hits are logged.
+        private static IEnumerator CheckEmitter()
+        {
+            Aleatora game = Aleatora.Instance;
+            Emitter emitter = game != null ? game.Emitter : null;
+            GameObject cone = GameObject.Find("Emitter");
+            if (!SelfTest.Check(emitter != null && cone != null && emitter.gameObject == cone && game.Board.Notes != null,
+                "the bootstrap gave the scene's Emitter object its emitter"))
+            {
+                yield break;
+            }
+
+            EmitterTuning tuning = game.Tuning.Emitter;
+            HexGrid grid = game.Grid;
+            HexCoord centre = game.Board.Notes.Centre;
+            emitter.Clear();
+            emitter.AimAt(grid.TopOf(centre));
+            yield return null;
+            Vector3 toAim = emitter.AimPoint - emitter.transform.position;
+            SelfTest.Check(Vector3.Angle(-emitter.transform.up, toAim) < 0.5f && emitter.Nozzle.y < emitter.transform.position.y
+                && emitter.Nozzle.y > grid.TopOf(centre).y,
+                $"the cone points at the centre cell {centre}, its nozzle at {emitter.Nozzle} below it and above the board");
+
+            int strays = 0;
+            foreach (Collider collider in UnityEngine.Object.FindObjectsByType<Collider>(FindObjectsSortMode.None))
+            {
+                strays += collider.GetComponentInParent<HexCellView>() == null && collider.GetComponent<EmitterSphere>() == null ? 1 : 0;
+            }
+
+            SelfTest.Check(strays == 0, $"the only colliders are the cells' and the spheres': {strays} others");
+
+            var hits = new List<EmitterHit>();
+            int glowed = 0, noted = 0, near = 0, hard = 0;
+            void OnHit(EmitterHit hit)
+            {
+                hits.Add(hit);
+                glowed += grid.TryGetCell(hit.Cell, out HexCellView cell) && cell.HitAmount >= 1f ? 1 : 0;
+                noted += hit.Note >= 0 && hit.Note == game.Board.NoteAt(hit.Cell) ? 1 : 0;
+                near += HexCoord.Distance(hit.Cell, centre) <= 2 ? 1 : 0;
+                hard += hit.Speed >= tuning.MinSpeed ? 1 : 0;
+            }
+
+            SelfTest.Check(!emitter.Spraying && emitter.Spheres.Count == 0, "the emitter isn't spraying at the start");
+            emitter.Hit += OnHit;
+            yield return QueuedInput.Press(Key.Space);
+            SelfTest.Check(emitter.Spraying, "Space turns spraying on");
+
+            int most = 0;
+            float start = Time.realtimeSinceStartup;
+            while (Time.realtimeSinceStartup - start < 2f)
+            {
+                most = Math.Max(most, emitter.Spheres.Count);
+                yield return null;
+            }
+
+            yield return SelfTest.Capture("3-Emitter");
+            Debug.Log($"Menu check: emitter at {tuning.Rate}/s for 2 s: {emitter.Launched} launched, {hits.Count} hits, at most {most} spheres; "
+                + "the first: " + string.Join("; ", hits.GetRange(0, Math.Min(8, hits.Count))));
+            SelfTest.Check(emitter.Launched >= 4 && most <= tuning.MaxSpheres, $"spraying launched spheres: {emitter.Launched}, at most {most} at once");
+            SelfTest.Check(hits.Count > 0, $"spheres hit cells: {hits.Count} hits");
+            SelfTest.Check(glowed == hits.Count, $"every cell hit glowed: {glowed} of {hits.Count}");
+            SelfTest.Check(noted == hits.Count, $"every hit carries its cell's note: {noted} of {hits.Count}");
+            SelfTest.Check(hard == hits.Count, $"every hit was at Min Speed or faster: {hard} of {hits.Count}");
+            SelfTest.Check(near * 2 > hits.Count, $"most hits are within two cells of the centre cell aimed at: {near} of {hits.Count}");
+
+            // Max Spheres holds at a high rate.
+            float rateBefore = tuning.Rate;
+            int capBefore = tuning.MaxSpheres;
+            tuning.Rate = 50f;
+            tuning.MaxSpheres = 20;
+            most = 0;
+            start = Time.realtimeSinceStartup;
+            while (Time.realtimeSinceStartup - start < 1.5f)
+            {
+                most = Math.Max(most, emitter.Spheres.Count);
+                yield return null;
+            }
+
+            SelfTest.Check(most == 20, $"at 50 a second, never more than Max Spheres (20) at once: at most {most}");
+            tuning.Rate = rateBefore;
+            tuning.MaxSpheres = capBefore;
+            SelfTest.Progress();
+
+            // Under the session menu nothing is launched; closing it, spraying goes on.
+            yield return QueuedInput.Press(Key.Escape);
+            SelfTest.Check(Menus.Count == 1 && MenuFocus.IsAnyOpen, "Escape opens the session menu over the spray");
+            int launched = emitter.Launched;
+            yield return new WaitForSecondsRealtime(0.75f);
+            SelfTest.Check(emitter.Launched == launched && emitter.CurrentRate == 0f && emitter.Spraying,
+                $"under the session menu spraying pauses: {emitter.Launched - launched} launched");
+            yield return QueuedInput.Press(Key.Escape);
+            SelfTest.Check(Menus.Count == 0 && !MenuFocus.IsAnyOpen, "Escape closes the session menu");
+            yield return new WaitForSecondsRealtime(0.75f);
+            SelfTest.Check(emitter.Launched > launched, $"with the menu closed spraying goes on: {emitter.Launched - launched} launched");
+
+            yield return QueuedInput.Press(Key.Space);
+            launched = emitter.Launched;
+            yield return new WaitForSecondsRealtime(0.5f);
+            SelfTest.Check(!emitter.Spraying && emitter.Launched == launched, "Space turns spraying off");
+
+            emitter.Hit -= OnHit;
+            emitter.Clear();
+            SelfTest.Check(emitter.Spheres.Count == 0, "Clear puts every sphere away");
+            SelfTest.Progress();
+
+            // The physics' cost (the plan's Risks): Max Spheres on the board, on the default board and on the largest.
+            yield return MeasureSpray(game, "5 × 5 × 5");
+            yield return ShowBoard(grid, game.Tuning.Grid, 40, 40, 40, HexOrientation.Flat, 4681, null);
+            emitter.AimAt(grid.TopOf(game.Board.Notes.Centre));
+            yield return MeasureSpray(game, "40 × 40 × 40");
+            yield return ShowBoard(grid, game.Tuning.Grid, 5, 5, 5, HexOrientation.Flat, 61, null);
+            emitter.AimAt(grid.TopOf(game.Board.Notes.Centre));
+        }
+
+        // Times the frames for a second with no spheres, then sprays at 50 a second until Max Spheres
+        // are out (or 10 s) and times two seconds more, with the hits a second. A reading, not a check.
+        private static IEnumerator MeasureSpray(Aleatora game, string what)
+        {
+            Emitter emitter = game.Emitter;
+            EmitterTuning tuning = game.Tuning.Emitter;
+            var idle = new float[2];
+            yield return new WaitForSecondsRealtime(0.5f);
+            yield return TimeFrames(1f, idle);
+
+            float rateBefore = tuning.Rate;
+            tuning.Rate = 50f;
+            emitter.Spraying = true;
+            float start = Time.realtimeSinceStartup;
+            while (emitter.Spheres.Count < tuning.MaxSpheres && Time.realtimeSinceStartup - start < 10f)
+            {
+                yield return null;
+            }
+
+            int spheres = emitter.Spheres.Count;
+            int hitsBefore = emitter.Hits;
+            var spraying = new float[2];
+            yield return TimeFrames(2f, spraying);
+            Debug.Log($"Menu check: spray cost on {what} ({game.Grid.CellCount} cells), fixed step {Time.fixedDeltaTime * 1000f:0.#} ms: "
+                + $"no spheres {idle[0]:0.0} ms a frame (the longest {idle[1]:0.0}); {spheres} of {tuning.MaxSpheres} spheres at 50 a second "
+                + $"{spraying[0]:0.0} ms a frame (the longest {spraying[1]:0.0}), {(emitter.Hits - hitsBefore) / 2f:0} hits a second");
+            emitter.Spraying = false;
+            tuning.Rate = rateBefore;
+            emitter.Clear();
+            SelfTest.Progress();
+        }
+
+        // The mean and the longest frame over some seconds, in milliseconds, into result[0] and result[1].
+        private static IEnumerator TimeFrames(float seconds, float[] result)
+        {
+            int frames = 0;
+            float total = 0f, longest = 0f;
+            float start = Time.realtimeSinceStartup;
+            while (Time.realtimeSinceStartup - start < seconds)
+            {
+                yield return null;
+                frames++;
+                total += Time.unscaledDeltaTime;
+                longest = Mathf.Max(longest, Time.unscaledDeltaTime);
+            }
+
+            result[0] = total / Math.Max(1, frames) * 1000f;
+            result[1] = longest * 1000f;
         }
 
         // Every cell: a degree of the set's mode; its octave by its ring (the centre lowest); its MIDI

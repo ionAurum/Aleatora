@@ -131,6 +131,66 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""initialStateCheck"": false,
                     ""priority"": 0
+                },
+                {
+                    ""name"": ""Spray"",
+                    ""type"": ""Button"",
+                    ""id"": ""9ca0a540-2df0-4a74-9d4d-46d740b21a25"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Spray Pressure"",
+                    ""type"": ""Value"",
+                    ""id"": ""6298f554-e5a5-4b29-82d7-d36ea30cb02b"",
+                    ""expectedControlType"": ""Axis"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Move Emitter"",
+                    ""type"": ""Value"",
+                    ""id"": ""4657284d-ec22-4836-b994-ba620440aee7"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Raise Emitter"",
+                    ""type"": ""Value"",
+                    ""id"": ""189d7eb2-00ac-40b7-ae50-02c596b98acd"",
+                    ""expectedControlType"": ""Axis"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Aim"",
+                    ""type"": ""Button"",
+                    ""id"": ""f943ca88-9bc8-4272-8d23-3124bc05fae9"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Aim Point"",
+                    ""type"": ""Value"",
+                    ""id"": ""72b8b001-b856-4556-b727-357fdc15a5cc"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
                 }
             ],
             ""bindings"": [
@@ -197,6 +257,149 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": "";Keyboard&Mouse"",
                     ""action"": ""Left Click"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0e6165cd-07e3-4db3-8f7f-0d58b91f779d"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Spray"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""20994930-aaf5-42ce-aa20-411a904a4d45"",
+                    ""path"": ""<Gamepad>/rightTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Spray Pressure"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""WASD"",
+                    ""id"": ""6cf466ba-d804-4444-8f62-6a717cbc76c3"",
+                    ""path"": ""2DVector"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move Emitter"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""up"",
+                    ""id"": ""0494fa7b-94ec-4d30-b00c-a5eb9d980649"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Move Emitter"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""down"",
+                    ""id"": ""0f591c93-fae8-4fb0-b2d2-03d06eed7921"",
+                    ""path"": ""<Keyboard>/s"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Move Emitter"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""left"",
+                    ""id"": ""7ada6242-7568-42ab-9e85-17fce6c46c47"",
+                    ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Move Emitter"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""right"",
+                    ""id"": ""71fc1520-1bdf-4f81-af50-0a02727ab3c0"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Move Emitter"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1662da4e-c758-438c-83e2-0844c0e2049d"",
+                    ""path"": ""<Gamepad>/leftStick"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Move Emitter"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""QE"",
+                    ""id"": ""51b82828-eaff-4d8b-b12c-b59cc7abeec4"",
+                    ""path"": ""1DAxis"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Raise Emitter"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""negative"",
+                    ""id"": ""eddee25a-c6b5-472a-9be0-842779561cc2"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Raise Emitter"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""positive"",
+                    ""id"": ""427c41ab-8f9c-4136-8543-603915398e5b"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Raise Emitter"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a9c99e0e-6559-4bdb-b1c6-707c57416cdb"",
+                    ""path"": ""<Keyboard>/leftShift"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Aim"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""695b48ac-221c-40bb-a974-6e205b7fe940"",
+                    ""path"": ""<Gamepad>/rightStick"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Aim Point"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -830,6 +1033,12 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Player_Zoom = m_Player.FindAction("Zoom", throwIfNotFound: true);
         m_Player_Focus = m_Player.FindAction("Focus", throwIfNotFound: true);
         m_Player_LeftClick = m_Player.FindAction("Left Click", throwIfNotFound: true);
+        m_Player_Spray = m_Player.FindAction("Spray", throwIfNotFound: true);
+        m_Player_SprayPressure = m_Player.FindAction("Spray Pressure", throwIfNotFound: true);
+        m_Player_MoveEmitter = m_Player.FindAction("Move Emitter", throwIfNotFound: true);
+        m_Player_RaiseEmitter = m_Player.FindAction("Raise Emitter", throwIfNotFound: true);
+        m_Player_Aim = m_Player.FindAction("Aim", throwIfNotFound: true);
+        m_Player_AimPoint = m_Player.FindAction("Aim Point", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -928,6 +1137,12 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Zoom;
     private readonly InputAction m_Player_Focus;
     private readonly InputAction m_Player_LeftClick;
+    private readonly InputAction m_Player_Spray;
+    private readonly InputAction m_Player_SprayPressure;
+    private readonly InputAction m_Player_MoveEmitter;
+    private readonly InputAction m_Player_RaiseEmitter;
+    private readonly InputAction m_Player_Aim;
+    private readonly InputAction m_Player_AimPoint;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -955,6 +1170,30 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/LeftClick".
         /// </summary>
         public InputAction @LeftClick => m_Wrapper.m_Player_LeftClick;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Spray".
+        /// </summary>
+        public InputAction @Spray => m_Wrapper.m_Player_Spray;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/SprayPressure".
+        /// </summary>
+        public InputAction @SprayPressure => m_Wrapper.m_Player_SprayPressure;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/MoveEmitter".
+        /// </summary>
+        public InputAction @MoveEmitter => m_Wrapper.m_Player_MoveEmitter;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/RaiseEmitter".
+        /// </summary>
+        public InputAction @RaiseEmitter => m_Wrapper.m_Player_RaiseEmitter;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Aim".
+        /// </summary>
+        public InputAction @Aim => m_Wrapper.m_Player_Aim;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/AimPoint".
+        /// </summary>
+        public InputAction @AimPoint => m_Wrapper.m_Player_AimPoint;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -993,6 +1232,24 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @LeftClick.started += instance.OnLeftClick;
             @LeftClick.performed += instance.OnLeftClick;
             @LeftClick.canceled += instance.OnLeftClick;
+            @Spray.started += instance.OnSpray;
+            @Spray.performed += instance.OnSpray;
+            @Spray.canceled += instance.OnSpray;
+            @SprayPressure.started += instance.OnSprayPressure;
+            @SprayPressure.performed += instance.OnSprayPressure;
+            @SprayPressure.canceled += instance.OnSprayPressure;
+            @MoveEmitter.started += instance.OnMoveEmitter;
+            @MoveEmitter.performed += instance.OnMoveEmitter;
+            @MoveEmitter.canceled += instance.OnMoveEmitter;
+            @RaiseEmitter.started += instance.OnRaiseEmitter;
+            @RaiseEmitter.performed += instance.OnRaiseEmitter;
+            @RaiseEmitter.canceled += instance.OnRaiseEmitter;
+            @Aim.started += instance.OnAim;
+            @Aim.performed += instance.OnAim;
+            @Aim.canceled += instance.OnAim;
+            @AimPoint.started += instance.OnAimPoint;
+            @AimPoint.performed += instance.OnAimPoint;
+            @AimPoint.canceled += instance.OnAimPoint;
         }
 
         /// <summary>
@@ -1016,6 +1273,24 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @LeftClick.started -= instance.OnLeftClick;
             @LeftClick.performed -= instance.OnLeftClick;
             @LeftClick.canceled -= instance.OnLeftClick;
+            @Spray.started -= instance.OnSpray;
+            @Spray.performed -= instance.OnSpray;
+            @Spray.canceled -= instance.OnSpray;
+            @SprayPressure.started -= instance.OnSprayPressure;
+            @SprayPressure.performed -= instance.OnSprayPressure;
+            @SprayPressure.canceled -= instance.OnSprayPressure;
+            @MoveEmitter.started -= instance.OnMoveEmitter;
+            @MoveEmitter.performed -= instance.OnMoveEmitter;
+            @MoveEmitter.canceled -= instance.OnMoveEmitter;
+            @RaiseEmitter.started -= instance.OnRaiseEmitter;
+            @RaiseEmitter.performed -= instance.OnRaiseEmitter;
+            @RaiseEmitter.canceled -= instance.OnRaiseEmitter;
+            @Aim.started -= instance.OnAim;
+            @Aim.performed -= instance.OnAim;
+            @Aim.canceled -= instance.OnAim;
+            @AimPoint.started -= instance.OnAimPoint;
+            @AimPoint.performed -= instance.OnAimPoint;
+            @AimPoint.canceled -= instance.OnAimPoint;
         }
 
         /// <summary>
@@ -1355,6 +1630,48 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnLeftClick(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Spray" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSpray(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Spray Pressure" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSprayPressure(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Move Emitter" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnMoveEmitter(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Raise Emitter" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnRaiseEmitter(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Aim" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnAim(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Aim Point" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnAimPoint(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

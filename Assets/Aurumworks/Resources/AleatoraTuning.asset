@@ -69,3 +69,26 @@ MonoBehaviour:
     _labelColor: {r: 0.1, g: 0.1, b: 0.1, a: 1}
     _labelSize: 5
     _labelHeight: 0.01
+    _rate: 4
+    _spread: 10
+    _speed: 8
+    _speedJitter: 10
+    _minSize: 0.2
+    _maxSize: 0.5
+    _bounciness: 0.6
+    _lifetime: 8
+    _maxSpheres: 300
+    _minSpeed: 1
+    _logHits: 0
+    _moveSpeed: 6
+    _raiseSpeed: 4
+    _aimSpeed: 8
+    _minHeight: 2
+    _maxHeight: 30
+    _sphereMaterial: {fileID: 2100000, guid: 31f2b24e3d4248d409519971af8dbd52, type: 2}
+    _aimMaterial: {fileID: 2100000, guid: 31f2b24e3d4248d409519971af8dbd52, type: 2}
+    _aimColor: {r: 1, g: 0.85, b: 0, a: 1}
+    _aimSize: 0.4
+    _hitColor: {r: 1, g: 1, b: 1, a: 1}
+    _hitGlow: 1
+    _hitFade: 0.25

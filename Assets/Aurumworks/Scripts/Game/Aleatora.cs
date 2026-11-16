@@ -7,7 +7,7 @@ namespace Aurumworks.Aleatora
     /// Aleatora, made in code as each scene loads (Docs/Aleatora_Tech.md, Building in code): this
     /// object reads the tuning (AleatoraTuning) and makes the board (HexGrid, on a child at the
     /// origin), what selects its cells (GridSelection), the cells' notes (BoardNotes) and MIDI out (MidiPlayback, which opens the
-    /// saved port). The scene holds the camera, the Cinemachine camera and the lights. Quit to Menu
+    /// saved port), and gives the scene's Emitter object (the cone) its Emitter. The scene holds the camera, the Cinemachine camera, the lights and the cone. Quit to Menu
     /// loads the scene afresh, and with it a fresh Aleatora. It makes no sound.
     /// </summary>
     public class Aleatora : MonoBehaviour
@@ -29,6 +29,11 @@ namespace Aurumworks.Aleatora
 
         /// <summary>MIDI out: the open port.</summary>
         public MidiPlayback Midi { get; private set; }
+
+        /// <summary>The emitter, on the scene's Emitter object; null if the scene has none.</summary>
+        public Emitter Emitter { get; private set; }
+
+        private const string EmitterObjectName = "Emitter";
 
         // Statics survive play mode when domain reload is disabled; reset them.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -82,6 +87,18 @@ namespace Aurumworks.Aleatora
 
             Midi = gameObject.AddComponent<MidiPlayback>();
             Midi.Begin(Tuning.Midi);
+
+            // The scene's cone becomes the emitter (the emitter plan, EM-2).
+            GameObject cone = GameObject.Find(EmitterObjectName);
+            if (cone != null)
+            {
+                Emitter = cone.TryGetComponent(out Emitter emitter) ? emitter : cone.AddComponent<Emitter>();
+                Emitter.Begin(Grid, Tuning.Grid, Board, Tuning.Emitter, transform);
+            }
+            else
+            {
+                Debug.LogWarning($"Aleatora: the scene has no active '{EmitterObjectName}' object, so there is no emitter.");
+            }
         }
 
         private void OnDestroy()
