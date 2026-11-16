@@ -165,6 +165,13 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 52. **TH-1 merges to `main` before TH-2's listening** (2026-11-15). Jon: "run the tests, commit,
     then merge." The tests (291) and the menu check (186) passed first. TH-2's tuning of
     `virtuoso.json` happens after the merge.
+53. **Every Virtuoso phrase starts on the root** (2026-11-16, TH-2). Jon: "change the generator
+    such that all melodies start on the scale root." In `virtuoso.py`, not in the game's
+    `MelodyGenerator`: the folk sets keep their own first notes, and with *Smoothing* above 0 a
+    Virtuoso melody's first note can still be other than 1 (Jon chose this over making the game's
+    first note always 1).
+54. **The double harmonic is shown as "Byzantine"** (2026-11-16, TH-2): "Virtuoso · Byzantine" on
+    the *Melodies* page. The set keeps its name on disk, `virtuoso_double_harmonic`.
 
 ## Open, each its own plan later (the plan's decision 7)
 

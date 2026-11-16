@@ -7,7 +7,7 @@
     "pull: the chance a figure that ends on a colour note is followed by its pull, and that the ending goes through a pull into 1.",
     "chromatic: the chance a whole step inside a run is filled by its passing note (0.23 gives about 3% of notes in Lydian and Phrygian; double harmonic has one whole step and the pentatonic two, so fewer).",
     "next_figure: how often the next figure starts a scale step or a third from where the last ended.",
-    "modes: each mode's degrees, its 3rd and its colour note (phrases start on 1, 5, the 3rd or the colour), and its pulls.",
+    "modes: each mode's degrees, its 3rd and its colour note, and its pulls. Every phrase starts on 1 (ruling 53).",
     "A pull goes from a degree to the nearest placement of another, up or down; a mode's colour notes are its pulls' 'from's."
   ],
   "corpus": "virtuoso",
@@ -28,12 +28,6 @@
   "next_figure": {
     "step": 2,
     "third": 1
-  },
-  "start": {
-    "1": 3,
-    "5": 2,
-    "third": 2,
-    "colour": 2
   },
   "modes": {
     "lydian": {

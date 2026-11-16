@@ -5,9 +5,9 @@ namespace Aurumworks.Aleatora.Tests
 {
     /// <summary>
     /// EditMode tests of the four tables written from theory (Docs/Aleatora_Theory_Plan.md, TH-1):
-    /// each reads with four orders and the phrase count; every phrase begins in its mode and ends on
-    /// 1; only passing notes are outside the mode; each colour note's likeliest next note is its
-    /// pull; and a melody from each at order 4 keeps to the mode at ChromaticWeight 0 and mostly
+    /// each reads with four orders and the phrase count; every phrase starts on 1 (Design, ruling
+    /// 53) and ends on 1; only passing notes are outside the mode; each colour note's likeliest
+    /// next note is its pull; and a melody from each at order 4 keeps to the mode at ChromaticWeight 0 and mostly
     /// finds its order-4 contexts.
     /// </summary>
     public class TheoryTableTests
@@ -53,11 +53,11 @@ namespace Aurumworks.Aleatora.Tests
 
             int mask = ModeScale.Mask(mode);
             int outside = 0;
+            Assert.That(table.First(0), Is.EqualTo(table.Tunes), "every phrase starts on 1 (ruling 53)");
             for (int d = 0; d < Degree.Count; d++)
             {
                 if (!ModeScale.Has(mask, d))
                 {
-                    Assert.That(table.First(d), Is.Zero, $"no phrase begins on {Degree.Name(d)}");
                     outside += table.Unigram(d);
                 }
 

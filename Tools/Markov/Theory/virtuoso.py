@@ -14,7 +14,7 @@ the same shape (Tools/Markov/Source/README.md), which Tools/markov.py turns into
 A phrase is written in pitch, on scale steps over two octaves and a bit, so steps and leaps are
 real; each note is then counted as its degree (semitones above the tonic, 0 to 11). It is:
 
-1. A start on 1, 5, the mode's 3rd or its colour note, in the middle octave.
+1. A start on 1, in the middle octave (Design, ruling 53: every melody starts on the root).
 2. Two to five figures, each starting a step or a third (one or two scale steps) from where the
    last one ended, up or down:
    run         four to eight scale steps one way; a whole step inside it is sometimes filled by
@@ -35,8 +35,8 @@ files (ruling 51). The script runs offline and its output is committed, so the g
 deterministic.
 
 Before writing, it checks its own phrases and counts, and exits 1 if any check fails: every phrase
-ends on 1 and has the minimum notes or more; no degree comes twice running; no note is outside the mode but a passing note, and
-each passing note lies between two scale notes a whole step apart; each pulled degree's likeliest
+starts and ends on 1 and has the minimum notes or more; no degree comes twice running; no note is
+outside the mode but a passing note, and each passing note lies between two scale notes a whole step apart; each pulled degree's likeliest
 next note (order 1) is one of its pulls' targets. It writes nothing over a file that is already
 identical.
 """
@@ -203,9 +203,7 @@ class Writer:
     def phrase(self):
         mode, r, w = self.mode, self.rng, self.w
         while True:
-            starts = {"1": 0, "5": 7, "third": mode.third, "colour": mode.colour}
-            name = r.choices(list(starts), [w["start"][k] for k in starts])[0]
-            current = mode.step_of(starts[name], 1)
+            current = mode.step_of(0, 1)
             notes = [(mode.pitch(current), False)]
             low, high = w["figures_per_phrase"]
             for _ in range(r.randint(low, high)):
@@ -224,6 +222,8 @@ class Writer:
 
 def check_phrase(mode, notes, minimum):
     errors = []
+    if notes[0][0] % 12 != 0:
+        errors.append("starts on " + DEGREES[notes[0][0] % 12])
     if notes[-1][0] % 12 != 0:
         errors.append("ends on " + DEGREES[notes[-1][0] % 12])
     if len(notes) < minimum:
