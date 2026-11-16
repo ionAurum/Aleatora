@@ -219,7 +219,7 @@ namespace Aurumworks.Aleatora
 
             Heading(column, "Spray");
             Number(column, "Rate", 0f, 50f, false, () => _tuning.Rate, v => _tuning.Rate = v, v => v.ToString("0.0", CultureInfo.InvariantCulture) + "/s");
-            Number(column, "Spread", 0f, 60f, false, () => _tuning.Spread, v => _tuning.Spread = v, v => v.ToString("0", CultureInfo.InvariantCulture) + "°");
+            Number(column, "Spread", 0f, EmitterTuning.MostSpread, false, () => _tuning.Spread, v => _tuning.Spread = v, v => v.ToString("0", CultureInfo.InvariantCulture) + "°");
             Number(column, "Speed", 2f, 30f, false, () => _tuning.Speed, v => _tuning.Speed = v, Decimal1);
             Number(column, "Speed jitter", 0f, 50f, false, () => _tuning.SpeedJitter * 100f, v => _tuning.SpeedJitter = v / 100f,
                 v => v.ToString("0", CultureInfo.InvariantCulture) + "%");

@@ -70,7 +70,7 @@ MonoBehaviour:
     _labelSize: 5
     _labelHeight: 0.01
     _rate: 4
-    _spread: 10
+    _spread: 20
     _speed: 8
     _speedJitter: 10
     _minSize: 0.2
@@ -93,13 +93,19 @@ MonoBehaviour:
     _maxVoices: 32
     _moveSpeed: 6
     _raiseSpeed: 4
-    _aimSpeed: 8
     _minHeight: 2
     _maxHeight: 30
+    _tiltSensitivity: 0.15
+    _swing: 0
+    _stickTiltSpeed: 120
+    _wheelStep: 1.25
+    _spreadStep: 5
     _sphereMaterial: {fileID: 2100000, guid: 31f2b24e3d4248d409519971af8dbd52, type: 2}
     _aimMaterial: {fileID: 2100000, guid: 31f2b24e3d4248d409519971af8dbd52, type: 2}
     _aimColor: {r: 1, g: 0.85, b: 0, a: 1}
     _aimSize: 0.4
+    _aimLineWidth: 0.05
+    _heldColor: {r: 1, g: 0.85, b: 0, a: 1}
     _hitColor: {r: 1, g: 1, b: 1, a: 1}
     _hitGlow: 1
     _hitFade: 0.25

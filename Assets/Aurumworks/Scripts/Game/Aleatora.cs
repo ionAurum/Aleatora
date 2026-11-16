@@ -98,6 +98,8 @@ namespace Aurumworks.Aleatora
                 Emitter = cone.TryGetComponent(out Emitter emitter) ? emitter : cone.AddComponent<Emitter>();
                 Emitter.Begin(Grid, Tuning.Grid, Board, Tuning.Emitter, transform);
                 Emitter.Hit += PlayHit; // its notes out (EM-3)
+                Selection.MouseTaken = () => Emitter != null && Emitter.Held; // held, the mouse is the emitter's (EM-6)
+                Selection.ClaimsClick = point => Emitter != null && !Emitter.Held && Emitter.IsOnCone(point);
             }
             else
             {

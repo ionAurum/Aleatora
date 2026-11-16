@@ -15,6 +15,15 @@ namespace Aurumworks.Aleatora
     [Serializable]
     public class EmitterTuning
     {
+        /// <summary>The widest spray, edge to edge, in degrees: the whole lower half.</summary>
+        public const float MostSpread = 180f;
+
+        /// <summary>The highest Rate, spheres a second.</summary>
+        public const float MostRate = 50f;
+
+        /// <summary>The lowest Rate the wheel steps to, spheres a second (the panel still sets 0).</summary>
+        public const float LeastWheelRate = 0.5f;
+
         [Header("Board: notes")]
         [Tooltip("The melody table the board's notes come from, by its name in Resources/Markov/Index.txt: european_ionian, irish_dorian, …. Only its unigram is used: how often each degree is played.")]
         [SerializeField] private string _set = "european_ionian";
@@ -60,8 +69,8 @@ namespace Aurumworks.Aleatora
         [Header("Emitter: spray")]
         [Tooltip("Spheres launched a second while spraying. The gamepad's right trigger scales it by how far it is pressed.")]
         [SerializeField, Range(0f, 50f)] private float _rate = 4f;
-        [Tooltip("The largest angle between a sphere's direction and the cone's axis, in degrees (as the ParticleSystem's cone measures it). 0 is a jet.")]
-        [SerializeField, Range(0f, 60f)] private float _spread = 10f;
+        [Tooltip("The spray's whole angle, edge to edge, in degrees: 0 is a jet, 180 the whole lower half. Right button and the wheel step it.")]
+        [SerializeField, Range(0f, 180f)] private float _spread = 20f;
         [Tooltip("The spheres' launch speed, in units a second.")]
         [SerializeField, Range(2f, 30f)] private float _speed = 8f;
         [Tooltip("How far each sphere's speed may stray either side of Speed, in percent.")]
@@ -114,12 +123,22 @@ namespace Aurumworks.Aleatora
         [SerializeField, Range(0.5f, 30f)] private float _moveSpeed = 6f;
         [Tooltip("How fast Q and E lower and raise it, in units a second.")]
         [SerializeField, Range(0.5f, 30f)] private float _raiseSpeed = 4f;
-        [Tooltip("How fast the right stick moves the aim point, in units a second.")]
-        [SerializeField, Range(0.5f, 30f)] private float _aimSpeed = 8f;
         [Tooltip("The emitter's lowest height above the cells' tops, in units.")]
         [SerializeField, Range(0.5f, 50f)] private float _minHeight = 2f;
         [Tooltip("The emitter's highest height above the cells' tops, in units.")]
         [SerializeField, Range(1f, 100f)] private float _maxHeight = 30f;
+
+        [Header("Emitter: controls")]
+        [Tooltip("How far the cone tilts for each count of the mouse's movement while the emitter is held, in degrees.")]
+        [SerializeField, Range(0.01f, 2f)] private float _tiltSensitivity = 0.15f;
+        [Tooltip("How long the cone takes to follow the tilt set, in seconds (most of the way): 0 at once; more, the cone lags and swings after a flick.")]
+        [SerializeField, Range(0f, 1f)] private float _swing;
+        [Tooltip("How fast the right stick tilts the cone at full push, in degrees a second.")]
+        [SerializeField, Range(10f, 720f)] private float _stickTiltSpeed = 120f;
+        [Tooltip("Each notch of the wheel (or press of the D-pad) multiplies or divides Rate by this.")]
+        [SerializeField, Range(1.01f, 2f)] private float _wheelStep = 1.25f;
+        [Tooltip("Each notch of the wheel with the right button (or the D-pad with the left trigger) widens or narrows Spread by this, in degrees.")]
+        [SerializeField, Range(0.5f, 30f)] private float _spreadStep = 5f;
 
         [Header("Emitter: look")]
         [Tooltip("The spheres' material. Empty: Unity's default for a sphere.")]
@@ -130,6 +149,10 @@ namespace Aurumworks.Aleatora
         [SerializeField] private Color _aimColor = new(1f, 0.85f, 0f, 1f);
         [Tooltip("The aim point's marker's diameter, in units.")]
         [SerializeField, Range(0.05f, 3f)] private float _aimSize = 0.4f;
+        [Tooltip("The width of the outline drawn where the spray's edge lands, in units. 0: no outline.")]
+        [SerializeField, Range(0f, 0.5f)] private float _aimLineWidth = 0.05f;
+        [Tooltip("The cone's colour while the emitter is held (taken with G or a click on it).")]
+        [SerializeField] private Color _heldColor = new(1f, 0.85f, 0f, 1f);
         [Tooltip("The colour a struck cell glows.")]
         [SerializeField] private Color _hitColor = Color.white;
         [Tooltip("How brightly a struck cell glows at first (as the grid's Selected Glow).")]
@@ -238,14 +261,14 @@ namespace Aurumworks.Aleatora
         /// <summary>Spheres a second while spraying, 0 to 50.</summary>
         public float Rate
         {
-            get => Mathf.Clamp(_rate, 0f, 50f);
+            get => Mathf.Clamp(_rate, 0f, MostRate);
             set => _rate = value;
         }
 
-        /// <summary>The spread's half-angle, 0 to 60 degrees.</summary>
+        /// <summary>The spray's whole angle, edge to edge, 0 to 180 degrees (MostSpread).</summary>
         public float Spread
         {
-            get => Mathf.Clamp(_spread, 0f, 60f);
+            get => Mathf.Clamp(_spread, 0f, MostSpread);
             set => _spread = value;
         }
 
@@ -395,14 +418,31 @@ namespace Aurumworks.Aleatora
         /// <summary>How fast it is lowered and raised, units a second.</summary>
         public float RaiseSpeed => Mathf.Max(0f, _raiseSpeed);
 
-        /// <summary>How fast the right stick moves the aim point, units a second.</summary>
-        public float AimSpeed => Mathf.Max(0f, _aimSpeed);
 
         /// <summary>The emitter's lowest height above the cells' tops.</summary>
         public float MinHeight => Mathf.Max(0.5f, Mathf.Min(_minHeight, _maxHeight));
 
         /// <summary>The emitter's highest height above the cells' tops.</summary>
         public float MaxHeight => Mathf.Max(MinHeight, _maxHeight);
+
+        /// <summary>Degrees of tilt a count of the mouse's movement.</summary>
+        public float TiltSensitivity => Mathf.Max(0f, _tiltSensitivity);
+
+        /// <summary>The cone's lag behind the tilt set, in seconds; 0 none.</summary>
+        public float Swing
+        {
+            get => Mathf.Max(0f, _swing);
+            set => _swing = value;
+        }
+
+        /// <summary>The right stick's tilt at full push, degrees a second.</summary>
+        public float StickTiltSpeed => Mathf.Max(0f, _stickTiltSpeed);
+
+        /// <summary>The factor a notch of the wheel multiplies or divides Rate by.</summary>
+        public float WheelStep => Mathf.Max(1.001f, _wheelStep);
+
+        /// <summary>The degrees a notch of the wheel widens or narrows Spread by.</summary>
+        public float SpreadStep => Mathf.Max(0f, _spreadStep);
 
         /// <summary>The spheres' material, or null for Unity's default.</summary>
         public Material SphereMaterial => _sphereMaterial;
@@ -415,6 +455,12 @@ namespace Aurumworks.Aleatora
 
         /// <summary>The aim marker's diameter.</summary>
         public float AimSize => Mathf.Clamp(_aimSize, 0.05f, 3f);
+
+        /// <summary>The landing outline's width; 0 draws none.</summary>
+        public float AimLineWidth => Mathf.Clamp(_aimLineWidth, 0f, 0.5f);
+
+        /// <summary>The cone's colour while the emitter is held.</summary>
+        public Color HeldColor => _heldColor;
 
         /// <summary>The colour a struck cell glows.</summary>
         public Color HitColor => _hitColor;

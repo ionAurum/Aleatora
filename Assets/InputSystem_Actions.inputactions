@@ -87,7 +87,7 @@
                     "priority": 0
                 },
                 {
-                    "name": "Aim",
+                    "name": "Grid Lock",
                     "type": "Button",
                     "id": "f943ca88-9bc8-4272-8d23-3124bc05fae9",
                     "expectedControlType": "",
@@ -97,7 +97,7 @@
                     "priority": 0
                 },
                 {
-                    "name": "Aim Point",
+                    "name": "Stick Tilt",
                     "type": "Value",
                     "id": "72b8b001-b856-4556-b727-357fdc15a5cc",
                     "expectedControlType": "Vector2",
@@ -114,6 +114,56 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false,
+                    "priority": 0
+                },
+                {
+                    "name": "Grab Emitter",
+                    "type": "Button",
+                    "id": "1133fa97-df0f-42f9-ba50-7e7d3c0ac8ef",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
+                },
+                {
+                    "name": "Tilt",
+                    "type": "Value",
+                    "id": "a85a4d21-4e2e-4249-a634-4be99f7aa281",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
+                },
+                {
+                    "name": "Wheel",
+                    "type": "PassThrough",
+                    "id": "d4f31e64-424d-4589-aa07-ee2efc6eda1b",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
+                },
+                {
+                    "name": "Wheel Step",
+                    "type": "Value",
+                    "id": "904afb21-177b-425f-a9bb-19ae3caee45f",
+                    "expectedControlType": "Axis",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true,
+                    "priority": 0
+                },
+                {
+                    "name": "Wheel Modifier",
+                    "type": "Button",
+                    "id": "293a5672-4043-42fe-9dc2-5aeeedadaf53",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true,
                     "priority": 0
                 }
             ],
@@ -312,7 +362,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
-                    "action": "Aim",
+                    "action": "Grid Lock",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -323,7 +373,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
-                    "action": "Aim Point",
+                    "action": "Stick Tilt",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -335,6 +385,149 @@
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
                     "action": "Hide Panel",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e53e5b7d-3c6b-42e3-b007-739110f78919",
+                    "path": "<Keyboard>/rightShift",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Grid Lock",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2f6e9927-58f4-40e8-bb60-d2526a1a94cf",
+                    "path": "<Gamepad>/leftStickPress",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Grid Lock",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "Shoulders",
+                    "id": "2f841aca-0fd9-4bec-9720-abd93815aa51",
+                    "path": "1DAxis",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Raise Emitter",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "negative",
+                    "id": "1caf075a-d7c5-4983-b5b0-a555e3291f71",
+                    "path": "<Gamepad>/leftShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Raise Emitter",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "positive",
+                    "id": "880666d7-256a-48d8-953d-0a106c96dc5e",
+                    "path": "<Gamepad>/rightShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Raise Emitter",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "d984fa40-48f9-4867-8879-b9ecf5d9cf8b",
+                    "path": "<Keyboard>/g",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Grab Emitter",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "68e03be7-33bc-4b26-b620-2e0dace9794f",
+                    "path": "<Mouse>/delta",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Tilt",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "8d0d9589-a7a7-4a4a-804a-0df8f9800653",
+                    "path": "<Mouse>/scroll",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Wheel",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "D-pad",
+                    "id": "c67aaa4c-43f4-424d-a62f-13ae3a839fa4",
+                    "path": "1DAxis",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Wheel Step",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "negative",
+                    "id": "fb351ff1-ce29-452c-9bed-cfa7fe14b18b",
+                    "path": "<Gamepad>/dpad/down",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Wheel Step",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "positive",
+                    "id": "6a42d033-ef73-47a8-ab68-8b9505f15a95",
+                    "path": "<Gamepad>/dpad/up",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Wheel Step",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "ca43593d-a2d0-4986-afd2-b257f4ae2972",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Wheel Modifier",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "82daebd2-d5be-4c3f-8d07-c0b8aadd697a",
+                    "path": "<Gamepad>/leftTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "Wheel Modifier",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

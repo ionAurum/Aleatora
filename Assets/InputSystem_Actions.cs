@@ -173,7 +173,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""priority"": 0
                 },
                 {
-                    ""name"": ""Aim"",
+                    ""name"": ""Grid Lock"",
                     ""type"": ""Button"",
                     ""id"": ""f943ca88-9bc8-4272-8d23-3124bc05fae9"",
                     ""expectedControlType"": """",
@@ -183,7 +183,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""priority"": 0
                 },
                 {
-                    ""name"": ""Aim Point"",
+                    ""name"": ""Stick Tilt"",
                     ""type"": ""Value"",
                     ""id"": ""72b8b001-b856-4556-b727-357fdc15a5cc"",
                     ""expectedControlType"": ""Vector2"",
@@ -200,6 +200,56 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Grab Emitter"",
+                    ""type"": ""Button"",
+                    ""id"": ""1133fa97-df0f-42f9-ba50-7e7d3c0ac8ef"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Tilt"",
+                    ""type"": ""Value"",
+                    ""id"": ""a85a4d21-4e2e-4249-a634-4be99f7aa281"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Wheel"",
+                    ""type"": ""PassThrough"",
+                    ""id"": ""d4f31e64-424d-4589-aa07-ee2efc6eda1b"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Wheel Step"",
+                    ""type"": ""Value"",
+                    ""id"": ""904afb21-177b-425f-a9bb-19ae3caee45f"",
+                    ""expectedControlType"": ""Axis"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Wheel Modifier"",
+                    ""type"": ""Button"",
+                    ""id"": ""293a5672-4043-42fe-9dc2-5aeeedadaf53"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true,
                     ""priority"": 0
                 }
             ],
@@ -398,7 +448,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Keyboard&Mouse"",
-                    ""action"": ""Aim"",
+                    ""action"": ""Grid Lock"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -409,7 +459,7 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Gamepad"",
-                    ""action"": ""Aim Point"",
+                    ""action"": ""Stick Tilt"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -421,6 +471,149 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": "";Keyboard&Mouse"",
                     ""action"": ""Hide Panel"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e53e5b7d-3c6b-42e3-b007-739110f78919"",
+                    ""path"": ""<Keyboard>/rightShift"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Grid Lock"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""2f6e9927-58f4-40e8-bb60-d2526a1a94cf"",
+                    ""path"": ""<Gamepad>/leftStickPress"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Grid Lock"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""Shoulders"",
+                    ""id"": ""2f841aca-0fd9-4bec-9720-abd93815aa51"",
+                    ""path"": ""1DAxis"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Raise Emitter"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""negative"",
+                    ""id"": ""1caf075a-d7c5-4983-b5b0-a555e3291f71"",
+                    ""path"": ""<Gamepad>/leftShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Raise Emitter"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""positive"",
+                    ""id"": ""880666d7-256a-48d8-953d-0a106c96dc5e"",
+                    ""path"": ""<Gamepad>/rightShoulder"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Raise Emitter"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d984fa40-48f9-4867-8879-b9ecf5d9cf8b"",
+                    ""path"": ""<Keyboard>/g"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Grab Emitter"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""68e03be7-33bc-4b26-b620-2e0dace9794f"",
+                    ""path"": ""<Mouse>/delta"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Tilt"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""8d0d9589-a7a7-4a4a-804a-0df8f9800653"",
+                    ""path"": ""<Mouse>/scroll"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Wheel"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""D-pad"",
+                    ""id"": ""c67aaa4c-43f4-424d-a62f-13ae3a839fa4"",
+                    ""path"": ""1DAxis"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Wheel Step"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""negative"",
+                    ""id"": ""fb351ff1-ce29-452c-9bed-cfa7fe14b18b"",
+                    ""path"": ""<Gamepad>/dpad/down"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Wheel Step"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""positive"",
+                    ""id"": ""6a42d033-ef73-47a8-ab68-8b9505f15a95"",
+                    ""path"": ""<Gamepad>/dpad/up"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Wheel Step"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ca43593d-a2d0-4986-afd2-b257f4ae2972"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Keyboard&Mouse"",
+                    ""action"": ""Wheel Modifier"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""82daebd2-d5be-4c3f-8d07-c0b8aadd697a"",
+                    ""path"": ""<Gamepad>/leftTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";Gamepad"",
+                    ""action"": ""Wheel Modifier"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1058,9 +1251,14 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         m_Player_SprayPressure = m_Player.FindAction("Spray Pressure", throwIfNotFound: true);
         m_Player_MoveEmitter = m_Player.FindAction("Move Emitter", throwIfNotFound: true);
         m_Player_RaiseEmitter = m_Player.FindAction("Raise Emitter", throwIfNotFound: true);
-        m_Player_Aim = m_Player.FindAction("Aim", throwIfNotFound: true);
-        m_Player_AimPoint = m_Player.FindAction("Aim Point", throwIfNotFound: true);
+        m_Player_GridLock = m_Player.FindAction("Grid Lock", throwIfNotFound: true);
+        m_Player_StickTilt = m_Player.FindAction("Stick Tilt", throwIfNotFound: true);
         m_Player_HidePanel = m_Player.FindAction("Hide Panel", throwIfNotFound: true);
+        m_Player_GrabEmitter = m_Player.FindAction("Grab Emitter", throwIfNotFound: true);
+        m_Player_Tilt = m_Player.FindAction("Tilt", throwIfNotFound: true);
+        m_Player_Wheel = m_Player.FindAction("Wheel", throwIfNotFound: true);
+        m_Player_WheelStep = m_Player.FindAction("Wheel Step", throwIfNotFound: true);
+        m_Player_WheelModifier = m_Player.FindAction("Wheel Modifier", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1163,9 +1361,14 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_SprayPressure;
     private readonly InputAction m_Player_MoveEmitter;
     private readonly InputAction m_Player_RaiseEmitter;
-    private readonly InputAction m_Player_Aim;
-    private readonly InputAction m_Player_AimPoint;
+    private readonly InputAction m_Player_GridLock;
+    private readonly InputAction m_Player_StickTilt;
     private readonly InputAction m_Player_HidePanel;
+    private readonly InputAction m_Player_GrabEmitter;
+    private readonly InputAction m_Player_Tilt;
+    private readonly InputAction m_Player_Wheel;
+    private readonly InputAction m_Player_WheelStep;
+    private readonly InputAction m_Player_WheelModifier;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1210,17 +1413,37 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @RaiseEmitter => m_Wrapper.m_Player_RaiseEmitter;
         /// <summary>
-        /// Provides access to the underlying input action "Player/Aim".
+        /// Provides access to the underlying input action "Player/GridLock".
         /// </summary>
-        public InputAction @Aim => m_Wrapper.m_Player_Aim;
+        public InputAction @GridLock => m_Wrapper.m_Player_GridLock;
         /// <summary>
-        /// Provides access to the underlying input action "Player/AimPoint".
+        /// Provides access to the underlying input action "Player/StickTilt".
         /// </summary>
-        public InputAction @AimPoint => m_Wrapper.m_Player_AimPoint;
+        public InputAction @StickTilt => m_Wrapper.m_Player_StickTilt;
         /// <summary>
         /// Provides access to the underlying input action "Player/HidePanel".
         /// </summary>
         public InputAction @HidePanel => m_Wrapper.m_Player_HidePanel;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/GrabEmitter".
+        /// </summary>
+        public InputAction @GrabEmitter => m_Wrapper.m_Player_GrabEmitter;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Tilt".
+        /// </summary>
+        public InputAction @Tilt => m_Wrapper.m_Player_Tilt;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Wheel".
+        /// </summary>
+        public InputAction @Wheel => m_Wrapper.m_Player_Wheel;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/WheelStep".
+        /// </summary>
+        public InputAction @WheelStep => m_Wrapper.m_Player_WheelStep;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/WheelModifier".
+        /// </summary>
+        public InputAction @WheelModifier => m_Wrapper.m_Player_WheelModifier;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1271,15 +1494,30 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @RaiseEmitter.started += instance.OnRaiseEmitter;
             @RaiseEmitter.performed += instance.OnRaiseEmitter;
             @RaiseEmitter.canceled += instance.OnRaiseEmitter;
-            @Aim.started += instance.OnAim;
-            @Aim.performed += instance.OnAim;
-            @Aim.canceled += instance.OnAim;
-            @AimPoint.started += instance.OnAimPoint;
-            @AimPoint.performed += instance.OnAimPoint;
-            @AimPoint.canceled += instance.OnAimPoint;
+            @GridLock.started += instance.OnGridLock;
+            @GridLock.performed += instance.OnGridLock;
+            @GridLock.canceled += instance.OnGridLock;
+            @StickTilt.started += instance.OnStickTilt;
+            @StickTilt.performed += instance.OnStickTilt;
+            @StickTilt.canceled += instance.OnStickTilt;
             @HidePanel.started += instance.OnHidePanel;
             @HidePanel.performed += instance.OnHidePanel;
             @HidePanel.canceled += instance.OnHidePanel;
+            @GrabEmitter.started += instance.OnGrabEmitter;
+            @GrabEmitter.performed += instance.OnGrabEmitter;
+            @GrabEmitter.canceled += instance.OnGrabEmitter;
+            @Tilt.started += instance.OnTilt;
+            @Tilt.performed += instance.OnTilt;
+            @Tilt.canceled += instance.OnTilt;
+            @Wheel.started += instance.OnWheel;
+            @Wheel.performed += instance.OnWheel;
+            @Wheel.canceled += instance.OnWheel;
+            @WheelStep.started += instance.OnWheelStep;
+            @WheelStep.performed += instance.OnWheelStep;
+            @WheelStep.canceled += instance.OnWheelStep;
+            @WheelModifier.started += instance.OnWheelModifier;
+            @WheelModifier.performed += instance.OnWheelModifier;
+            @WheelModifier.canceled += instance.OnWheelModifier;
         }
 
         /// <summary>
@@ -1315,15 +1553,30 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
             @RaiseEmitter.started -= instance.OnRaiseEmitter;
             @RaiseEmitter.performed -= instance.OnRaiseEmitter;
             @RaiseEmitter.canceled -= instance.OnRaiseEmitter;
-            @Aim.started -= instance.OnAim;
-            @Aim.performed -= instance.OnAim;
-            @Aim.canceled -= instance.OnAim;
-            @AimPoint.started -= instance.OnAimPoint;
-            @AimPoint.performed -= instance.OnAimPoint;
-            @AimPoint.canceled -= instance.OnAimPoint;
+            @GridLock.started -= instance.OnGridLock;
+            @GridLock.performed -= instance.OnGridLock;
+            @GridLock.canceled -= instance.OnGridLock;
+            @StickTilt.started -= instance.OnStickTilt;
+            @StickTilt.performed -= instance.OnStickTilt;
+            @StickTilt.canceled -= instance.OnStickTilt;
             @HidePanel.started -= instance.OnHidePanel;
             @HidePanel.performed -= instance.OnHidePanel;
             @HidePanel.canceled -= instance.OnHidePanel;
+            @GrabEmitter.started -= instance.OnGrabEmitter;
+            @GrabEmitter.performed -= instance.OnGrabEmitter;
+            @GrabEmitter.canceled -= instance.OnGrabEmitter;
+            @Tilt.started -= instance.OnTilt;
+            @Tilt.performed -= instance.OnTilt;
+            @Tilt.canceled -= instance.OnTilt;
+            @Wheel.started -= instance.OnWheel;
+            @Wheel.performed -= instance.OnWheel;
+            @Wheel.canceled -= instance.OnWheel;
+            @WheelStep.started -= instance.OnWheelStep;
+            @WheelStep.performed -= instance.OnWheelStep;
+            @WheelStep.canceled -= instance.OnWheelStep;
+            @WheelModifier.started -= instance.OnWheelModifier;
+            @WheelModifier.performed -= instance.OnWheelModifier;
+            @WheelModifier.canceled -= instance.OnWheelModifier;
         }
 
         /// <summary>
@@ -1692,19 +1945,19 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnRaiseEmitter(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "Aim" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Grid Lock" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnAim(InputAction.CallbackContext context);
+        void OnGridLock(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "Aim Point" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Stick Tilt" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnAimPoint(InputAction.CallbackContext context);
+        void OnStickTilt(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "Hide Panel" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
@@ -1712,6 +1965,41 @@ public partial class @InputSystem_Actions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnHidePanel(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Grab Emitter" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnGrabEmitter(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Tilt" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnTilt(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Wheel" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnWheel(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Wheel Step" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnWheelStep(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Wheel Modifier" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnWheelModifier(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.
