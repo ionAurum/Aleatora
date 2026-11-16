@@ -4,7 +4,7 @@ using NUnit.Framework;
 namespace Aurumworks.Aleatora.Tests
 {
     /// <summary>
-    /// EditMode tests of the four tables written from theory (Docs/Aleatora_Theory_Plan.md, TH-1):
+    /// EditMode tests of the five tables written from theory (Docs/Aleatora_Theory_Plan.md, TH-1):
     /// each reads with four orders and the phrase count; every phrase starts on 1 (Design, ruling
     /// 53) and ends on 1; only passing notes are outside the mode; each colour note's likeliest
     /// next note is its pull; and a melody from each at order 4 keeps to the mode at ChromaticWeight 0 and mostly
@@ -42,6 +42,7 @@ namespace Aurumworks.Aleatora.Tests
         [TestCase("phrygian")]
         [TestCase("double_harmonic")]
         [TestCase("hindu_pentatonic")]
+        [TestCase("phrygian_dominant")]
         public void TheSetReadsAndKeepsToItsMode(string mode)
         {
             MarkovTable table = Table(mode);
@@ -83,6 +84,8 @@ namespace Aurumworks.Aleatora.Tests
         [TestCase("double_harmonic", "b6", "5")]
         [TestCase("hindu_pentatonic", "b7", "1 5")]
         [TestCase("hindu_pentatonic", "4", "3")]
+        [TestCase("phrygian_dominant", "b2", "1")]
+        [TestCase("phrygian_dominant", "b6", "5")]
         public void TheColourNoteLeadsToItsPull(string mode, string colour, string pulls)
         {
             MarkovTable table = Table(mode);
@@ -103,6 +106,7 @@ namespace Aurumworks.Aleatora.Tests
         [TestCase("phrygian")]
         [TestCase("double_harmonic")]
         [TestCase("hindu_pentatonic")]
+        [TestCase("phrygian_dominant")]
         public void AnOrderFourMelodyKeepsToTheMode(string mode)
         {
             MarkovTable table = Table(mode);

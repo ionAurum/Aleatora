@@ -36,6 +36,7 @@ namespace Aurumworks.Aleatora.Tests
         [TestCase("virtuoso_phrygian", "Virtuoso · phrygian")]
         [TestCase("virtuoso_double_harmonic", "Virtuoso · Byzantine")]
         [TestCase("virtuoso_hindu_pentatonic", "Virtuoso · hindu pentatonic")]
+        [TestCase("virtuoso_phrygian_dominant", "Virtuoso · phrygian dominant")]
         [TestCase("no_mode_here", "no_mode_here")]
         [TestCase("ionian", "ionian")]
         public void SetNameSplitsTheCorpusFromTheMode(string name, string shown)

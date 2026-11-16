@@ -24,6 +24,7 @@ namespace Aurumworks.Aleatora
         private static readonly int _phrygian = Of(0, 1, 3, 5, 7, 8, 10);
         private static readonly int _doubleHarmonic = Of(0, 1, 4, 5, 7, 8, 11);
         private static readonly int _hinduPentatonic = Of(0, 4, 5, 7, 10);
+        private static readonly int _phrygianDominant = Of(0, 1, 4, 5, 7, 8, 10);
 
         /// <summary>The mode's degrees as a mask, by the name the tables give it ("ionian", "harmonic_minor", "gong", "double_harmonic", …).</summary>
         public static int Mask(string mode)
@@ -42,6 +43,7 @@ namespace Aurumworks.Aleatora
                 case "phrygian": return _phrygian;
                 case "double_harmonic": return _doubleHarmonic;
                 case "hindu_pentatonic": return _hinduPentatonic;
+                case "phrygian_dominant": return _phrygianDominant;
                 default: return All;
             }
         }

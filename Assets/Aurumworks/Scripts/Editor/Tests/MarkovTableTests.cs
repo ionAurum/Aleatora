@@ -60,7 +60,7 @@ namespace Aurumworks.Aleatora.Tests
         public void EverySetInTheIndexLoads()
         {
             IReadOnlyList<string> names = MarkovLibrary.Names;
-            Assert.That(names.Count, Is.EqualTo(21), "the 17 folk sets ship (ruling 6), and the four from theory (ruling 51)");
+            Assert.That(names.Count, Is.EqualTo(22), "the 17 folk sets ship (ruling 6), and the five from theory (rulings 51 and 56)");
             Assert.That(names, Is.Unique);
             foreach (string name in names)
             {
