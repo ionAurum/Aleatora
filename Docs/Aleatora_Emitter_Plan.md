@@ -289,6 +289,9 @@ Jon sprays into Reaper, following its clock: the layouts, the grids and strength
 parameters, the controls. He rules on the decisions and the readings, and says what to change.
 Merge once he approves.
 
+**Approved and merged into `main`** (ruling 82, 2026-11-16): the readings stand as built; the
+plan is finished. Scheme M is tabled until Jon asks.
+
 ## Milestone summary
 
 | # | Branch | Lands | Checked by |

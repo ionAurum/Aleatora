@@ -194,7 +194,7 @@ the D-pad's steps. Menu check: the same moves through queued gamepad input.
 
 ---
 
-## Scheme M: MIDI control changes (later; ruling 79)
+## Scheme M: MIDI control changes (later; ruling 79; tabled until Jon asks, ruling 82)
 
 Not in EM-6. What drives the emitter here is Reaper, not knobs (Jon, M5): track automation, a
 plugin's LFO, anything that sends control changes, into Aleatora over loopMIDI, onto the

@@ -267,6 +267,10 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
 81. **EM-6 works well** (2026-11-16). Jon, after trying ruling 80's changes: "I've tried ruling
     80's EM-6 changes and it works well." EM-6 is done; its readings (Tech, *As built (EM-6)*)
     carry into EM-7, where Jon plays it.
+82. **EM-7: the emitter plan approved and merged; scheme M tabled** (2026-11-16). Jon: "I
+    approve. Commit anything outstanding and merge both branches into `main`. We can table M until
+    I ask for it sometime in the future." The readings of EM-3 and EM-6 stand as built. The MIDI
+    controls (scheme M, ruling 79) wait until Jon asks for them.
 
 ## Open, each its own plan later (the plan's decision 7)
 
@@ -277,6 +281,8 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
   and sync (rulings 37 to 47). Jon means to teach Aleatora Reaper's OSC (ruling 39).
 - What the keyboard's notes do (ruling 37: chords and the like, later).
 - Rhythm: every note is still a quarter note (the MIDI plan's *Later*).
+- The emitter's MIDI controls (scheme M, `Docs/Aleatora_Emitter_Controls.md`; ruling 79),
+  tabled until Jon asks (ruling 82).
 - More modes for the Markov tables: done, five from theory (rulings 48 to 58,
   `Docs/Aleatora_Theory_Plan.md`, finished).
 

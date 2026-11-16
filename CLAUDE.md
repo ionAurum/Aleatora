@@ -12,7 +12,7 @@ in `Docs/Aleatora_Tech.md`; the plans with their milestones are `Docs/Aleatora_M
 `Docs/Aleatora_Midi_Plan.md` (MIDI out, finished) and
 `Docs/Aleatora_MidiIn_Plan.md` (MIDI in, clock and sync, finished) and
 `Docs/Aleatora_Theory_Plan.md` (melody tables from theory, finished) and
-`Docs/Aleatora_Emitter_Plan.md` (the emitter: spheres on the board play its notes). Read
+`Docs/Aleatora_Emitter_Plan.md` (the emitter: spheres on the board play its notes, finished). Read
 the sections the hand-off names, not all of them.
 
 ## Layout
