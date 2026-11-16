@@ -188,6 +188,10 @@ IN-4.
 
 ## IN-2 — Clock (branch `in-2-clock`)
 
+**Done** (2026-11-15): 265 EditMode tests pass, the MIDI-2 ones unchanged. What was built, and
+the readings where this plan was silent, are in Tech, *As built (IN-2)*. One change from *Code
+layout*: `ClockSender.Advance` takes the player's beat, not the time.
+
 **Tasks**
 
 1. `NotePlayer` in beats, through `IBeatSource`. Every MIDI-2 test still passes unchanged in

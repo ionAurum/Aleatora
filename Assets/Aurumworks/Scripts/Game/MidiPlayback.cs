@@ -23,6 +23,13 @@ namespace Aurumworks.Aleatora
     /// keys held) and a queue the main thread drains for the monitor (DrainReceived), clock ticks and
     /// Active Sensing left out of it. Inputs close with the output, as the rules say.
     ///
+    /// The clock (IN-2): Aleatora keeps its own (its BPM), or follows an open input's MIDI clock
+    /// (Reaper's; ruling 39), saved by the input's name (ClockKey). The followed input's clock
+    /// messages feed the Follower, and the player plays by it. A followed input that isn't open
+    /// leaves Aleatora on its own clock until it opens. Send clock (SendClockKey, off by default;
+    /// ruling 40) sends Aleatora's own clock on the output with its notes, only while it keeps its
+    /// own. A self-test reads neither choice.
+    ///
     /// The clock thread runs while playing or while an input is open: with Windows' 1 ms timer it
     /// reads the inputs and advances the player on a Stopwatch, then waits on the inputs' signals for
     /// up to a millisecond, so a message is read as it arrives. It touches no Unity API (the MIDI
@@ -36,6 +43,12 @@ namespace Aurumworks.Aleatora
         /// <summary>The Settings key the chosen inputs' names are saved under, one to a line.</summary>
         public const string InputsKey = "Aurumworks.Midi.Inputs";
 
+        /// <summary>The Settings key the clock's choice is saved under: "" is Aleatora's own, else the name of the input followed.</summary>
+        public const string ClockKey = "Aurumworks.Midi.Clock";
+
+        /// <summary>The Settings key Send clock is saved under: "1" on, anything else off.</summary>
+        public const string SendClockKey = "Aurumworks.Midi.SendClock";
+
         /// <summary>The most messages kept for the monitor until the main thread drains them; past it the oldest go.</summary>
         public const int ReceivedCapacity = 256;
 
@@ -43,6 +56,11 @@ namespace Aurumworks.Aleatora
 
         private readonly object _sync = new object(); // the output, and the clock thread's state
         private readonly NotePlayer _player = new NotePlayer();
+        private readonly ClockFollower _follower = new ClockFollower();
+        private readonly ClockSender _sender = new ClockSender();
+        private string _clockName = string.Empty; // the input to follow, "" none (under _sync)
+        private string _followed;                 // the input followed now, or null (under _sync)
+        private bool _sendClock;
         private readonly Stopwatch _clock = Stopwatch.StartNew();
         private readonly List<IMidiInput> _inputs = new List<IMidiInput>(); // under _sync
         private readonly Dictionary<string, string> _inputErrors = new Dictionary<string, string>(); // main thread
@@ -134,14 +152,68 @@ namespace Aurumworks.Aleatora
             set => _player.SetChannel(value, _output);
         }
 
-        /// <summary>Quarter notes a minute, 20–300, from the next note.</summary>
+        /// <summary>Aleatora's own quarter notes a minute, 20–300, from the next note (not the followed clock's: Tempo).</summary>
         public int Bpm
         {
             get => _player.Bpm;
             set => _player.SetBpm(value, Now);
         }
 
-        /// <summary>Starts on the tuning's channel, BPM, velocity and note length, and opens the saved port (none in a self-test).</summary>
+        /// <summary>The tempo playing: the followed clock's as measured while following (Bpm until it is known), else Bpm.</summary>
+        public double Tempo => _player.Tempo;
+
+        /// <summary>The clock followed: its tempo, whether it runs, where it is.</summary>
+        public ClockFollower Follower => _follower;
+
+        /// <summary>The saved clock: "" for Aleatora's own, else the name of the input to follow.</summary>
+        public string ChosenClock => Settings.GetString(ClockKey, string.Empty);
+
+        /// <summary>The input whose clock is chosen (ChooseClock or UseClock), or "" for Aleatora's own.</summary>
+        public string ClockName
+        {
+            get
+            {
+                lock (_sync)
+                {
+                    return _clockName;
+                }
+            }
+        }
+
+        /// <summary>The input followed now, or null: Aleatora's own clock (the one chosen isn't open, or none is).</summary>
+        public string Followed
+        {
+            get
+            {
+                lock (_sync)
+                {
+                    return _followed;
+                }
+            }
+        }
+
+        /// <summary>Whether the player follows an input's clock now.</summary>
+        public bool IsFollowing => Followed != null;
+
+        /// <summary>Whether Send clock is on (ChooseSendClock or UseSendClock); the clock goes out only on Aleatora's own.</summary>
+        public bool SendClock
+        {
+            get
+            {
+                lock (_sync)
+                {
+                    return _sendClock;
+                }
+            }
+        }
+
+        /// <summary>The saved Send clock.</summary>
+        public bool ChosenSendClock => Settings.GetString(SendClockKey, string.Empty) == "1";
+
+        /// <summary>
+        /// Starts on the tuning's channel, BPM, velocity and note length, and opens the saved port and
+        /// inputs and takes the saved clock and Send clock (none of them in a self-test).
+        /// </summary>
         public void Begin(MidiTuning tuning)
         {
             Channel = tuning.Channel;
@@ -155,6 +227,48 @@ namespace Aurumworks.Aleatora
                 {
                     OpenInput(name);
                 }
+
+                UseClock(ChosenClock);
+                UseSendClock(ChosenSendClock);
+            }
+        }
+
+        /// <summary>Chooses the clock and saves the choice: "" or null for Aleatora's own, else the name of an input to follow.</summary>
+        public void ChooseClock(string inputName)
+        {
+            Settings.SetString(ClockKey, inputName ?? string.Empty);
+            Settings.Save();
+            UseClock(inputName);
+        }
+
+        /// <summary>
+        /// The clock, without saving a choice: "" or null for Aleatora's own, else the name of an input
+        /// to follow. It is followed while that input is open; until then Aleatora keeps its own.
+        /// </summary>
+        public void UseClock(string inputName)
+        {
+            lock (_sync)
+            {
+                _clockName = inputName ?? string.Empty;
+                UpdateClock();
+            }
+        }
+
+        /// <summary>Turns Send clock on or off and saves the choice.</summary>
+        public void ChooseSendClock(bool on)
+        {
+            Settings.SetString(SendClockKey, on ? "1" : string.Empty);
+            Settings.Save();
+            UseSendClock(on);
+        }
+
+        /// <summary>Turns Send clock on or off, without saving a choice.</summary>
+        public void UseSendClock(bool on)
+        {
+            lock (_sync)
+            {
+                _sendClock = on;
+                UpdateClock();
             }
         }
 
@@ -225,6 +339,7 @@ namespace Aurumworks.Aleatora
                     input = _inputs[index];
                     _inputs.RemoveAt(index);
                     MakeSignals();
+                    UpdateClock();
                 }
             }
 
@@ -385,8 +500,25 @@ namespace Aurumworks.Aleatora
             {
                 _inputs.Add(input);
                 MakeSignals();
+                UpdateClock();
                 StartClock();
             }
+        }
+
+        // Under _sync, after a change of clock, of Send clock or of the inputs: follows the chosen
+        // input while it is open (a new follow starts afresh), else Aleatora's own clock; the sender
+        // only on Aleatora's own.
+        private void UpdateClock()
+        {
+            string followed = _clockName.Length > 0 && IndexOfInput(_clockName) >= 0 ? _clockName : null;
+            if (followed != _followed)
+            {
+                _followed = followed;
+                _follower.Reset();
+                _player.Follow(followed != null ? _follower : null, Now, _output);
+            }
+
+            _player.SetSender(_sendClock && followed == null ? _sender : null, _output);
         }
 
         // Under _sync.
@@ -443,6 +575,11 @@ namespace Aurumworks.Aleatora
                 while (input.TryRead(out TimedMessage message))
                 {
                     _held.Receive(message);
+                    if (input.Name == _followed)
+                    {
+                        _follower.Receive(message); // the clock's messages; the rest it leaves alone
+                    }
+
                     if (MidiMessage.IsClock(message.Message) || MidiMessage.IsActiveSensing(message.Message))
                     {
                         continue;
@@ -520,7 +657,13 @@ namespace Aurumworks.Aleatora
                         }
 
                         ReadInputs();
-                        _player.Advance(Now, _output);
+                        double now = Now;
+                        if (_followed != null)
+                        {
+                            _follower.Check(now); // half a second without a tick is a Stop
+                        }
+
+                        _player.Advance(now, _output);
                         signals = _signals;
                     }
 

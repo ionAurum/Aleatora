@@ -26,7 +26,7 @@ All in Assembly-CSharp (no asmdefs), namespace `Aurumworks.Aleatora`, under
 |---|---|---|
 | `Grid/` | `HexCoord`, `HexDirection` (with `HexDirections`), `HexShape`, `HexLayout` (with `HexOrientation`, `HexPoint`): plain C#. `HexGrid`, `HexCellView`, `GridSelection` | The last three only |
 | `Music/` (M1; M2 from `Rng` on) | `Degree`, `ModeScale`, `MarkovTable`, `MarkovTableReader`, `Rng`, `GeneratorSettings`, `MelodyGenerator`, `MelodyStep`, `Voicing` | No |
-| `Midi/` (MIDI-1) | `MidiMessage`, `IMidiOutput`, `MidiPorts`, `RecordingOutput`; internal `WinMm`, `WinMmOutput` | No |
+| `Midi/` (MIDI-1) | `MidiMessage`, `IMidiOutput`, `MidiPorts`, `RecordingOutput`; internal `WinMm`, `WinMmOutput`; `NotePlayer`, `INoteSource`, `MelodySource` (MIDI-2, 3); `IMidiInput`, `TimedMessage`, `FeedInput`, `HeldNotes`, internal `WinMmInput` (IN-1); `IBeatSource`, `InternalBeatSource`, `ClockFollower`, `ClockSender` (IN-2) | No |
 | `Game/` | The bootstrap `Aleatora`, `AleatoraTuning`, `GridTuning`, `MarkovLibrary`, `MelodyTuning` (M2), `MelodyViewTuning` (M3), `MidiTuning`, `MidiPlayback` (MIDI-1) | Yes |
 | `View/` (M3) | `MelodiesPage`, `DegreeBars`, `TransitionGrid`, `TransitionGraph`, `MelodyStrip`; the static `ViewText` and `ViewMesh` | Yes |
 | (root) | `MainMenu`, `SessionMenu`, `SettingsMenu`, `MenuCheck` | Yes |
@@ -523,10 +523,79 @@ responds to what comes in yet: it is read, held and queued.
   MIDIIN2 (SE49); nothing opened them. With Jon's "Aleatora Test" port made (the same day; Greedo and Han were
   no longer listed), a CC and a tick sent through it came back in 1.00 ms and 1.03 ms.
 
+### As built (IN-2, 2026-11-15, branch `in-2-clock`)
+
+The clock (the MIDI in plan's decisions 4 to 6; rulings 39 and 40). Nothing on screen yet: the
+*MIDI* page's *Clock* and *Send clock* and the *BPM* box come in IN-3.
+
+- **`NotePlayer` runs in beats.** Its API is as in MIDI-2 (every call still says the time in
+  seconds) and every MIDI-2 test passes unchanged. Note ons are scheduled in beats; a note's off is
+  in seconds, NoteLength of a beat at the tempo it went on at. Two ways of keeping time:
+  - **Its own** (`InternalBeatSource`: a line through one time and beat at the BPM). *Play* puts
+    beat 0 (or, resuming, the next note's beat) at now; *BPM* moves the line so the next note
+    keeps ruling 35's time; a note more than a beat late moves it to now. The notes play in order,
+    as before.
+  - **Following** a `ClockFollower` (`Follow(follower, now, output)`; null goes back). Note *n*
+    goes on as the clock's beat *n* arrives, counted from the song's start; *Loop* plays *n* mod
+    the count; *Endless* asks the source for notes until it has note *n* (the same notes as playing
+    from the start; tested to beat 200); with neither, nothing past the last note, the playhead
+    −1, and it stays *playing*, so the clock going back to the start plays again. The clock's Start
+    or Continue plays it (after Aleatora's own *Stop* too); its Stop, or half a second without a
+    tick, ends the note sounding and holds the playhead. A position between beats waits for the
+    next whole beat. Held up by more than a beat, it plays the note for the beat it is now.
+  - New: `Tempo` (the followed clock's measured tempo, else `Bpm`), `Following`, `Sender`,
+    `Follow`, `SetSender`.
+- **`IBeatSource`**: `BeatAt(now)`, `Tempo`. The transport (Starts, Jumps) the player reads from
+  the `ClockFollower` itself.
+- **`ClockFollower`**: `Receive(message, time)` takes Clock, Start, Continue, Stop and SPP and
+  leaves the rest; `Check(now)` stops it after `Timeout` (0.5 s) without a tick while running.
+  `Tempo`: the average over the last 24 tick gaps (one beat), from every tick, running or not; Start,
+  Continue or a gap over 0.5 s starts the average afresh, the last tempo standing until two ticks
+  come (0 until the first two ever). `BeatAt`: the last tick's position plus the time since at the
+  tempo, never reaching the next tick, so note *n* goes on with tick 24*n*, not before it. Before
+  the first tick after Start, Continue or SPP, just short of the position (the first tick after a
+  Start is beat 0). Ticks while stopped move nothing. `IsRunning`, `Starts`, `Jumps`, `JumpBeat`,
+  `Timeouts`, `Position`, `Reset` (the counts kept). Thread-safe.
+- **`ClockSender`**: driven by the player on its own beats, under the player's lock, not by a BPM
+  of its own (the plan had `Advance(now, output)`; it is `Advance(beat, output)`), so tick 24*n*
+  goes out just before note *n*'s note on whatever the tempo did. *Play* from the first note: SPP 0
+  and Start; a resume: SPP to the next note's beat and Continue. Either waits for its first tick,
+  and goes with it. *Pause*, *Stop* and the end of the melody send Stop (nothing if Start hadn't
+  gone yet). The beats count from *Play*, so Reaper's bar 1 is where Aleatora's *Play* was.
+- **`MidiPlayback`**: `ClockKey` (`Aurumworks.Midi.Clock`: "" Aleatora's own, else the input's
+  name) and `SendClockKey` (`Aurumworks.Midi.SendClock`: "1" on). `ChooseClock`/`UseClock`,
+  `ChooseSendClock`/`UseSendClock` (saved or not, as `Choose`/`Use`); `Begin` takes the saved ones,
+  not in a self-test. `ClockName`, `Followed`, `IsFollowing`, `SendClock`, `ChosenClock`,
+  `ChosenSendClock`, `Follower`, `Tempo`. The clock thread feeds the followed input's messages to
+  the follower, checks its timeout, then advances the player. The sender is on only with Send clock
+  on and Aleatora's own clock.
+- **Readings where the plan was silent**, for Jon at IN-4:
+  - **A followed input that isn't open** (not found, or closed) leaves Aleatora on its own clock
+    until it opens; the choice stays saved.
+  - **Changing the clock while playing:** to a clock, it joins on the next beat if the clock runs,
+    else waits for its Start; back to its own, the next note goes on at once. The note sounding ends
+    either way.
+  - **While following**, *Pause* is like *Stop* (silent until *Play* or the clock's next Start or
+    Continue) but keeps the playhead. "Until Reaper next starts" counts Continue, which Reaper
+    sends when it plays from mid-project.
+  - **While following**, *Generate* and *Step* change the notes and note *n* still goes on beat
+    *n*: a new melody is heard from the note for the next beat, not from its first, keeping
+    decision 4's rule that a note always lands on the same beat.
+  - **The first note after the first Start** sounds for NoteLength of a beat at Aleatora's own BPM,
+    as no tempo has been measured yet (one tick); every later note at the measured tempo.
+  - **Send clock and *BPM* while playing:** ruling 35 moves the next note (at once, if the new
+    beat is past), and the ticks go with the notes, so they bunch or spread around that note.
+    Turning Send clock on while playing joins at the next note with SPP and Continue. Changing the
+    output port while sending sends no Stop to the old one.
+- **Measured** (EditMode, 2026-11-15, Jon's machine): following a fed clock at 300 BPM on the real
+  thread, 12 note ons after their ticks by mean 0.16 ms, worst 1.06 ms, the tempo read 300.0;
+  ±1 ms of jitter at 120 BPM read at most 0.472 BPM off (the worst a ±1 ms jitter can make is
+  0.48); MIDI-2's 16 notes at 300 BPM on its own clock, mean 0.63 ms late, worst 1.96 ms.
+
 ## Checks
 
 - **EditMode tests** (`Editor/Tests/`), 21 as of M0, 69 as of M1, 107 as of M2, 131 as of M3,
-  166 as of MIDI-1, 193 as of MIDI-2, 200 as of MIDI-3, 241 as of IN-1:
+  166 as of MIDI-1, 193 as of MIDI-2, 200 as of MIDI-3, 241 as of IN-1, 265 as of IN-2:
   - `HexCoordTests`: Q + R + S = 0; the directions as named; a neighbour is one step away and its
     opposite comes back; six distinct neighbours; distance symmetric with the triangle
     inequality; equality and hashing; rounding a centre gives the cell; points round a corner
@@ -604,6 +673,23 @@ responds to what comes in yet: it is read, held and queued.
     logged); the monitor's queue without ticks or Active Sensing, and keeping the newest 256; two
     inputs apart and one closed; the last input closed ends the thread, playing keeps it; the
     output's name refused; `Shutdown` closes the inputs.
+  - IN-2: `NotePlayerTests` unchanged, through the player's own beats. `ClockTests`, on made-up
+    times advanced every millisecond: 120 BPM reads 120.0, a change to 150 reads within a beat,
+    ±1 ms of jitter stays under 0.5 BPM, a gap starts the average afresh; following, Start plays
+    note 0 on the first tick and note *n* on tick 24*n* (note offs at the measured tempo), SPP 16
+    puts note 4 on the first tick, SPP 17 waits for beat 5, Stop ends the note and holds the place,
+    Continue resumes at SPP's beat or where it stopped, half a second without ticks is a Stop (and
+    ends a long note), *Loop* wraps, nothing past the end until the clock goes back, *Endless*
+    steps to beat 200 with the notes playing from the start makes, Aleatora's *Stop* silences until
+    the clock's next Start and *Play* joins on the next beat, going back to its own clock plays on
+    at once, `Tempo` is the clock's; the sender: SPP 0, Start, then 24 ticks a beat 20.83 ms apart
+    with each note's tick just before it, Stop on *Pause*, SPP 12 and Continue on resuming, Stop
+    on *Stop* and at the melody's end, nothing while following, joining at the next note when
+    turned on mid-play. `ClockPlaybackTests`, through `MidiPlayback` with a `FeedInput`: following
+    a fed clock at 300 BPM on the real thread, each note on within 2 ms after its tick (the spread
+    logged) and nothing sounding after Stop; a clock input not open leaves Aleatora on its own
+    until it opens and after it closes; Send clock sends with its own clock (48 ticks for two
+    notes, Stop at the end), not while following.
   - Only the M2 tests draw random numbers, from `Rng` with fixed seeds.
 - **The menu check** (`MenuCheck.cs`), as of M0 (10 screenshots): the template's walk (main menu,
   Settings, Play, session menu and its Settings, Quit to Menu), with no volumes and no
@@ -653,4 +739,4 @@ responds to what comes in yet: it is read, held and queued.
   gel pads): EditMode tests 69 of 69. M2: EditMode tests 107 of 107; `m2-generator` on
   `m2-generator` (exit 0, 55 checks held, tree clean). M3: EditMode tests 128 of 128, then 131 of 131 after the CanvasRenderer fix; `m3` at
   1920 × 1080 and `m3-small` at 1280 × 720 on `m3-view` (exit 0 each, 94 checks held, tree clean). MIDI-1: EditMode tests 166 of 166 (the loopMIDI test
-  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots).
+  opened "Greedo"); `midi1` on `midi-1-port` (exit 0, 99 checks held, 12 screenshots). MIDI-2: EditMode tests 193 of 193; `midi2` on `midi-2-player` (exit 0, 99 checks held, unchanged). MIDI-3: EditMode tests 200 of 200 (16 notes at 300 BPM, worst 1.14 ms); `midi3-final` at 1920 × 1080 and `midi3-final-small` at 1280 × 720 on `midi-3-page` (exit 0 each, 144 checks held, 14 screenshots). IN-1: EditMode tests 239 of 241, the two "Aleatora Test" tests skipped (no such port yet), then 241 of 241 once Jon made it; `in1` at 1920 × 1080 and `in1-720` at 1280 × 720 on `in-1-input` (exit 0 each, 149 checks held, 14 screenshots). IN-2: EditMode tests 265 of 265 (none skipped); `in2` at 1920 × 1080 on `in-2-clock` (exit 0, 149 checks held, unchanged: the clock has no screen until IN-3).

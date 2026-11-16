@@ -10,7 +10,7 @@ Cinemachine 3.1.7, uGUI with TextMeshPro. Brought up to the Aurumworks framework
 what to read for it. Jon's rulings are in `Docs/Aleatora_Design.md`; how each system is built is
 in `Docs/Aleatora_Tech.md`; the plans with their milestones are `Docs/Aleatora_Markov_Plan.md` (finished) and
 `Docs/Aleatora_Midi_Plan.md` (MIDI out, finished) and
-`Docs/Aleatora_MidiIn_Plan.md` (MIDI in, clock and sync: IN-1 done). Read
+`Docs/Aleatora_MidiIn_Plan.md` (MIDI in, clock and sync: IN-1 and IN-2 done). Read
 the sections the hand-off names, not all of them.
 
 ## Layout
