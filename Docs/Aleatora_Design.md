@@ -128,6 +128,11 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     the port, the test is skipped.
 43. **Go-ahead for the MIDI in plan's IN-1** (2026-11-15). Decisions 1, 6, 7 and 10, not ruled
     on, are built as their defaults; Jon rules on them in IN-4 with the rest.
+44. **IN-1's readings where the plan was silent are accepted** (2026-11-15; Tech, *As built
+    (IN-1)*): All Notes Off (CC 123) lets go of every key on its channel, the sustain pedal still
+    holding them, and All Sound Off (CC 120) clears everything; choosing an output that is open as
+    an input closes that input; note names use ♯ (`C♯4`); a message reads "Note on E4 96", with
+    the channel in front in logs.
 
 ## Open, each its own plan later (the plan's decision 7)
 
