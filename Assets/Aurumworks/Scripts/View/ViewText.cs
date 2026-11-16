@@ -70,7 +70,8 @@ namespace Aurumworks.Aleatora
         /// A set's name as the page shows it: "european_harmonic_minor" as "European · harmonic
         /// minor", "chinese_han_gong" as "Chinese han · gong". Read from the name alone (it ends in
         /// one of ModeScale's modes), so listing the sets reads no table. A name ending in no mode
-        /// it knows is shown as it is.
+        /// it knows is shown as it is. The double harmonic is shown as "Byzantine" (Design, ruling
+        /// 54): "virtuoso_double_harmonic" is "Virtuoso · Byzantine".
         /// </summary>
         public static string SetName(string name)
         {
@@ -79,12 +80,15 @@ namespace Aurumworks.Aleatora
                 if (name.Length > mode.Length + 1 && name.EndsWith("_" + mode, System.StringComparison.Ordinal))
                 {
                     string corpus = name.Substring(0, name.Length - mode.Length - 1).Replace('_', ' ');
-                    return char.ToUpperInvariant(corpus[0]) + corpus.Substring(1) + " · " + mode.Replace('_', ' ');
+                    return char.ToUpperInvariant(corpus[0]) + corpus.Substring(1) + " · " + ModeName(mode);
                 }
             }
 
             return name;
         }
+
+        // A mode's name as the page shows it: "harmonic_minor" as "harmonic minor".
+        private static string ModeName(string mode) => mode == "double_harmonic" ? "Byzantine" : mode.Replace('_', ' ');
 
         /// <summary>A MIDI note number as a note's name, middle C (60) as "C4".</summary>
         public static string NoteName(int note) => TonicName(note) + (note / Degree.Count - 1).ToString(CultureInfo.InvariantCulture);
