@@ -12,3 +12,7 @@ dimensions, and its melodies are drawn from Markov tables of about 10,000 folk m
 
 It takes `com.aurumworks.core` by path from `../Framework/`, so it needs that folder beside it.
 `bash Tools/menucheck.sh <name>` builds the Windows player and runs its self-test.
+
+## Licence
+
+MIT (`LICENSE`). Third-party files and their licences are listed in `Docs/licences.md`.
