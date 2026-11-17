@@ -278,6 +278,9 @@ What Aleatora is and what Jon has ruled. The plan and its milestones are in
     MIDI's edges; on the grid the board's lowest octave steps. **Z** and **X** step down and up
     on both. On the gamepad, the **D-pad's left and right** on the grid (held or not) and **LB and
     RB** on the Melodies page, where the D-pad navigates the menu.
+84. **Aleatora is open source under the MIT licence** (2026-11-17). Jon: "I'm open sourcing
+    Aleatora under the MIT license." `LICENSE` (Jon Goldman, as Attune's); the third-party files
+    and their licences are in `Docs/licences.md`, which lists what is still open.
 
 ## Open, each its own plan later (the plan's decision 7)
 
