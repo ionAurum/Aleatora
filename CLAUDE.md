@@ -106,7 +106,7 @@ Claude can't run the Unity Editor. End every change with what Jon should verify:
 State plainly what couldn't be verified.
 
 ## Workflow
-- Git with LFS for binaries, branch `main`, no remote until Jon asks. Each milestone on its own
+- Git with LFS for binaries, branch `main`. Remote `origin`: `github.com/ionAurum/Aleatora` (private, made 2026-11-17 at Jon's ask); push what is committed. Each milestone on its own
   branch (`m0-grid`, `m1-tables`, …), small commits, merged once Jon approves. Framework changes
   are committed in `../Framework/` first.
 - One milestone at a time; stop at the end of each and report. Don't invent design: where the

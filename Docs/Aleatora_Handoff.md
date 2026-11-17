@@ -13,6 +13,7 @@ merge into `main`.
 
 Finished on `main`: the Markov plan, MIDI out, MIDI in with clock and sync, the theory plan, the
 emitter plan.
+GitHub: `ionAurum/Aleatora` (private), `origin`; `main` and `octave-steps` pushed 2026-11-17.
 Jon's loopMIDI ports: "Aleatora to Reaper", "Reaper to Aleatora", "Aleatora Test" (ruling 45).
 Reaper sends MIDI clock only while its transport runs (ruling 70).
 Jon has an XInput gamepad plugged in: the menu check's gamepad checks run on a pad of their own
