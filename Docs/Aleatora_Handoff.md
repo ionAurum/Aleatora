@@ -13,7 +13,7 @@ merge into `main`.
 
 Finished on `main`: the Markov plan, MIDI out, MIDI in with clock and sync, the theory plan, the
 emitter plan.
-GitHub: `ionAurum/Aleatora` (still private), `origin`; `main` and `octave-steps` pushed.
+GitHub: `ionAurum/Aleatora` (public), `origin`; `main` and `octave-steps` pushed.
 Open source under MIT (ruling 84): `LICENSE`, `Docs/licences.md`, on `main` and merged into
 `octave-steps`.
 Jon's loopMIDI ports: "Aleatora to Reaper", "Reaper to Aleatora", "Aleatora Test" (ruling 45).
@@ -26,11 +26,10 @@ Fallback.asset` (the Editor's dynamic font atlas) is left uncommitted; it isn't 
 
 ## Open, for Jon
 
-- **Before the repository goes public** (`Docs/licences.md`, *Open*): the EmojiOne sprite sheet
-  (committed, licence unclear; Attune leaves it out), where the two meshes came from, and the
-  framework taken by path (the repository doesn't open alone; Attune takes the public
-  `aurumworks-core` by git URL and tag, a change to `Packages/manifest.json`). Then
-  `gh repo edit ionAurum/Aleatora --visibility public --accept-visibility-change-consequences`.
+- **Licences still open** (`Docs/licences.md`, *Open*), now the repository is public: the
+  EmojiOne sprite sheet (committed, licence unclear; Attune leaves it out), where the two meshes
+  came from, and the framework taken by path (the repository doesn't open alone; Attune takes the
+  public `aurumworks-core` by git URL and tag, a change to `Packages/manifest.json`).
 - **Try the octave steps** (Editor): Z and X, the panel's Octave row and the D-pad's left and
   right step the board's lowest octave; on the Melodies page Z and X, its Octave row and LB and RB
   move the melody an octave. In the Editor the board's octave stays on `AleatoraTuning` after play,
